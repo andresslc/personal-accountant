@@ -7,81 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, Grid, List } from "lucide-react"
-
-const allTransactions = [
-  {
-    id: 1,
-    date: "2024-01-15",
-    category: "Groceries",
-    type: "expense",
-    description: "Whole Foods Market",
-    amount: -82.45,
-    method: "Credit Card",
-  },
-  {
-    id: 2,
-    date: "2024-01-14",
-    category: "Salary",
-    type: "income",
-    description: "Monthly Salary",
-    amount: 4500,
-    method: "Bank Transfer",
-  },
-  {
-    id: 3,
-    date: "2024-01-14",
-    category: "Utilities",
-    type: "expense",
-    description: "Electric Bill",
-    amount: -124.5,
-    method: "Bank Transfer",
-  },
-  {
-    id: 4,
-    date: "2024-01-13",
-    category: "Shopping",
-    type: "expense",
-    description: "Amazon Purchase",
-    amount: -56.99,
-    method: "Credit Card",
-  },
-  {
-    id: 5,
-    date: "2024-01-13",
-    category: "Healthcare",
-    type: "expense",
-    description: "Pharmacy",
-    amount: -28.0,
-    method: "Cash",
-  },
-  {
-    id: 6,
-    date: "2024-01-12",
-    category: "Groceries",
-    type: "expense",
-    description: "Trader Joe's",
-    amount: -65.32,
-    method: "Credit Card",
-  },
-  {
-    id: 7,
-    date: "2024-01-12",
-    category: "Entertainment",
-    type: "expense",
-    description: "Movie Tickets",
-    amount: -32.0,
-    method: "Credit Card",
-  },
-  {
-    id: 8,
-    date: "2024-01-11",
-    category: "Freelance",
-    type: "income",
-    description: "Project Payment",
-    amount: 800,
-    method: "Bank Transfer",
-  },
-]
+import { allTransactions, transactionCategories, transactionTypes } from "@/lib/mocks"
 
 export function TransactionsManager() {
   const [search, setSearch] = useState("")
@@ -96,9 +22,6 @@ export function TransactionsManager() {
     const matchesType = type === "all" || t.type === type
     return matchesSearch && matchesCategory && matchesType
   })
-
-  const categories = ["all", "Groceries", "Salary", "Utilities", "Shopping", "Healthcare", "Entertainment", "Freelance"]
-  const types = ["all", "income", "expense"]
 
   return (
     <div className="space-y-6">
@@ -117,7 +40,7 @@ export function TransactionsManager() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((cat) => (
+                {transactionCategories.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat === "all" ? "All Categories" : cat}
                   </SelectItem>
@@ -129,7 +52,7 @@ export function TransactionsManager() {
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                {types.map((t) => (
+                {transactionTypes.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t === "all" ? "All Types" : t.charAt(0).toUpperCase() + t.slice(1)}
                   </SelectItem>

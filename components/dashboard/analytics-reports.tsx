@@ -19,58 +19,15 @@ import {
   Cell,
 } from "recharts"
 import { Download, Calendar } from "lucide-react"
-
-const cashFlowData = [
-  { month: "Jan", income: 4500, expenses: 3200 },
-  { month: "Feb", income: 4200, expenses: 2800 },
-  { month: "Mar", income: 4800, expenses: 3500 },
-  { month: "Apr", income: 4600, expenses: 3100 },
-  { month: "May", income: 5000, expenses: 3600 },
-  { month: "Jun", income: 5200, expenses: 3800 },
-]
-
-const expenseBreakdown = [
-  { name: "Rent", value: 1500 },
-  { name: "Groceries", value: 450 },
-  { name: "Utilities", value: 200 },
-  { name: "Entertainment", value: 280 },
-  { name: "Other", value: 690 },
-]
-
-const topSpending = [
-  { rank: 1, category: "Rent", amount: 4500 },
-  { rank: 2, category: "Groceries", amount: 1350 },
-  { rank: 3, category: "Utilities", amount: 600 },
-]
-
-const subscriptions = [
-  { name: "Netflix", amount: 15.99, frequency: "Monthly" },
-  { name: "Spotify", amount: 10.99, frequency: "Monthly" },
-  { name: "Cloud Storage", amount: 9.99, frequency: "Monthly" },
-]
-
-const netWorthData = [
-  { month: "Jan", value: 24000 },
-  { month: "Feb", value: 24800 },
-  { month: "Mar", value: 26200 },
-  { month: "Apr", value: 27100 },
-  { month: "May", value: 28900 },
-  { month: "Jun", value: 30500 },
-  { month: "Jul", value: 31200 },
-  { month: "Aug", value: 33100 },
-  { month: "Sep", value: 34500 },
-  { month: "Oct", value: 35800 },
-  { month: "Nov", value: 36900 },
-  { month: "Dec", value: 38200 },
-]
-
-const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-]
+import {
+  cashFlowData,
+  expenseBreakdown,
+  topSpendingCategories,
+  subscriptions,
+  netWorthData,
+  CHART_COLORS,
+  dateRangeOptions,
+} from "@/lib/mocks"
 
 export function AnalyticsReports() {
   return (
@@ -83,10 +40,11 @@ export function AnalyticsReports() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7days">Last 7 Days</SelectItem>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="ytd">Year to Date</SelectItem>
-              <SelectItem value="custom">Custom Range</SelectItem>
+              {dateRangeOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           <Button variant="outline" className="gap-2 bg-transparent">
@@ -119,8 +77,8 @@ export function AnalyticsReports() {
                 labelStyle={{ color: "hsl(var(--foreground))" }}
               />
               <Legend />
-              <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1)))" strokeWidth={2} />
-              <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-3)))" strokeWidth={2} />
+              <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" strokeWidth={2} />
+              <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-3))" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </Card>
@@ -133,7 +91,7 @@ export function AnalyticsReports() {
               <PieChart>
                 <Pie data={expenseBreakdown} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
                   {expenseBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index]} />
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} />
                   ))}
                 </Pie>
               </PieChart>
@@ -141,7 +99,7 @@ export function AnalyticsReports() {
             <div className="flex flex-col justify-center">
               {expenseBreakdown.map((item, index) => (
                 <div key={item.name} className="flex items-center gap-2 mb-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index] }}></div>
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[index] }}></div>
                   <span className="text-sm text-foreground">{item.name}</span>
                   <span className="text-sm font-semibold text-foreground/70 ml-auto">${item.value}</span>
                 </div>
@@ -157,7 +115,7 @@ export function AnalyticsReports() {
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Top Spending Categories</h3>
           <div className="space-y-4">
-            {topSpending.map((item) => (
+            {topSpendingCategories.map((item) => (
               <div key={item.rank} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-foreground/50">{item.rank}</span>
@@ -208,7 +166,7 @@ export function AnalyticsReports() {
             <Area
               type="monotone"
               dataKey="value"
-              stroke="hsl(var(--chart-1)))"
+              stroke="hsl(var(--chart-1))"
               fill="hsl(var(--chart-1))"
               fillOpacity={0.2}
             />

@@ -8,15 +8,13 @@ import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit2 } from "lucide-react"
-import { Utensils, Home, Zap, ShoppingCart, Film } from "lucide-react"
-
-const budgetData = [
-  { id: 1, category: "Groceries", limit: 500, spent: 350, icon: Utensils, recurring: true },
-  { id: 2, category: "Rent", limit: 1500, spent: 1500, icon: Home, recurring: true },
-  { id: 3, category: "Utilities", limit: 200, spent: 124, icon: Zap, recurring: true },
-  { id: 4, category: "Entertainment", limit: 300, spent: 156, icon: Film, recurring: false },
-  { id: 5, category: "Shopping", limit: 400, spent: 312, icon: ShoppingCart, recurring: false },
-]
+import { 
+  budgetData, 
+  budgetCategoryOptions,
+  getTotalBudget,
+  getTotalSpent,
+  getRemainingBudget 
+} from "@/lib/mocks"
 
 export function BudgetPlanning() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -24,16 +22,9 @@ export function BudgetPlanning() {
   const [limitAmount, setLimitAmount] = useState("")
   const [isRecurring, setIsRecurring] = useState(true)
 
-  const totalBudget = budgetData.reduce((sum, b) => sum + b.limit, 0)
-  const totalSpent = budgetData.reduce((sum, b) => sum + b.spent, 0)
-  const remaining = totalBudget - totalSpent
-
-  const getProgressColor = (spent, limit) => {
-    const percentage = (spent / limit) * 100
-    if (percentage >= 100) return "bg-red-500"
-    if (percentage >= 80) return "bg-yellow-500"
-    return "bg-green-500"
-  }
+  const totalBudget = getTotalBudget()
+  const totalSpent = getTotalSpent()
+  const remaining = getRemainingBudget()
 
   const getDaysLeft = () => {
     const now = new Date()
@@ -82,10 +73,11 @@ export function BudgetPlanning() {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="groceries">Groceries</SelectItem>
-                  <SelectItem value="dining">Dining Out</SelectItem>
-                  <SelectItem value="transport">Transportation</SelectItem>
-                  <SelectItem value="entertainment">Entertainment</SelectItem>
+                  {budgetCategoryOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

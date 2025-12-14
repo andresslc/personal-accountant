@@ -2,29 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CreditCard, Utensils, Zap, ShoppingCart, Pill } from "lucide-react"
-
-const transactions = [
-  {
-    id: 1,
-    date: "2024-01-15",
-    category: "Groceries",
-    description: "Whole Foods Market",
-    amount: -82.45,
-    icon: Utensils,
-  },
-  { id: 2, date: "2024-01-14", category: "Salary", description: "Monthly Salary", amount: 4500, icon: CreditCard },
-  { id: 3, date: "2024-01-14", category: "Utilities", description: "Electric Bill", amount: -124.5, icon: Zap },
-  {
-    id: 4,
-    date: "2024-01-13",
-    category: "Shopping",
-    description: "Amazon Purchase",
-    amount: -56.99,
-    icon: ShoppingCart,
-  },
-  { id: 5, date: "2024-01-13", category: "Healthcare", description: "Pharmacy", amount: -28.0, icon: Pill },
-]
+import { recentTransactions } from "@/lib/mocks"
 
 export function TransactionsTable() {
   return (
@@ -43,7 +21,7 @@ export function TransactionsTable() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction, index) => {
+            {recentTransactions.map((transaction, index) => {
               const Icon = transaction.icon
               const isIncome = transaction.amount > 0
               return (
@@ -54,9 +32,11 @@ export function TransactionsTable() {
                   <td className="px-6 py-4 text-sm text-foreground/70">{transaction.date}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Icon className="w-4 h-4 text-primary" />
-                      </div>
+                      {Icon && (
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Icon className="w-4 h-4 text-primary" />
+                        </div>
+                      )}
                       <Badge variant="secondary">{transaction.category}</Badge>
                     </div>
                   </td>
