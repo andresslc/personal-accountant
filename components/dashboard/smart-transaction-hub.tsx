@@ -11,11 +11,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
-import { Zap, FileText, Upload, AlertCircle } from "lucide-react"
+import { Zap, FileText, Upload, AlertCircle, Loader2 } from "lucide-react"
+import type { ParsedTransaction } from "@/lib/ai/types"
+import { TransactionConfirmationCard } from "./transaction-confirmation-card"
 
 export function SmartTransactionHub() {
   const [activeTab, setActiveTab] = useState("ai-agent")
   const [textInput, setTextInput] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [parseError, setParseError] = useState<string | null>(null)
+  const [parsedResult, setParsedResult] = useState<ParsedTransaction | null>(null)
   const [manualForm, setManualForm] = useState({
     description: "",
     amount: "",
@@ -26,9 +31,43 @@ export function SmartTransactionHub() {
   })
   const [csvFile, setCsvFile] = useState<File | null>(null)
 
-  const handleAnalyze = () => {
-    console.log("[v0] Analyzing:", textInput)
-    // AI analysis logic will go here
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true)
+    setParseError(null)
+    setParsedResult(null)
+
+    try {
+      const response = await fetch("/api/parse-transaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textInput }),
+      })
+
+      const result = await response.json()
+
+      if (!result.success) {
+        setParseError(result.error)
+        return
+      }
+
+      setParsedResult(result.data)
+    } catch {
+      setParseError("Network error. Please check your connection and try again.")
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const handleConfirm = () => {
+    console.log("[AI] Confirmed transaction:", parsedResult)
+    // Supabase save will go here
+    setParsedResult(null)
+    setTextInput("")
+  }
+
+  const handleTryAgain = () => {
+    setParsedResult(null)
+    setParseError(null)
   }
 
   const handleManualSubmit = (e: React.FormEvent) => {
@@ -71,33 +110,67 @@ export function SmartTransactionHub() {
 
         {/* Tab 1: AI Agent */}
         <TabsContent value="ai-agent" className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="ai-input">Describe your transaction (text or voice)</Label>
-            <Textarea
-              id="ai-input"
-              placeholder="E.g., 'Spent $45 on groceries at Whole Foods' OR 'Paid $200 towards my Visa Card'"
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              className="min-h-24 resize-none"
+          {parsedResult ? (
+            <TransactionConfirmationCard
+              transaction={parsedResult}
+              onConfirm={handleConfirm}
+              onTryAgain={handleTryAgain}
             />
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                Supports Debt Repayment
-              </Badge>
-            </div>
-          </div>
-          <Button
-            onClick={handleAnalyze}
-            className="w-full bg-primary hover:bg-primary/90"
-            disabled={!textInput.trim()}
-          >
-            <Zap className="w-4 h-4 mr-2" />
-            Analyze Transaction
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            Our AI will automatically extract details like amount, category, and date from your description.
-          </p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="ai-input">Describe your transaction (text or voice)</Label>
+                <Textarea
+                  id="ai-input"
+                  placeholder={`Ej: "helado 4000", "me pagaron 3 millones de salario", "pagué 200k de la tarjeta Chase"`}
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  className="min-h-24 resize-none"
+                  disabled={isAnalyzing}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && textInput.trim()) {
+                      e.preventDefault()
+                      handleAnalyze()
+                    }
+                  }}
+                />
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary" className="bg-amber-50 text-amber-700 border-amber-200">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    Supports Debt Repayment
+                  </Badge>
+                </div>
+              </div>
+
+              {parseError && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 rounded-md px-3 py-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{parseError}</span>
+                </div>
+              )}
+
+              <Button
+                onClick={handleAnalyze}
+                className="w-full bg-primary hover:bg-primary/90"
+                disabled={!textInput.trim() || isAnalyzing}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-4 h-4 mr-2" />
+                    Analyze Transaction
+                  </>
+                )}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Our AI will automatically extract details like amount, category, and date from your description.
+              </p>
+            </>
+          )}
         </TabsContent>
 
         {/* Tab 2: Manual Entry */}

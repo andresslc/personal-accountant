@@ -1,19 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Header } from "@/components/dashboard/header"
 import { Sidebar } from "@/components/dashboard/sidebar"
 import { SummaryCards } from "@/components/dashboard/summary-cards"
 import { IncomeVsExpensesChart } from "@/components/dashboard/income-vs-expenses-chart"
 import { TransactionsTable } from "@/components/dashboard/transactions-table"
 import { ExpensesByCategoryChart } from "@/components/dashboard/expenses-by-category-chart"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SmartTransactionHub } from "@/components/dashboard/smart-transaction-hub"
-import { Plus } from "lucide-react"
+import { QuickAddMenu } from "@/components/dashboard/quick-add-menu"
+import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
 
 export default function Dashboard() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const router = useRouter()
+  const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -25,13 +28,11 @@ export default function Dashboard() {
         <div className="p-8">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            <Button
-              onClick={() => setIsDialogOpen(true)}
-              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              <Plus className="w-4 h-4" />
-              Add Transaction
-            </Button>
+            <QuickAddMenu
+              onAddTransaction={() => setIsTransactionDialogOpen(true)}
+              onCreateBudget={() => setIsBudgetDialogOpen(true)}
+              onAddDebt={() => router.push("/dashboard/debts")}
+            />
           </div>
 
           <SummaryCards />
@@ -49,7 +50,7 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Add New Transaction</DialogTitle>
@@ -57,6 +58,11 @@ export default function Dashboard() {
           <SmartTransactionHub />
         </DialogContent>
       </Dialog>
+
+      <BudgetQuickCreateDialog
+        open={isBudgetDialogOpen}
+        onOpenChange={setIsBudgetDialogOpen}
+      />
     </div>
   )
 }

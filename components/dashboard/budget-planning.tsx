@@ -3,28 +3,23 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Edit2 } from "lucide-react"
+import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
 import { 
   budgetData, 
-  budgetCategoryOptions,
+  type BudgetItem,
   getTotalBudget,
   getTotalSpent,
   getRemainingBudget 
 } from "@/lib/mocks"
 
 export function BudgetPlanning() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState("")
-  const [limitAmount, setLimitAmount] = useState("")
-  const [isRecurring, setIsRecurring] = useState(true)
+  const [budgets, setBudgets] = useState<BudgetItem[]>(budgetData)
 
-  const totalBudget = getTotalBudget()
-  const totalSpent = getTotalSpent()
-  const remaining = getRemainingBudget()
+  const totalBudget = getTotalBudget(budgets)
+  const totalSpent = getTotalSpent(budgets)
+  const remaining = getRemainingBudget(budgets)
 
   const getDaysLeft = () => {
     const now = new Date()
@@ -54,62 +49,19 @@ export function BudgetPlanning() {
       </div>
 
       {/* Create Budget Button */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
+      <BudgetQuickCreateDialog
+        onBudgetCreated={(newBudget) => setBudgets((current) => [newBudget, ...current])}
+        trigger={
           <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
             <Plus className="w-4 h-4" />
             Create New Budget
           </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Budget</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Category</label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {budgetCategoryOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">Limit Amount</label>
-              <Input
-                placeholder="$500.00"
-                value={limitAmount}
-                onChange={(e) => setLimitAmount(e.target.value)}
-                type="number"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <input
-                type="checkbox"
-                id="recurring"
-                checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="w-4 h-4 rounded border-border cursor-pointer"
-              />
-              <label htmlFor="recurring" className="text-sm font-medium text-foreground cursor-pointer">
-                Recurring Budget
-              </label>
-            </div>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Create Budget</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+        }
+      />
 
       {/* Budget Cards Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {budgetData.map((budget) => {
+        {budgets.map((budget) => {
           const Icon = budget.icon
           const percentage = (budget.spent / budget.limit) * 100
           const isOverBudget = budget.spent > budget.limit
