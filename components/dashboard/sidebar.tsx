@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -15,6 +15,13 @@ const navigationItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await fetch("/auth/signout", { method: "POST" })
+    router.push("/")
+    router.refresh()
+  }
 
   return (
     <aside className="w-64 border-r border-border bg-card flex flex-col min-h-screen">
@@ -56,7 +63,10 @@ export function Sidebar() {
           <Settings className="w-5 h-5" />
           <span className="font-medium">Settings</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+        >
           <LogOut className="w-5 h-5" />
           <span className="font-medium">Logout</span>
         </button>

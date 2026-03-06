@@ -1,10 +1,23 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { recentTransactions } from "@/lib/mocks"
+import { getRecentTransactions } from "@/lib/data/dashboard-data"
+import type { Transaction } from "@/lib/mocks"
 
 export function TransactionsTable() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  useEffect(() => {
+    const loadTransactions = async () => {
+      const data = await getRecentTransactions()
+      setTransactions(data)
+    }
+
+    void loadTransactions()
+  }, [])
+
   return (
     <Card className="border border-border">
       <div className="p-6 border-b border-border">
@@ -21,7 +34,7 @@ export function TransactionsTable() {
             </tr>
           </thead>
           <tbody>
-            {recentTransactions.map((transaction, index) => {
+            {transactions.map((transaction, index) => {
               const Icon = transaction.icon
               const isIncome = transaction.amount > 0
               return (

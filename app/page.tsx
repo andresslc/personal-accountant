@@ -27,8 +27,12 @@ export default function LandingPage() {
             </a>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost">Log in</Button>
-            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Sign up</Button>
+            <Link href="/login">
+              <Button variant="ghost">Log in</Button>
+            </Link>
+            <Link href="/signup">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">Sign up</Button>
+            </Link>
           </div>
         </div>
       </nav>
@@ -42,7 +46,7 @@ export default function LandingPage() {
           Track expenses, set budgets, and achieve financial freedom with our intuitive dashboard.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-          <Link href="/dashboard">
+          <Link href="/signup">
             <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2 w-full sm:w-auto">
               Get Started Free
               <ArrowRight className="w-4 h-4" />

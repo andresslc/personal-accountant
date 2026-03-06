@@ -1,12 +1,25 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { summaryCardsData } from "@/lib/mocks"
+import { getSummaryCards } from "@/lib/data/dashboard-data"
+import type { SummaryCard } from "@/lib/mocks"
 
 export function SummaryCards() {
+  const [cards, setCards] = useState<SummaryCard[]>([])
+
+  useEffect(() => {
+    const loadCards = async () => {
+      const data = await getSummaryCards()
+      setCards(data)
+    }
+
+    void loadCards()
+  }, [])
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {summaryCardsData.map((card) => {
+      {cards.map((card) => {
         const Icon = card.icon
         return (
           <Card key={card.title} className="p-6 border border-border">

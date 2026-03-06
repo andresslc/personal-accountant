@@ -1,20 +1,19 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+"use client"
+
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Progress } from "@/components/ui/progress";
+} from "@/components/ui/select"
+import { Progress } from "@/components/ui/progress"
+import { DebtQuickCreateDialog } from "@/components/dashboard/debt-quick-create-dialog"
+import { getDebts } from "@/lib/data/dashboard-data"
 import {
   AreaChart,
   Area,
@@ -23,23 +22,40 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
-import { CreditCard, Percent, Calendar, Eye } from "lucide-react";
+} from "recharts"
+import { CreditCard, Percent, Calendar, Eye, Plus } from "lucide-react"
 import {
-  liabilitiesData,
+  type Liability,
   payoffTimelineData,
   getTotalDebt,
   getWeightedAverageApr,
   getProgressPercent,
   estimatedDebtFreeDate,
-} from "@/lib/mocks";
-import { useState } from "react";
+} from "@/lib/mocks"
 
 export function DebtsTracker() {
-  const [payoffStrategy, setPayoffStrategy] = useState("avalanche");
+  const searchParams = useSearchParams()
+  const [payoffStrategy, setPayoffStrategy] = useState("avalanche")
+  const [liabilities, setLiabilities] = useState<Liability[]>([])
+  const [isDebtDialogOpen, setIsDebtDialogOpen] = useState(false)
 
-  const totalDebt = getTotalDebt();
-  const avgApr = getWeightedAverageApr();
+  useEffect(() => {
+    const loadDebts = async () => {
+      const data = await getDebts()
+      setLiabilities(data)
+    }
+
+    void loadDebts()
+  }, [])
+
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setIsDebtDialogOpen(true)
+    }
+  }, [searchParams])
+
+  const totalDebt = getTotalDebt(liabilities)
+  const avgApr = getWeightedAverageApr(liabilities)
   return (
     <div className="flex-1 p-8 space-y-8">
       {/* Header */}
@@ -52,23 +68,30 @@ export function DebtsTracker() {
             Manage your liabilities and visualize your road to freedom.
           </p>
         </div>
-        <div className="w-48">
-          <label className="text-sm font-medium text-foreground mb-2 block">
-            Payoff Strategy
-          </label>
-          <Select value={payoffStrategy} onValueChange={setPayoffStrategy}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="avalanche">
-                Avalanche (High Interest First)
-              </SelectItem>
-              <SelectItem value="snowball">
-                Snowball (Lowest Balance First)
-              </SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex items-end gap-3">
+          <div className="w-56">
+            <label className="text-sm font-medium text-foreground mb-2 block">Payoff Strategy</label>
+            <Select value={payoffStrategy} onValueChange={setPayoffStrategy}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="avalanche">Avalanche (High Interest First)</SelectItem>
+                <SelectItem value="snowball">Snowball (Lowest Balance First)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DebtQuickCreateDialog
+            open={isDebtDialogOpen}
+            onOpenChange={setIsDebtDialogOpen}
+            onDebtCreated={(newDebt) => setLiabilities((current) => [newDebt, ...current])}
+            trigger={
+              <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+                <Plus className="w-4 h-4" />
+                Add Debt
+              </Button>
+            }
+          />
         </div>
       </div>
 
@@ -88,7 +111,7 @@ export function DebtsTracker() {
               ${totalDebt.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Across {liabilitiesData.length} liabilities
+              Across {liabilities.length} liabilities
             </p>
           </CardContent>
         </Card>
@@ -136,12 +159,12 @@ export function DebtsTracker() {
           Active Liabilities
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {liabilitiesData.map((liability) => {
-            const Icon = liability.icon;
+          {liabilities.map((liability) => {
+            const Icon = liability.icon
             const progressPercent = getProgressPercent(
               liability.currentBalance,
               liability.originalBalance
-            );
+            )
 
             return (
               <Card key={liability.id} className="flex flex-col">
@@ -210,7 +233,7 @@ export function DebtsTracker() {
                   </Button>
                 </CardFooter>
               </Card>
-            );
+            )
           })}
         </div>
       </div>
@@ -270,5 +293,5 @@ export function DebtsTracker() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

@@ -2,8 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Header } from "@/components/dashboard/header"
-import { Sidebar } from "@/components/dashboard/sidebar"
 import { SummaryCards } from "@/components/dashboard/summary-cards"
 import { IncomeVsExpensesChart } from "@/components/dashboard/income-vs-expenses-chart"
 import { TransactionsTable } from "@/components/dashboard/transactions-table"
@@ -19,36 +17,28 @@ export default function Dashboard() {
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
+    <>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <QuickAddMenu
+          onAddTransaction={() => setIsTransactionDialogOpen(true)}
+          onCreateBudget={() => setIsBudgetDialogOpen(true)}
+          onAddDebt={() => router.push("/dashboard/debts?create=true")}
+        />
+      </div>
 
-      <main className="flex-1">
-        <Header />
+      <SummaryCards />
 
-        <div className="p-8">
-          <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-            <QuickAddMenu
-              onAddTransaction={() => setIsTransactionDialogOpen(true)}
-              onCreateBudget={() => setIsBudgetDialogOpen(true)}
-              onAddDebt={() => router.push("/dashboard/debts")}
-            />
-          </div>
-
-          <SummaryCards />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-            <div className="lg:col-span-2">
-              <IncomeVsExpensesChart />
-            </div>
-            <ExpensesByCategoryChart />
-          </div>
-
-          <div className="mt-8">
-            <TransactionsTable />
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+        <div className="lg:col-span-2">
+          <IncomeVsExpensesChart />
         </div>
-      </main>
+        <ExpensesByCategoryChart />
+      </div>
+
+      <div className="mt-8">
+        <TransactionsTable />
+      </div>
 
       <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
         <DialogContent className="max-w-2xl">
@@ -63,6 +53,6 @@ export default function Dashboard() {
         open={isBudgetDialogOpen}
         onOpenChange={setIsBudgetDialogOpen}
       />
-    </div>
+    </>
   )
 }

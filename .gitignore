@@ -19,6 +19,9 @@ yarn-error.log*
 # env files
 .env*
 
+# MCP config (may contain secrets)
+.cursor/mcp.json
+
 # vercel
 .vercel
 

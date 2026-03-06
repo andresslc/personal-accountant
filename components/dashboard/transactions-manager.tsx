@@ -1,27 +1,44 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, Grid, List } from "lucide-react"
-import { allTransactions, transactionCategories, transactionTypes } from "@/lib/mocks"
+import { getTransactionCategories, getTransactions } from "@/lib/data/dashboard-data"
+import type { Transaction } from "@/lib/mocks"
 
 export function TransactionsManager() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [categoryOptions, setCategoryOptions] = useState<string[]>(["all"])
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [type, setType] = useState("all")
   const [month, setMonth] = useState("all")
   const [view, setView] = useState("table")
 
-  const filteredTransactions = allTransactions.filter((t) => {
-    const matchesSearch = t.description.toLowerCase().includes(search.toLowerCase())
-    const matchesCategory = category === "all" || t.category === category
-    const matchesType = type === "all" || t.type === type
-    return matchesSearch && matchesCategory && matchesType
-  })
+  useEffect(() => {
+    const loadTransactions = async () => {
+      const [transactionsData, categoriesData] = await Promise.all([getTransactions(), getTransactionCategories()])
+      setTransactions(transactionsData)
+      setCategoryOptions(categoriesData)
+    }
+
+    void loadTransactions()
+  }, [])
+
+  const filteredTransactions = useMemo(
+    () =>
+      transactions.filter((transaction) => {
+        const matchesSearch = transaction.description.toLowerCase().includes(search.toLowerCase())
+        const matchesCategory = category === "all" || transaction.category === category
+        const matchesType = type === "all" || transaction.type === type
+        return matchesSearch && matchesCategory && matchesType
+      }),
+    [transactions, search, category, type]
+  )
 
   return (
     <div className="space-y-6">
@@ -40,7 +57,7 @@ export function TransactionsManager() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {transactionCategories.map((cat) => (
+                {categoryOptions.map((cat) => (
                   <SelectItem key={cat} value={cat}>
                     {cat === "all" ? "All Categories" : cat}
                   </SelectItem>
@@ -52,7 +69,7 @@ export function TransactionsManager() {
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
-                {transactionTypes.map((t) => (
+                {["all", "income", "expense"].map((t) => (
                   <SelectItem key={t} value={t}>
                     {t === "all" ? "All Types" : t.charAt(0).toUpperCase() + t.slice(1)}
                   </SelectItem>

@@ -199,6 +199,7 @@ The app will be available at `http://localhost:3000`.
 |----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anonymous/public key |
+| `NEXT_PUBLIC_USE_MOCK_DATA` | `true` uses local mocks, `false` reads from Supabase |
 
 ## How It Helps Users
 

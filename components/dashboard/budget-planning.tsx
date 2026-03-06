@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Plus, Edit2 } from "lucide-react"
 import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
+import { getBudgets } from "@/lib/data/dashboard-data"
 import { 
-  budgetData, 
   type BudgetItem,
   getTotalBudget,
   getTotalSpent,
@@ -15,7 +16,24 @@ import {
 } from "@/lib/mocks"
 
 export function BudgetPlanning() {
-  const [budgets, setBudgets] = useState<BudgetItem[]>(budgetData)
+  const searchParams = useSearchParams()
+  const [budgets, setBudgets] = useState<BudgetItem[]>([])
+  const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
+
+  useEffect(() => {
+    const loadBudgets = async () => {
+      const data = await getBudgets()
+      setBudgets(data)
+    }
+
+    void loadBudgets()
+  }, [])
+
+  useEffect(() => {
+    if (searchParams.get("create") === "true") {
+      setIsBudgetDialogOpen(true)
+    }
+  }, [searchParams])
 
   const totalBudget = getTotalBudget(budgets)
   const totalSpent = getTotalSpent(budgets)
@@ -50,6 +68,8 @@ export function BudgetPlanning() {
 
       {/* Create Budget Button */}
       <BudgetQuickCreateDialog
+        open={isBudgetDialogOpen}
+        onOpenChange={setIsBudgetDialogOpen}
         onBudgetCreated={(newBudget) => setBudgets((current) => [newBudget, ...current])}
         trigger={
           <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">

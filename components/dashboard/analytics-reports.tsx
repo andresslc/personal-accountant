@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,16 +21,45 @@ import {
 } from "recharts"
 import { Download, Calendar } from "lucide-react"
 import {
-  cashFlowData,
-  expenseBreakdown,
-  topSpendingCategories,
-  subscriptions,
-  netWorthData,
-  CHART_COLORS,
-  dateRangeOptions,
-} from "@/lib/mocks"
+  getCashFlowData,
+  getExpenseBreakdown,
+  getTopSpendingCategories,
+  getSubscriptions,
+  getNetWorth,
+  getChartColors,
+  getDateRangeOptions,
+} from "@/lib/data/dashboard-data"
+import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/mocks"
 
 export function AnalyticsReports() {
+  const [cashFlow, setCashFlow] = useState<MonthlyData[]>([])
+  const [breakdown, setBreakdown] = useState<CategoryExpense[]>([])
+  const [spendingCategories, setSpendingCategories] = useState<SpendingRank[]>([])
+  const [recurringSubscriptions, setRecurringSubscriptions] = useState<Subscription[]>([])
+  const [netWorth, setNetWorth] = useState<NetWorthPoint[]>([])
+  const chartColors = getChartColors()
+  const dateRangeOptions = getDateRangeOptions()
+
+  useEffect(() => {
+    const loadData = async () => {
+      const [cashFlowData, expenseBreakdown, topCategories, subscriptions, netWorthData] = await Promise.all([
+        getCashFlowData(),
+        getExpenseBreakdown(),
+        getTopSpendingCategories(),
+        getSubscriptions(),
+        getNetWorth(),
+      ])
+
+      setCashFlow(cashFlowData)
+      setBreakdown(expenseBreakdown)
+      setSpendingCategories(topCategories)
+      setRecurringSubscriptions(subscriptions)
+      setNetWorth(netWorthData)
+    }
+
+    void loadData()
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Control Panel */}
@@ -64,7 +94,7 @@ export function AnalyticsReports() {
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Cash Flow Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={cashFlowData}>
+            <LineChart data={cashFlow}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
               <YAxis stroke="hsl(var(--muted-foreground))" />
@@ -89,17 +119,20 @@ export function AnalyticsReports() {
           <div className="flex gap-6">
             <ResponsiveContainer width="50%" height={300}>
               <PieChart>
-                <Pie data={expenseBreakdown} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
-                  {expenseBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index]} />
+                <Pie data={breakdown} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
+                  {breakdown.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
             <div className="flex flex-col justify-center">
-              {expenseBreakdown.map((item, index) => (
+              {breakdown.map((item, index) => (
                 <div key={item.name} className="flex items-center gap-2 mb-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: CHART_COLORS[index] }}></div>
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: chartColors[index % chartColors.length] }}
+                  ></div>
                   <span className="text-sm text-foreground">{item.name}</span>
                   <span className="text-sm font-semibold text-foreground/70 ml-auto">${item.value}</span>
                 </div>
@@ -115,7 +148,7 @@ export function AnalyticsReports() {
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Top Spending Categories</h3>
           <div className="space-y-4">
-            {topSpendingCategories.map((item) => (
+            {spendingCategories.map((item) => (
               <div key={item.rank} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-foreground/50">{item.rank}</span>
@@ -131,7 +164,7 @@ export function AnalyticsReports() {
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Recurring Subscriptions</h3>
           <div className="space-y-4">
-            {subscriptions.map((sub) => (
+            {recurringSubscriptions.map((sub) => (
               <div
                 key={sub.name}
                 className="flex items-center justify-between pb-4 border-b border-border last:border-b-0"
@@ -151,7 +184,7 @@ export function AnalyticsReports() {
       <Card className="p-6 border border-border">
         <h3 className="text-lg font-bold text-foreground mb-6">Net Worth Growth</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={netWorthData}>
+          <AreaChart data={netWorth}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
             <YAxis stroke="hsl(var(--muted-foreground))" />
