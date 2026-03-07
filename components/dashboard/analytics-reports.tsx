@@ -30,6 +30,7 @@ import {
   getDateRangeOptions,
 } from "@/lib/data/dashboard-data"
 import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/mocks"
+import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 export function AnalyticsReports() {
   const [cashFlow, setCashFlow] = useState<MonthlyData[]>([])
@@ -82,10 +83,20 @@ export function AnalyticsReports() {
             Pick Date
           </Button>
         </div>
-        <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-          <Download className="w-4 h-4" />
-          Download PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <AIInsightsDialog
+            endpoint="/api/ai/reports-insights"
+            title="Reports AI Assistant"
+            description="Summarize trends, outliers, and key report takeaways."
+            triggerLabel="Reports AI"
+            defaultAnalysisType="report_summary"
+            lockAnalysisType
+          />
+          <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Download className="w-4 h-4" />
+            Download PDF
+          </Button>
+        </div>
       </div>
 
       {/* Top Row - Two Large Charts */}

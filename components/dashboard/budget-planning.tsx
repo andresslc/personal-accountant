@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Plus, Edit2 } from "lucide-react"
 import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
+import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
 import { getBudgets } from "@/lib/data/dashboard-data"
 import { 
   type BudgetItem,
@@ -67,17 +68,27 @@ export function BudgetPlanning() {
       </div>
 
       {/* Create Budget Button */}
-      <BudgetQuickCreateDialog
-        open={isBudgetDialogOpen}
-        onOpenChange={setIsBudgetDialogOpen}
-        onBudgetCreated={(newBudget) => setBudgets((current) => [newBudget, ...current])}
-        trigger={
-          <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
-            <Plus className="w-4 h-4" />
-            Create New Budget
-          </Button>
-        }
-      />
+      <div className="flex items-center gap-3">
+        <BudgetQuickCreateDialog
+          open={isBudgetDialogOpen}
+          onOpenChange={setIsBudgetDialogOpen}
+          onBudgetCreated={(newBudget) => setBudgets((current) => [newBudget, ...current])}
+          trigger={
+            <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="w-4 h-4" />
+              Create New Budget
+            </Button>
+          }
+        />
+        <AIInsightsDialog
+          endpoint="/api/ai/budget-insights"
+          title="Budget AI Assistant"
+          description="Get budget allocation recommendations and category guardrails."
+          triggerLabel="Budget AI"
+          defaultAnalysisType="budget_recommendation"
+          lockAnalysisType
+        />
+      </div>
 
       {/* Budget Cards Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

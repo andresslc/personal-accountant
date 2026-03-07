@@ -3,6 +3,7 @@
 import { Bell, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/auth-provider"
+import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 export function Header() {
   const { user } = useAuth()
@@ -25,6 +26,13 @@ export function Header() {
           <p className="text-sm text-foreground/70">{dateStr}</p>
         </div>
         <div className="flex items-center gap-4">
+          <AIInsightsDialog
+            endpoint="/api/ai/finance-insights"
+            title="Global Financial Assistant"
+            description="Ask for a general view across transactions, budget, debts, and reports."
+            triggerLabel="Ask AI"
+            defaultAnalysisType="overview"
+          />
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
