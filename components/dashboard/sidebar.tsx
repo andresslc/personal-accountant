@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, Settings, LogOut } from "lucide-react"
+import { useTheme } from "next-themes"
+import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, Sun, Moon, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navigationItems = [
@@ -16,11 +17,16 @@ const navigationItems = [
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { resolvedTheme, setTheme } = useTheme()
 
   const handleLogout = async () => {
     await fetch("/auth/signout", { method: "POST" })
     router.push("/")
     router.refresh()
+  }
+
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
 
   return (
@@ -36,7 +42,9 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
         {navigationItems.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href)
+          const isActive = item.href === "/dashboard"
+            ? pathname === "/dashboard"
+            : pathname.startsWith(item.href)
           const Icon = item.icon
 
           return (
@@ -57,11 +65,20 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Settings & Logout */}
+      {/* Theme Toggle & Logout */}
       <div className="border-t border-border p-4 space-y-2">
-        <button className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors">
-          <Settings className="w-5 h-5" />
-          <span className="font-medium">Settings</span>
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-foreground/70 hover:text-foreground hover:bg-muted transition-colors"
+        >
+          {resolvedTheme === "dark" ? (
+            <Sun className="w-5 h-5" />
+          ) : (
+            <Moon className="w-5 h-5" />
+          )}
+          <span className="font-medium">
+            {resolvedTheme === "dark" ? "Light Mode" : "Dark Mode"}
+          </span>
         </button>
         <button
           onClick={handleLogout}

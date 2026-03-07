@@ -23,20 +23,20 @@ export function IncomeVsExpensesChart() {
       <h3 className="text-lg font-bold text-foreground mb-6">Income vs Expenses</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-          <YAxis stroke="hsl(var(--muted-foreground))" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+          <XAxis dataKey="month" stroke="var(--muted-foreground)" />
+          <YAxis stroke="var(--muted-foreground)" />
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "var(--card)",
+              border: "1px solid var(--border)",
               borderRadius: "8px",
             }}
-            labelStyle={{ color: "hsl(var(--foreground))" }}
+            labelStyle={{ color: "var(--foreground)" }}
           />
           <Legend />
-          <Bar dataKey="income" fill="hsl(var(--chart-1))" />
-          <Bar dataKey="expenses" fill="hsl(var(--chart-3))" />
+          <Bar dataKey="income" fill="var(--chart-1)" />
+          <Bar dataKey="expenses" fill="var(--chart-3)" />
         </BarChart>
       </ResponsiveContainer>
     </Card>

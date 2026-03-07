@@ -102,8 +102,8 @@ export function DebtsTracker() {
             <CardTitle className="text-sm font-medium">
               Total Outstanding Debt
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-red-100 flex items-center justify-center">
-              <CreditCard className="w-5 h-5 text-red-600" />
+            <div className="h-8 w-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+              <CreditCard className="w-5 h-5 text-red-500" />
             </div>
           </CardHeader>
           <CardContent>
@@ -121,8 +121,8 @@ export function DebtsTracker() {
             <CardTitle className="text-sm font-medium">
               Avg. Interest Rate (APR)
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-amber-100 flex items-center justify-center">
-              <Percent className="w-5 h-5 text-amber-600" />
+            <div className="h-8 w-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+              <Percent className="w-5 h-5 text-amber-500" />
             </div>
           </CardHeader>
           <CardContent>
@@ -138,8 +138,8 @@ export function DebtsTracker() {
             <CardTitle className="text-sm font-medium">
               Debt-Free Date
             </CardTitle>
-            <div className="h-8 w-8 rounded-lg bg-green-100 flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-green-600" />
+            <div className="h-8 w-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <Calendar className="w-5 h-5 text-green-500" />
             </div>
           </CardHeader>
           <CardContent>
@@ -227,7 +227,7 @@ export function DebtsTracker() {
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 text-xs h-9 border-amber-500 text-amber-600 hover:bg-amber-50 bg-transparent"
+                    className="flex-1 text-xs h-9 border-amber-500 text-amber-500 hover:bg-amber-500/10 bg-transparent"
                   >
                     Record Payment
                   </Button>
@@ -254,29 +254,29 @@ export function DebtsTracker() {
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                   <stop
                     offset="5%"
-                    stopColor="hsl(var(--primary))"
+                    stopColor="var(--primary)"
                     stopOpacity={0.3}
                   />
                   <stop
                     offset="95%"
-                    stopColor="hsl(var(--primary))"
+                    stopColor="var(--primary)"
                     stopOpacity={0}
                   />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
               />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+              <XAxis dataKey="month" stroke="var(--muted-foreground)" />
               <YAxis
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 tickFormatter={(value) => `$${value / 1000}k`}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: "8px",
                 }}
                 formatter={(value: number) => `$${value.toLocaleString()}`}
@@ -284,7 +284,7 @@ export function DebtsTracker() {
               <Area
                 type="monotone"
                 dataKey="balance"
-                stroke="hsl(var(--primary))"
+                stroke="var(--primary)"
                 fillOpacity={1}
                 fill="url(#colorBalance)"
               />

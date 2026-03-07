@@ -17,7 +17,7 @@ export const summaryCardsData: SummaryCard[] = [
     change: "+12.5%",
     positive: true,
     icon: DollarSign,
-    color: "bg-blue-500/10 text-blue-600",
+    color: "bg-blue-500/10 text-blue-500",
   },
   {
     title: "Income",
@@ -25,7 +25,7 @@ export const summaryCardsData: SummaryCard[] = [
     change: "+5.2%",
     positive: true,
     icon: TrendingUp,
-    color: "bg-green-500/10 text-green-600",
+    color: "bg-green-500/10 text-green-500",
   },
   {
     title: "Expenses",
@@ -33,7 +33,7 @@ export const summaryCardsData: SummaryCard[] = [
     change: "-2.1%",
     positive: false,
     icon: TrendingDown,
-    color: "bg-red-500/10 text-red-600",
+    color: "bg-red-500/10 text-red-500",
   },
   {
     title: "Savings",
@@ -41,7 +41,7 @@ export const summaryCardsData: SummaryCard[] = [
     change: "+18.3%",
     positive: true,
     icon: Wallet,
-    color: "bg-purple-500/10 text-purple-600",
+    color: "bg-purple-500/10 text-purple-500",
   },
 ]
 

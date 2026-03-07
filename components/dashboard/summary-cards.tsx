@@ -27,7 +27,7 @@ export function SummaryCards() {
               <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${card.color}`}>
                 <Icon className="w-6 h-6" />
               </div>
-              <div className={`text-sm font-semibold ${card.positive ? "text-green-600" : "text-red-600"}`}>
+              <div className={`text-sm font-semibold ${card.positive ? "text-green-500" : "text-red-500"}`}>
                 {card.change}
               </div>
             </div>

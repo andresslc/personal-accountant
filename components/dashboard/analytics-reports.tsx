@@ -95,20 +95,20 @@ export function AnalyticsReports() {
           <h3 className="text-lg font-bold text-foreground mb-6">Cash Flow Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={cashFlow}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="month" stroke="var(--muted-foreground)" />
+              <YAxis stroke="var(--muted-foreground)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: "8px",
                 }}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
+                labelStyle={{ color: "var(--foreground)" }}
               />
               <Legend />
-              <Line type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-              <Line type="monotone" dataKey="expenses" stroke="hsl(var(--chart-3))" strokeWidth={2} />
+              <Line type="monotone" dataKey="income" stroke="var(--chart-1)" strokeWidth={2} />
+              <Line type="monotone" dataKey="expenses" stroke="var(--chart-3)" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </Card>
@@ -185,22 +185,22 @@ export function AnalyticsReports() {
         <h3 className="text-lg font-bold text-foreground mb-6">Net Worth Growth</h3>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={netWorth}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-            <YAxis stroke="hsl(var(--muted-foreground))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+            <XAxis dataKey="month" stroke="var(--muted-foreground)" />
+            <YAxis stroke="var(--muted-foreground)" />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
                 borderRadius: "8px",
               }}
-              labelStyle={{ color: "hsl(var(--foreground))" }}
+              labelStyle={{ color: "var(--foreground)" }}
             />
             <Area
               type="monotone"
               dataKey="value"
-              stroke="hsl(var(--chart-1))"
-              fill="hsl(var(--chart-1))"
+              stroke="var(--chart-1)"
+              fill="var(--chart-1)"
               fillOpacity={0.2}
             />
           </AreaChart>
