@@ -30,7 +30,7 @@ import {
   getDateRangeOptions,
 } from "@/lib/data/dashboard-data"
 import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/mocks"
-import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
+import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 export function AnalyticsReports() {
   const [cashFlow, setCashFlow] = useState<MonthlyData[]>([])
@@ -84,11 +84,11 @@ export function AnalyticsReports() {
           </Button>
         </div>
         <div className="flex items-center gap-2">
-          <AIInsightsDialog
+          <AIRecommendationsDialog
             endpoint="/api/ai/reports-insights"
-            title="Reports AI Assistant"
-            description="Summarize trends, outliers, and key report takeaways."
-            triggerLabel="Reports AI"
+            title="AI Financial Report"
+            description="Generate a comprehensive written financial report with trends and outlook."
+            triggerLabel="Full Report"
             defaultAnalysisType="report_summary"
             lockAnalysisType
           />

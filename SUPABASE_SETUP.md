@@ -98,6 +98,18 @@ create table public.subscriptions (
 );
 ```
 
+### user_financial_memory
+
+Stores durable AI memory per user for personalized recommendations.
+
+```sql
+create table public.user_financial_memory (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  memory     jsonb not null default '{}'::jsonb,
+  updated_at timestamptz default now() not null
+);
+```
+
 ---
 
 ## 3. Automatic `updated_at` Trigger
@@ -152,6 +164,7 @@ alter table public.transactions  enable row level security;
 alter table public.budget_items  enable row level security;
 alter table public.liabilities   enable row level security;
 alter table public.subscriptions enable row level security;
+alter table public.user_financial_memory enable row level security;
 
 -- categories: everyone reads system defaults; users manage their own custom ones
 create policy "Read system and own categories"
@@ -187,6 +200,12 @@ create policy "Users manage own liabilities"
 -- subscriptions
 create policy "Users manage own subscriptions"
   on public.subscriptions for all
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+-- user_financial_memory
+create policy "Users manage own financial memory"
+  on public.user_financial_memory for all
   using (user_id = auth.uid())
   with check (user_id = auth.uid());
 ```

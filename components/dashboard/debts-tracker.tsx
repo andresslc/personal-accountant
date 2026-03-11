@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
 import { DebtQuickCreateDialog } from "@/components/dashboard/debt-quick-create-dialog"
-import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
+import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 import { getDebts } from "@/lib/data/dashboard-data"
 import {
   AreaChart,
@@ -82,11 +82,11 @@ export function DebtsTracker() {
               </SelectContent>
             </Select>
           </div>
-          <AIInsightsDialog
+          <AIRecommendationsDialog
             endpoint="/api/ai/debts-insights"
-            title="Debt Strategy AI"
-            description="Receive payoff sequencing guidance and interest reduction actions."
-            triggerLabel="Debt AI"
+            title="Debt Payoff Strategy"
+            description="Get a personalized debt payoff plan to save on interest and become debt-free faster."
+            triggerLabel="Debt Advice"
             defaultAnalysisType="debt_strategy"
             lockAnalysisType
           />

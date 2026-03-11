@@ -1,5 +1,13 @@
 import { z } from "zod"
 
+export const FinancePageSchema = z.enum([
+  "dashboard",
+  "transactions",
+  "budgets",
+  "debts",
+  "reports",
+])
+
 export const FinanceAnalysisTypeSchema = z.enum([
   "overview",
   "spending_diagnosis",
@@ -41,8 +49,53 @@ export const FinanceActionItemSchema = z.object({
   estimated_impact: z.string().min(1),
 })
 
+export const FinancialIntentProfileSchema = z.object({
+  primary_goal: z.string().default(""),
+  secondary_goals: z.array(z.string()).default([]),
+  priority_order: z.array(z.string()).default([]),
+  motivations: z.array(z.string()).default([]),
+  obstacles: z.array(z.string()).default([]),
+  focus_areas: z.array(z.string()).default([]),
+  commitment_level: z.string().default(""),
+  support_preferences: z.array(z.string()).default([]),
+})
+
+export const PageSpecificPatternsSchema = z.object({
+  transactions: z.array(z.string()).default([]),
+  budgets: z.array(z.string()).default([]),
+  debts: z.array(z.string()).default([]),
+  reports: z.array(z.string()).default([]),
+})
+
+export const FinancialIntentMemorySchema = z.object({
+  financial_intent_profile: FinancialIntentProfileSchema.default({
+    primary_goal: "",
+    secondary_goals: [],
+    priority_order: [],
+    motivations: [],
+    obstacles: [],
+    focus_areas: [],
+    commitment_level: "",
+    support_preferences: [],
+  }),
+  page_specific_patterns: PageSpecificPatternsSchema.default({
+    transactions: [],
+    budgets: [],
+    debts: [],
+    reports: [],
+  }),
+})
+
+export const MemoryUpdateSchema = z.object({
+  memory_update: FinancialIntentMemorySchema,
+})
+
 export const FinanceInsightsRequestSchema = z.object({
   analysis_type: FinanceAnalysisTypeSchema,
+  current_page: FinancePageSchema.optional(),
+  page_data: z.record(z.string(), z.any()).optional(),
+  user_message: z.string().optional(),
+  existing_user_memory: FinancialIntentMemorySchema.optional(),
   prompt: z.string().optional(),
   time_range: FinanceTimeRangeSchema.optional(),
   filters: FinanceFiltersSchema.optional(),
@@ -93,7 +146,10 @@ export const FinanceErrorResponseSchema = z.object({
 })
 
 export type FinanceAnalysisType = z.infer<typeof FinanceAnalysisTypeSchema>
+export type FinancePage = z.infer<typeof FinancePageSchema>
 export type FinanceInsightsRequest = z.infer<typeof FinanceInsightsRequestSchema>
 export type FinanceInsightsData = z.infer<typeof FinanceInsightsDataSchema>
 export type FinanceSuccessResponse = z.infer<typeof FinanceSuccessResponseSchema>
 export type FinanceErrorResponse = z.infer<typeof FinanceErrorResponseSchema>
+export type FinancialIntentMemory = z.infer<typeof FinancialIntentMemorySchema>
+export type MemoryUpdate = z.infer<typeof MemoryUpdateSchema>

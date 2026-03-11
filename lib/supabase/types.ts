@@ -63,6 +63,12 @@ export interface Subscription {
   updated_at: string
 }
 
+export interface UserFinancialMemory {
+  user_id: string
+  memory: Record<string, unknown>
+  updated_at: string
+}
+
 // View types (read-only, computed server-side)
 export interface MonthlySummary {
   user_id: string
@@ -106,6 +112,11 @@ export interface Database {
         Row: Subscription
         Insert: Omit<Subscription, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Subscription, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+      }
+      user_financial_memory: {
+        Row: UserFinancialMemory
+        Insert: Omit<UserFinancialMemory, 'updated_at'>
+        Update: Partial<Omit<UserFinancialMemory, 'user_id' | 'updated_at'>>
       }
     }
     Views: {

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Plus, Edit2 } from "lucide-react"
 import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
-import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
+import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 import { getBudgets } from "@/lib/data/dashboard-data"
 import { 
   type BudgetItem,
@@ -80,11 +80,11 @@ export function BudgetPlanning() {
             </Button>
           }
         />
-        <AIInsightsDialog
+        <AIRecommendationsDialog
           endpoint="/api/ai/budget-insights"
-          title="Budget AI Assistant"
-          description="Get budget allocation recommendations and category guardrails."
-          triggerLabel="Budget AI"
+          title="Budget Recommendations"
+          description="Get budget allocation advice and category optimization suggestions."
+          triggerLabel="Budget Advice"
           defaultAnalysisType="budget_recommendation"
           lockAnalysisType
         />

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download, Grid, List } from "lucide-react"
 import { getTransactionCategories, getTransactions } from "@/lib/data/dashboard-data"
 import type { Transaction } from "@/lib/mocks"
-import { AIInsightsDialog } from "@/components/dashboard/ai-insights-dialog"
+import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 export function TransactionsManager() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -111,11 +111,11 @@ export function TransactionsManager() {
               </Button>
             </div>
             <div className="flex items-center gap-2">
-              <AIInsightsDialog
+              <AIRecommendationsDialog
                 endpoint="/api/ai/transactions-insights"
-                title="Transactions AI Assistant"
-                description="Analyze spending patterns, anomalies, and category-level opportunities."
-                triggerLabel="Transactions AI"
+                title="Spending Recommendations"
+                description="Get actionable advice to reduce spending and optimize your expenses."
+                triggerLabel="Spending Advice"
                 defaultAnalysisType="spending_diagnosis"
                 lockAnalysisType
               />
