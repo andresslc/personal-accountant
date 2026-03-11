@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { getSummaryCards } from "@/lib/data/dashboard-data"
-import type { SummaryCard } from "@/lib/mocks"
+import type { SummaryCard } from "@/lib/data/dashboard-data"
 
 export function SummaryCards() {
   const [cards, setCards] = useState<SummaryCard[]>([])

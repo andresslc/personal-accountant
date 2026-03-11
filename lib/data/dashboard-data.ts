@@ -354,3 +354,38 @@ export const getNetWorth = async (): Promise<NetWorthPoint[]> => {
     return { month: item.month, value: runningValue }
   })
 }
+
+// Re-export types so components never import from lib/mocks directly
+export type {
+  Transaction as TransactionUI,
+  BudgetItem as BudgetItemUI,
+  Liability as LiabilityUI,
+  PayoffTimelinePoint,
+  MonthlyData,
+  CategoryExpense,
+  SpendingRank,
+  Subscription,
+  NetWorthPoint,
+} from "@/lib/mocks"
+
+export type { SummaryCard } from "@/lib/mocks/summary"
+
+// Re-export mock helpers and data that components need
+export {
+  getTotalBudget,
+  getTotalSpent,
+  getRemainingBudget,
+  budgetCategoryOptions,
+  budgetData,
+} from "@/lib/mocks/budget"
+
+export {
+  getTotalDebt,
+  getWeightedAverageApr,
+  getProgressPercent,
+  estimatedDebtFreeDate,
+  payoffTimelineData,
+  liabilitiesData,
+} from "@/lib/mocks/debts"
+
+export { getCategoryById } from "@/lib/mocks/categories"

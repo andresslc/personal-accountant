@@ -26,13 +26,13 @@ import {
 } from "recharts"
 import { CreditCard, Percent, Calendar, Eye, Plus } from "lucide-react"
 import {
-  type Liability,
+  type LiabilityUI as Liability,
   payoffTimelineData,
   getTotalDebt,
   getWeightedAverageApr,
   getProgressPercent,
   estimatedDebtFreeDate,
-} from "@/lib/mocks"
+} from "@/lib/data/dashboard-data"
 
 export function DebtsTracker() {
   const searchParams = useSearchParams()

@@ -138,6 +138,10 @@ create trigger trg_budget_items_updated_at
 create trigger trg_subscriptions_updated_at
   before update on public.subscriptions
   for each row execute function public.handle_updated_at();
+
+create trigger trg_user_financial_memory_updated_at
+  before update on public.user_financial_memory
+  for each row execute function public.handle_updated_at();
 ```
 
 ---
@@ -308,7 +312,9 @@ auth.users  (managed by Supabase Auth)
     ├── budget_items    (monthly budget limits per category)
     │       └── FK → categories.id
     │
-    └── subscriptions   (recurring charges: Netflix, Spotify, etc.)
+    ├── subscriptions   (recurring charges: Netflix, Spotify, etc.)
+    │
+    └── user_financial_memory  (durable AI memory per user, jsonb)
 
 Views:
     ├── monthly_summary         (income, expenses, savings per month)

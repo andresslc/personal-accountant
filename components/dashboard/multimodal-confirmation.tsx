@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 import { TransactionConfirmationCard } from "./transaction-confirmation-card"
 import type { MultimodalParseResult, ParsedBudget, ParsedDebt } from "@/lib/ai/multimodal-types"
-import { getCategoryById } from "@/lib/mocks/categories"
+import { getCategoryById } from "@/lib/data/dashboard-data"
 
 function formatCOP(amount: number): string {
   return new Intl.NumberFormat("es-CO", {

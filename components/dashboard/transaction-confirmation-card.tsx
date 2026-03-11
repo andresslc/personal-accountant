@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, Check, RotateCcw, Calendar, CreditCard, Tag, DollarSign } from "lucide-react"
 import type { ParsedTransaction } from "@/lib/ai/types"
-import { getCategoryById } from "@/lib/mocks/categories"
-import { liabilitiesData } from "@/lib/mocks/debts"
+import { getCategoryById, liabilitiesData } from "@/lib/data/dashboard-data"
 
 interface TransactionConfirmationCardProps {
   transaction: ParsedTransaction

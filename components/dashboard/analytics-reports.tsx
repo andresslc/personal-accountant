@@ -29,7 +29,7 @@ import {
   getChartColors,
   getDateRangeOptions,
 } from "@/lib/data/dashboard-data"
-import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/mocks"
+import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 export function AnalyticsReports() {

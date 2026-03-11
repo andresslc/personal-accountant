@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, Grid, List } from "lucide-react"
 import { getTransactionCategories, getTransactions } from "@/lib/data/dashboard-data"
-import type { Transaction } from "@/lib/mocks"
+import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 export function TransactionsManager() {

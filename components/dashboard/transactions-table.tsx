@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getRecentTransactions } from "@/lib/data/dashboard-data"
-import type { Transaction } from "@/lib/mocks"
+import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
 
 export function TransactionsTable() {
   const [transactions, setTransactions] = useState<Transaction[]>([])

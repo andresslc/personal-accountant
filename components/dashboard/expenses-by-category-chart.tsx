@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { PieChart, Pie, Cell, Legend, ResponsiveContainer, Tooltip } from "recharts"
 import { getChartColors, getExpensesByCategory } from "@/lib/data/dashboard-data"
-import type { CategoryExpense } from "@/lib/mocks"
+import type { CategoryExpense } from "@/lib/data/dashboard-data"
 
 export function ExpensesByCategoryChart() {
   const [chartData, setChartData] = useState<CategoryExpense[]>([])

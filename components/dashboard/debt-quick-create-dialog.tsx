@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { type Liability } from "@/lib/mocks"
+import { type LiabilityUI as Liability } from "@/lib/data/dashboard-data"
 
 type LiabilityType = Liability["type"]
 

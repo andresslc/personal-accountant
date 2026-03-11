@@ -8,13 +8,13 @@ import { Progress } from "@/components/ui/progress"
 import { Plus, Edit2 } from "lucide-react"
 import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
-import { getBudgets } from "@/lib/data/dashboard-data"
-import { 
-  type BudgetItem,
+import {
+  getBudgets,
   getTotalBudget,
   getTotalSpent,
-  getRemainingBudget 
-} from "@/lib/mocks"
+  getRemainingBudget,
+  type BudgetItemUI as BudgetItem,
+} from "@/lib/data/dashboard-data"
 
 export function BudgetPlanning() {
   const searchParams = useSearchParams()

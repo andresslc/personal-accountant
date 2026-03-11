@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { getIncomeVsExpenses } from "@/lib/data/dashboard-data"
-import type { MonthlyData } from "@/lib/mocks"
+import type { MonthlyData } from "@/lib/data/dashboard-data"
 
 export function IncomeVsExpensesChart() {
   const [chartData, setChartData] = useState<MonthlyData[]>([])
