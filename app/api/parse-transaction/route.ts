@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { getAIProvider } from "@/lib/ai/provider"
+import { applyInputGuardrails } from "@/lib/ai/guardrails"
 
 export async function POST(request: Request) {
   try {
@@ -10,6 +11,14 @@ export async function POST(request: Request) {
     if (!text) {
       return NextResponse.json(
         { success: false, error: "Transaction text is required" },
+        { status: 400 }
+      )
+    }
+
+    const guardrailResult = applyInputGuardrails(text, "transaction")
+    if (guardrailResult.verdict === "blocked") {
+      return NextResponse.json(
+        { success: false, error: guardrailResult.userFacingMessage },
         { status: 400 }
       )
     }

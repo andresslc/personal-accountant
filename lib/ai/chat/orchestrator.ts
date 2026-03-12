@@ -6,6 +6,7 @@ import { toolDefinitions, executeTool } from "./tools"
 import { runDebtAgent } from "./agents/debt-agent"
 import { runAdvisoryAgent } from "./agents/advisory-agent"
 import { runPredictionAgent } from "./agents/prediction-agent"
+import { applyOutputGuardrails } from "@/lib/ai/guardrails"
 import type { StreamEvent, FinancialContext } from "./types"
 
 interface OrchestratorInput {
@@ -57,6 +58,12 @@ export async function* runOrchestrator(
     }
 
     if (!hasToolCalls) {
+      if (fullText) {
+        const outputCheck = applyOutputGuardrails(fullText)
+        if (outputCheck.sanitizedOutput && outputCheck.sanitizedOutput !== fullText) {
+          yield { type: "text", content: "\n\n[Some content was redacted for security.]" }
+        }
+      }
       yield { type: "done" }
       return
     }

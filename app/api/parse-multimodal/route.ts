@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { runMultimodalGraph } from "@/lib/ai/multimodal-graph"
+import { applyInputGuardrails } from "@/lib/ai/guardrails"
 
 export async function POST(request: Request) {
   try {
@@ -20,6 +21,16 @@ export async function POST(request: Request) {
         { success: false, error: "Text input is required." },
         { status: 400 }
       )
+    }
+
+    if (text) {
+      const guardrailResult = applyInputGuardrails(text, "multimodal")
+      if (guardrailResult.verdict === "blocked") {
+        return NextResponse.json(
+          { success: false, error: guardrailResult.userFacingMessage },
+          { status: 400 }
+        )
+      }
     }
 
     if ((type === "image" || type === "audio") && !file) {

@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { runOrchestrator } from "@/lib/ai/chat/orchestrator"
 import { getAIProvider } from "@/lib/ai/provider"
 import { buildSummaryPrompt } from "@/lib/ai/chat/prompts"
+import { applyConversationGuardrails, applyInputGuardrails } from "@/lib/ai/guardrails"
 import type { StreamEvent } from "@/lib/ai/chat/types"
 
 export const runtime = "nodejs"
@@ -31,6 +32,24 @@ export async function POST(request: Request) {
       action = body.action ?? null
       messages = body.messages ?? []
       textContent = body.text ?? null
+    }
+
+    if (textContent) {
+      const inputCheck = applyInputGuardrails(textContent, "chat")
+      if (inputCheck.verdict === "blocked") {
+        return new Response(
+          JSON.stringify({ error: inputCheck.userFacingMessage }),
+          { status: 400, headers: { "Content-Type": "application/json" } }
+        )
+      }
+    }
+
+    const conversationCheck = applyConversationGuardrails(messages)
+    if (conversationCheck.verdict === "blocked") {
+      return new Response(
+        JSON.stringify({ error: conversationCheck.userFacingMessage }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      )
     }
 
     const supabase = await createClient()
