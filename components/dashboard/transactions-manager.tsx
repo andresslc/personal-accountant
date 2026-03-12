@@ -11,6 +11,8 @@ import { getTransactionCategories, getTransactions } from "@/lib/data/dashboard-
 import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 
+const PAGE_SIZE = 8
+
 export function TransactionsManager() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["all"])
@@ -19,6 +21,7 @@ export function TransactionsManager() {
   const [type, setType] = useState("all")
   const [month, setMonth] = useState("all")
   const [view, setView] = useState("table")
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     const loadTransactions = async () => {
@@ -40,6 +43,17 @@ export function TransactionsManager() {
       }),
     [transactions, search, category, type]
   )
+
+  const totalPages = Math.max(1, Math.ceil(filteredTransactions.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  )
+
+  useEffect(() => {
+    setPage(1)
+  }, [search, category, type, month])
 
   return (
     <div className="space-y-6">
@@ -84,6 +98,7 @@ export function TransactionsManager() {
               <SelectContent>
                 <SelectItem value="all">All Months</SelectItem>
                 <SelectItem value="jan">January</SelectItem>
+                <SelectItem value="feb">February</SelectItem>
                 <SelectItem value="dec">December</SelectItem>
               </SelectContent>
             </Select>
@@ -131,7 +146,7 @@ export function TransactionsManager() {
       {/* Table View */}
       {view === "table" && (
         <Card className="border border-border overflow-hidden">
-          {filteredTransactions.length > 0 ? (
+          {paginatedTransactions.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -144,7 +159,7 @@ export function TransactionsManager() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTransactions.map((transaction) => (
+                  {paginatedTransactions.map((transaction) => (
                     <tr key={transaction.id} className="border-b border-border hover:bg-muted/50 transition-colors">
                       <td className="px-6 py-4 text-sm text-foreground">{transaction.date}</td>
                       <td className="px-6 py-4">
@@ -168,51 +183,98 @@ export function TransactionsManager() {
           ) : (
             <div className="p-12 text-center">
               <p className="text-foreground/70 mb-4">No transactions found</p>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setSearch(""); setCategory("all"); setType("all"); setMonth("all") }}
+              >
                 Clear Filters
               </Button>
             </div>
           )}
 
           {/* Pagination */}
-          <div className="border-t border-border p-4 flex items-center justify-between bg-muted/50">
-            <p className="text-sm text-foreground/70">Page 1 of 10</p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                Previous
-              </Button>
-              <Button variant="outline" size="sm">
-                Next
-              </Button>
+          {filteredTransactions.length > 0 && (
+            <div className="border-t border-border p-4 flex items-center justify-between bg-muted/50">
+              <p className="text-sm text-foreground/70">
+                Page {currentPage} of {totalPages} ({filteredTransactions.length} transactions)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
             </div>
-          </div>
+          )}
         </Card>
       )}
 
       {/* Grid View */}
       {view === "grid" && (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTransactions.map((transaction) => (
-            <Card key={transaction.id} className="p-4 border border-border hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="font-semibold text-foreground">{transaction.description}</p>
-                  <p className="text-xs text-foreground/70 mt-1">{transaction.date}</p>
+        <>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedTransactions.map((transaction) => (
+              <Card key={transaction.id} className="p-4 border border-border hover:shadow-md transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-semibold text-foreground">{transaction.description}</p>
+                    <p className="text-xs text-foreground/70 mt-1">{transaction.date}</p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    {transaction.category}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {transaction.category}
-                </Badge>
+                <div className="pt-3 border-t border-border">
+                  <p className={`text-lg font-bold ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+                    {transaction.amount > 0 ? "+" : ""}
+                    {transaction.amount.toFixed(2)}
+                  </p>
+                  <p className="text-xs text-foreground/70 mt-1">{transaction.method}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Grid Pagination */}
+          {filteredTransactions.length > 0 && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-foreground/70">
+                Page {currentPage} of {totalPages} ({filteredTransactions.length} transactions)
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
               </div>
-              <div className="pt-3 border-t border-border">
-                <p className={`text-lg font-bold ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}>
-                  {transaction.amount > 0 ? "+" : ""}
-                  {transaction.amount.toFixed(2)}
-                </p>
-                <p className="text-xs text-foreground/70 mt-1">{transaction.method}</p>
-              </div>
-            </Card>
-          ))}
-        </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )

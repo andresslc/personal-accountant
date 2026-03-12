@@ -209,7 +209,7 @@ export function ChatView() {
   const isEmpty = messages.length === 0 && !isStreaming
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-full">
       {isEmpty ? (
         <ChatWelcome onSelectPrompt={handleSelectPrompt} />
       ) : (
