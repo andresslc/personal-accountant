@@ -1,0 +1,205 @@
+import { createClient } from "@/lib/supabase/server"
+import { runOrchestrator } from "@/lib/ai/chat/orchestrator"
+import { getAIProvider } from "@/lib/ai/provider"
+import { buildSummaryPrompt } from "@/lib/ai/chat/prompts"
+import type { StreamEvent } from "@/lib/ai/chat/types"
+
+export const runtime = "nodejs"
+export const maxDuration = 60
+
+export async function POST(request: Request) {
+  try {
+    const contentType = request.headers.get("content-type") || ""
+    let action: string | null = null
+    let messages: Array<{ role: "user" | "assistant"; content: string }> = []
+    let audioFile: File | null = null
+    let imageFile: File | null = null
+    let textContent: string | null = null
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData()
+      action = formData.get("action") as string | null
+      const messagesRaw = formData.get("messages") as string | null
+      if (messagesRaw) {
+        messages = JSON.parse(messagesRaw)
+      }
+      audioFile = formData.get("audio") as File | null
+      imageFile = formData.get("image") as File | null
+      textContent = formData.get("text") as string | null
+    } else {
+      const body = await request.json()
+      action = body.action ?? null
+      messages = body.messages ?? []
+      textContent = body.text ?? null
+    }
+
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const userId = user?.id ?? "anonymous"
+
+    if (action === "summarize") {
+      return handleSummarize(messages, userId, supabase)
+    }
+
+    if (audioFile) {
+      const provider = getAIProvider()
+      const arrayBuffer = await audioFile.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      const transcription = await provider.transcribeAudio(buffer, audioFile.type)
+
+      messages.push({ role: "user", content: transcription })
+
+      const encoder = new TextEncoder()
+      const stream = new ReadableStream({
+        async start(controller) {
+          controller.enqueue(
+            encoder.encode(
+              `data: ${JSON.stringify({ type: "transcription", text: transcription })}\n\n`
+            )
+          )
+
+          try {
+            const orchestratorStream = runOrchestrator({
+              messages,
+              userId,
+            })
+
+            for await (const event of orchestratorStream) {
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
+              )
+            }
+          } catch (error) {
+            const errorEvent: StreamEvent = {
+              type: "error",
+              message: error instanceof Error ? error.message : "Orchestrator error",
+            }
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`)
+            )
+          }
+
+          controller.close()
+        },
+      })
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      })
+    }
+
+    if (imageFile) {
+      const arrayBuffer = await imageFile.arrayBuffer()
+      const base64 = Buffer.from(arrayBuffer).toString("base64")
+      const caption = textContent || "Analyze this image for financial information"
+      const imageMsg = `[Image attached: ${imageFile.type}]\n${caption}\n[base64:${base64.slice(0, 100)}...]`
+
+      messages.push({ role: "user", content: imageMsg })
+    } else if (textContent) {
+      messages.push({ role: "user", content: textContent })
+    }
+
+    if (messages.length === 0) {
+      return new Response(JSON.stringify({ error: "No messages provided" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const orchestratorStream = runOrchestrator({
+            messages,
+            userId,
+          })
+
+          for await (const event of orchestratorStream) {
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
+            )
+          }
+        } catch (error) {
+          const errorEvent: StreamEvent = {
+            type: "error",
+            message: error instanceof Error ? error.message : "Orchestrator error",
+          }
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`)
+          )
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
+          )
+        }
+
+        controller.close()
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    })
+  } catch (error) {
+    console.error("Chat API error:", error)
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Internal server error",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    )
+  }
+}
+
+async function handleSummarize(
+  messages: Array<{ role: string; content: string }>,
+  userId: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any
+) {
+  try {
+    const provider = getAIProvider()
+    const conversationText = messages
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n")
+
+    const result = await provider.generateStructured({
+      systemPrompt: buildSummaryPrompt(),
+      userPrompt: conversationText,
+      schema: (await import("zod")).z.object({
+        summary: (await import("zod")).z.string(),
+        topics: (await import("zod")).z.array((await import("zod")).z.string()),
+      }),
+    })
+
+    if (userId !== "anonymous" && supabase) {
+      await supabase.from("chat_summaries").insert({
+        user_id: userId,
+        summary: result.summary,
+        topics: result.topics,
+        actions_taken: [],
+        message_count: messages.length,
+      })
+    }
+
+    return new Response(JSON.stringify({ success: true, ...result }), {
+      headers: { "Content-Type": "application/json" },
+    })
+  } catch (error) {
+    console.error("Summarize error:", error)
+    return new Response(
+      JSON.stringify({ success: false, error: "Failed to summarize" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    )
+  }
+}

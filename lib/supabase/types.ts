@@ -84,6 +84,16 @@ export interface BudgetWithSpending extends BudgetItem {
   remaining: number
 }
 
+export interface ChatSummary {
+  id: number
+  user_id: string
+  summary: string
+  topics: string[]
+  actions_taken: Array<Record<string, unknown>>
+  message_count: number
+  created_at: string
+}
+
 // Database type map for the Supabase client generic
 export interface Database {
   public: {
@@ -117,6 +127,11 @@ export interface Database {
         Row: UserFinancialMemory
         Insert: Omit<UserFinancialMemory, 'updated_at'>
         Update: Partial<Omit<UserFinancialMemory, 'user_id' | 'updated_at'>>
+      }
+      chat_summaries: {
+        Row: ChatSummary
+        Insert: Omit<ChatSummary, 'id' | 'created_at'>
+        Update: Partial<Omit<ChatSummary, 'id' | 'user_id' | 'created_at'>>
       }
     }
     Views: {

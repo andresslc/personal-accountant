@@ -40,11 +40,13 @@ export function BudgetPlanning() {
   const totalSpent = getTotalSpent(budgets)
   const remaining = getRemainingBudget(budgets)
 
-  const getDaysLeft = () => {
+  const [daysLeft, setDaysLeft] = useState<number | null>(null)
+
+  useEffect(() => {
     const now = new Date()
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    return lastDay.getDate() - now.getDate()
-  }
+    setDaysLeft(lastDay.getDate() - now.getDate())
+  }, [])
 
   return (
     <div className="space-y-6">
@@ -63,7 +65,7 @@ export function BudgetPlanning() {
             <p className="text-foreground/70 text-sm mb-2">Remaining</p>
             <p className="text-3xl font-bold text-green-600">${remaining.toFixed(2)}</p>
           </div>
-          <p className="text-xs text-foreground/70 mt-4">{getDaysLeft()} days left in month</p>
+          <p className="text-xs text-foreground/70 mt-4">{daysLeft !== null ? `${daysLeft} days left in month` : "\u00A0"}</p>
         </Card>
       </div>
 
@@ -125,7 +127,7 @@ export function BudgetPlanning() {
                 <p className={`text-sm font-semibold ${isOverBudget ? "text-red-600" : "text-foreground"}`}>
                   ${budget.spent.toFixed(2)} of ${budget.limit.toFixed(2)}
                 </p>
-                <p className="text-xs text-foreground/70 mt-1">{getDaysLeft()} days left in month</p>
+                <p className="text-xs text-foreground/70 mt-1">{daysLeft !== null ? `${daysLeft} days left in month` : "\u00A0"}</p>
               </div>
 
               {/* Warning if over budget */}

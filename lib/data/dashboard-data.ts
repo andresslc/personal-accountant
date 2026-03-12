@@ -355,6 +355,144 @@ export const getNetWorth = async (): Promise<NetWorthPoint[]> => {
   })
 }
 
+// --- Write functions ---
+
+export type TransactionInsert = {
+  date: string
+  description: string
+  amount: number
+  type: "income" | "expense" | "debt-payment"
+  category_id: string | null
+  method: string | null
+  liability_id: number | null
+}
+
+export type BudgetInsert = {
+  category_id: string
+  budget_limit: number
+  recurring: boolean
+  month_year: string
+}
+
+export type LiabilityInsert = {
+  name: string
+  type: "credit-card" | "car" | "student" | "personal" | "mortgage"
+  current_balance: number
+  original_balance: number
+  min_payment: number
+  apr: number
+  due_day: number | null
+}
+
+export type TransactionUpdate = Partial<Omit<TransactionInsert, "liability_id">>
+
+export const createTransaction = async (
+  data: TransactionInsert,
+  userId: string
+): Promise<{ id: number } | null> => {
+  if (USE_MOCK_DATA) {
+    const fakeId = Math.floor(Math.random() * 100000) + 1000
+    console.log("[mock] createTransaction:", { ...data, id: fakeId, userId })
+    return { id: fakeId }
+  }
+  const supabase = getSupabaseClient()
+  if (!supabase) return null
+
+  const { data: row, error } = await supabase
+    .from("transactions")
+    .insert({ ...data, user_id: userId })
+    .select("id")
+    .single()
+
+  if (error || !row) return null
+  return { id: row.id }
+}
+
+export const createBudgetItem = async (
+  data: BudgetInsert,
+  userId: string
+): Promise<{ id: number } | null> => {
+  if (USE_MOCK_DATA) {
+    const fakeId = Math.floor(Math.random() * 100000) + 1000
+    console.log("[mock] createBudgetItem:", { ...data, id: fakeId, userId })
+    return { id: fakeId }
+  }
+  const supabase = getSupabaseClient()
+  if (!supabase) return null
+
+  const { data: row, error } = await supabase
+    .from("budget_items")
+    .insert({ ...data, user_id: userId })
+    .select("id")
+    .single()
+
+  if (error || !row) return null
+  return { id: row.id }
+}
+
+export const createDebt = async (
+  data: LiabilityInsert,
+  userId: string
+): Promise<{ id: number } | null> => {
+  if (USE_MOCK_DATA) {
+    const fakeId = Math.floor(Math.random() * 100000) + 1000
+    console.log("[mock] createDebt:", { ...data, id: fakeId, userId })
+    return { id: fakeId }
+  }
+  const supabase = getSupabaseClient()
+  if (!supabase) return null
+
+  const { data: row, error } = await supabase
+    .from("liabilities")
+    .insert({ ...data, user_id: userId })
+    .select("id")
+    .single()
+
+  if (error || !row) return null
+  return { id: row.id }
+}
+
+export const deleteTransaction = async (
+  id: number,
+  userId: string
+): Promise<boolean> => {
+  if (USE_MOCK_DATA) {
+    console.log("[mock] deleteTransaction:", { id, userId })
+    return true
+  }
+  const supabase = getSupabaseClient()
+  if (!supabase) return false
+
+  const { error } = await supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+
+  return !error
+}
+
+export const updateTransaction = async (
+  id: number,
+  userId: string,
+  updates: TransactionUpdate
+): Promise<boolean> => {
+  if (USE_MOCK_DATA) {
+    console.log("[mock] updateTransaction:", { id, userId, updates })
+    return true
+  }
+  const supabase = getSupabaseClient()
+  if (!supabase) return false
+
+  const { error } = await supabase
+    .from("transactions")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", userId)
+
+  return !error
+}
+
 // Re-export types so components never import from lib/mocks directly
 export type {
   Transaction as TransactionUI,
