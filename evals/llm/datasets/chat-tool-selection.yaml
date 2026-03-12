@@ -1,0 +1,221 @@
+- description: Create expense transaction
+  vars:
+    input: "Add 30k expense for groceries"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_transaction');
+
+- description: Create expense - Spanish
+  vars:
+    input: "Agregar gasto de 50k en transporte"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_transaction');
+
+- description: Get financial summary
+  vars:
+    input: "How much did I spend this month?"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        const validTools = ['get_financial_summary', 'get_transactions'];
+        return data.tool_calls && data.tool_calls.some(tc => validTools.includes(tc.name)) || data.text.length > 20;
+
+- description: Get transactions
+  vars:
+    input: "Show me my recent transactions"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'get_transactions') || data.text.length > 20;
+
+- description: Delete transaction
+  vars:
+    input: "Delete transaction 42"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'delete_transaction');
+
+- description: Update transaction
+  vars:
+    input: "Update transaction 15 to change the amount to 75k"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'update_transaction');
+
+- description: Create budget
+  vars:
+    input: "Set a budget of 500k for groceries this month"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_budget');
+
+- description: Create debt
+  vars:
+    input: "Add a new credit card debt: Visa Gold, balance 2 million, APR 22%, minimum payment 150k"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_debt');
+
+- description: Get budgets
+  vars:
+    input: "Show me all my budgets"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'get_budgets') || data.text.length > 20;
+
+- description: Get debts
+  vars:
+    input: "What debts do I have?"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'get_debts') || data.text.length > 20;
+
+- description: Get categories
+  vars:
+    input: "What categories are available?"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'get_categories') || data.text.length > 20;
+
+- description: Route to debt agent
+  vars:
+    input: "What's the best strategy to pay off all my debts?"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        const hasRoute = data.tool_calls && data.tool_calls.some(tc => {
+          if (tc.name === 'route_to_sub_agent') {
+            const args = JSON.parse(tc.arguments);
+            return args.agent === 'debt_agent';
+          }
+          return false;
+        });
+        return hasRoute || data.text.length > 50;
+
+- description: Route to advisory agent
+  vars:
+    input: "Give me personalized financial advice based on my situation"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        const hasRoute = data.tool_calls && data.tool_calls.some(tc => {
+          if (tc.name === 'route_to_sub_agent') {
+            const args = JSON.parse(tc.arguments);
+            return args.agent === 'advisory_agent';
+          }
+          return false;
+        });
+        return hasRoute || data.text.length > 50;
+
+- description: Route to prediction agent
+  vars:
+    input: "What will my expenses look like next month?"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        const hasRoute = data.tool_calls && data.tool_calls.some(tc => {
+          if (tc.name === 'route_to_sub_agent') {
+            const args = JSON.parse(tc.arguments);
+            return args.agent === 'prediction_agent';
+          }
+          return false;
+        });
+        return hasRoute || data.text.length > 50;
+
+- description: Debt payment creation
+  vars:
+    input: "I just paid 200k to my Chase Sapphire card"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_transaction');
+
+- description: Spanish transaction creation
+  vars:
+    input: "Registrar ingreso de 1.5 millones por freelance"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_transaction');
+
+- description: Spanish budget query
+  vars:
+    input: "Cuánto me queda de presupuesto en comida?"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'get_budgets') || data.text.length > 20;
+
+- description: Spending comparison
+  vars:
+    input: "Compare my spending this month to my budgets"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.length > 0 || data.text.length > 30;
+
+- description: Simple greeting - no tools needed
+  vars:
+    input: "Hello!"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.text && data.text.length > 0;
+
+- description: Income recording
+  vars:
+    input: "Record my salary of 6.5 million received today"
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.tool_calls && data.tool_calls.some(tc => tc.name === 'create_transaction');

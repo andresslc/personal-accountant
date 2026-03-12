@@ -6,7 +6,10 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "eval:unit": "vitest run --config evals/vitest.config.ts",
+    "eval:llm": "npx promptfoo eval --config evals/llm/promptfooconfig.yaml",
+    "eval": "npm run eval:unit && npm run eval:llm"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -76,8 +79,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "promptfoo": "^0.121.2",
     "tailwindcss": "^4.1.9",
     "tw-animate-css": "1.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }

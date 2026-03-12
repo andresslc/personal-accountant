@@ -1,0 +1,167 @@
+- description: Spending diagnosis - has categories
+  vars:
+    input: |
+      {"analysis_type": "spending_diagnosis", "context": {"summary": {"income": 6500000, "expenses": 3800000, "savings": 2700000}, "budgets": [{"category": "Groceries", "limit": 600000, "spent": 420000}, {"category": "Transport", "limit": 200000, "spent": 150000}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.insights && data.insights.length >= 1;
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.recommended_actions && data.recommended_actions.length >= 1;
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.confidence >= 0.5 && data.confidence <= 1;
+
+- description: Spending diagnosis - mentions specific amounts
+  vars:
+    input: |
+      {"analysis_type": "spending_diagnosis", "context": {"summary": {"income": 6500000, "expenses": 3800000, "savings": 2700000}, "transactions": [{"description": "Uber", "amount": 25000, "type": "expense"}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.summary && data.summary.length > 10;
+
+- description: Budget recommendation
+  vars:
+    input: |
+      {"analysis_type": "budget_recommendation", "context": {"summary": {"income": 6500000, "expenses": 3800000}, "budgets": [{"category": "Groceries", "limit": 600000, "spent": 420000}, {"category": "Transport", "limit": 200000, "spent": 150000}, {"category": "Entertainment", "limit": 300000, "spent": 210000}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.recommended_actions && data.recommended_actions.length >= 1;
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.recommended_actions.every(a => a.estimated_impact && a.estimated_impact.length > 0);
+
+- description: Debt strategy - has strategies
+  vars:
+    input: |
+      {"analysis_type": "debt_strategy", "context": {"debts": [{"name": "Chase Sapphire", "currentBalance": 3200000, "minPayment": 250000, "apr": 24.5}, {"name": "Car Loan", "currentBalance": 18000000, "minPayment": 850000, "apr": 12}, {"name": "Student Loan", "currentBalance": 8500000, "minPayment": 320000, "apr": 7.5}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        const text = JSON.stringify(data).toLowerCase();
+        return text.includes('avalanche') || text.includes('snowball') || text.includes('highest') || text.includes('apr');
+
+- description: Report summary - has paragraphs
+  vars:
+    input: |
+      {"analysis_type": "report_summary", "context": {"summary": {"totalBalance": 4250000, "income": 6500000, "expenses": 3800000, "savings": 2700000}, "transactions": [{"description": "Salary", "amount": 6500000, "type": "income"}, {"description": "Groceries", "amount": 420000, "type": "expense"}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.summary && data.summary.length > 50;
+
+- description: Anomaly detection
+  vars:
+    input: |
+      {"analysis_type": "anomaly_detection", "context": {"transactions": [{"description": "Normal grocery", "amount": 50000, "type": "expense", "date": "2026-03-01"}, {"description": "Unusual purchase", "amount": 2000000, "type": "expense", "date": "2026-03-05"}, {"description": "Regular coffee", "amount": 5000, "type": "expense", "date": "2026-03-06"}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.insights && data.insights.length >= 1;
+
+- description: Overview analysis
+  vars:
+    input: |
+      {"analysis_type": "overview", "context": {"summary": {"totalBalance": 4250000, "income": 6500000, "expenses": 3800000, "savings": 2700000}, "budgets": [{"category": "Groceries", "limit": 600000, "spent": 420000}], "debts": [{"name": "Chase Sapphire", "currentBalance": 3200000, "apr": 24.5}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.summary && data.insights && data.recommended_actions;
+
+- description: Confidence within bounds
+  vars:
+    input: |
+      {"analysis_type": "overview", "context": {"summary": {"income": 6500000, "expenses": 3800000}}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.confidence >= 0 && data.confidence <= 1;
+
+- description: Period covered is non-empty
+  vars:
+    input: |
+      {"analysis_type": "spending_diagnosis", "context": {"summary": {"income": 6500000, "expenses": 3800000}}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.period_covered && data.period_covered.length > 0;
+
+- description: Data points used is non-negative
+  vars:
+    input: |
+      {"analysis_type": "overview", "context": {"summary": {"income": 6500000, "expenses": 3800000}, "transactions": [{"amount": 50000}, {"amount": 30000}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return typeof data.data_points_used === 'number' && data.data_points_used >= 0;
+
+- description: Estimated impact is present in actions
+  vars:
+    input: |
+      {"analysis_type": "budget_recommendation", "context": {"summary": {"income": 6500000, "expenses": 3800000}, "budgets": [{"category": "Food", "limit": 400000, "spent": 380000}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        if (!data.recommended_actions || data.recommended_actions.length === 0) return true;
+        return data.recommended_actions.every(a => a.estimated_impact && a.estimated_impact.length > 0);
+
+- description: Risks array respects max 5
+  vars:
+    input: |
+      {"analysis_type": "spending_diagnosis", "context": {"summary": {"income": 3000000, "expenses": 2800000, "savings": 200000}, "budgets": [{"category": "Food", "limit": 400000, "spent": 450000}, {"category": "Transport", "limit": 200000, "spent": 250000}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return !data.risks || data.risks.length <= 5;
+
+- description: Insights array respects max 8
+  vars:
+    input: |
+      {"analysis_type": "overview", "context": {"summary": {"income": 6500000, "expenses": 3800000}, "budgets": [{"category": "A", "limit": 100000, "spent": 90000}, {"category": "B", "limit": 200000, "spent": 50000}], "debts": [{"name": "X", "currentBalance": 1000000}]}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.insights && data.insights.length >= 1 && data.insights.length <= 8;
+
+- description: Spanish context analysis
+  vars:
+    input: |
+      {"analysis_type": "spending_diagnosis", "user_message": "¿Por qué estoy gastando tanto?", "context": {"summary": {"income": 6500000, "expenses": 5800000, "savings": 700000}}}
+  assert:
+    - type: is-json
+    - type: javascript
+      value: |
+        const data = JSON.parse(output);
+        return data.summary && data.summary.length > 0;

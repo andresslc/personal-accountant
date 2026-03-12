@@ -1,0 +1,65 @@
+name: AI Evals
+
+on:
+  pull_request:
+    paths:
+      - "lib/ai/**"
+      - "evals/**"
+  push:
+    branches: [main]
+    paths:
+      - "lib/ai/**"
+      - "evals/**"
+  schedule:
+    - cron: "0 9 * * 1" # Weekly on Monday at 9am UTC
+  workflow_dispatch:
+
+jobs:
+  deterministic:
+    name: Deterministic Evals (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run eval:unit
+        env:
+          NEXT_PUBLIC_USE_MOCK_DATA: "true"
+
+  llm-evals:
+    name: Live LLM Evals (PromptFoo)
+    needs: deterministic
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.pull_request.labels.*.name, 'run-evals')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run eval:llm
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AI_PROVIDER: openai
+          NEXT_PUBLIC_USE_MOCK_DATA: "true"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: evals/llm/results/
+          retention-days: 30

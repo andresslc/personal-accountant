@@ -1,0 +1,40 @@
+description: FinFlow LLM Evaluation Suite
+
+providers:
+  - id: file://providers/finflow-transaction.ts
+    label: openai-transaction
+    config:
+      provider: openai
+
+  - id: file://providers/finflow-transaction.ts
+    label: gemini-transaction
+    config:
+      provider: gemini
+
+  - id: file://providers/finflow-insights.ts
+    label: openai-insights
+    config:
+      provider: openai
+
+  - id: file://providers/finflow-insights.ts
+    label: gemini-insights
+    config:
+      provider: gemini
+
+  - id: file://providers/finflow-chat.ts
+    label: openai-chat
+    config:
+      provider: openai
+
+  - id: file://providers/finflow-chat.ts
+    label: gemini-chat
+    config:
+      provider: gemini
+
+tests: datasets/*.yaml
+
+defaultTest:
+  options:
+    transformVars: "{ ...vars }"
+
+outputPath: results/latest.json
