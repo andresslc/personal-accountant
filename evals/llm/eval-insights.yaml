@@ -1,0 +1,18 @@
+description: FinFlow Finance Insights Evals
+
+providers:
+  - id: file://providers/finflow-insights.ts
+    label: openai-insights
+    config:
+      provider: openai
+
+prompts:
+  - "{{input}}"
+
+tests: datasets/finance-insights.yaml
+
+defaultTest:
+  options:
+    transformVars: "{ ...vars }"
+
+outputPath: results/insights-results.json

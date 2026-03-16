@@ -6,32 +6,48 @@ providers:
     config:
       provider: openai
 
-  - id: file://providers/finflow-transaction.ts
-    label: gemini-transaction
-    config:
-      provider: gemini
-
   - id: file://providers/finflow-insights.ts
     label: openai-insights
     config:
       provider: openai
-
-  - id: file://providers/finflow-insights.ts
-    label: gemini-insights
-    config:
-      provider: gemini
 
   - id: file://providers/finflow-chat.ts
     label: openai-chat
     config:
       provider: openai
 
-  - id: file://providers/finflow-chat.ts
-    label: gemini-chat
-    config:
-      provider: gemini
+scenarios:
+  - description: Transaction parsing
+    providers:
+      - id: file://providers/finflow-transaction.ts
+        label: openai-transaction
+        config:
+          provider: openai
+    tests: datasets/transaction-parsing.yaml
 
-tests: datasets/*.yaml
+  - description: Finance insights
+    providers:
+      - id: file://providers/finflow-insights.ts
+        label: openai-insights
+        config:
+          provider: openai
+    tests: datasets/finance-insights.yaml
+
+  - description: Chat tool selection
+    providers:
+      - id: file://providers/finflow-chat.ts
+        label: openai-chat
+        config:
+          provider: openai
+    tests: datasets/chat-tool-selection.yaml
+
+  - description: Guardrails adversarial
+    providers:
+      - id: file://providers/finflow-chat.ts
+        label: openai-chat
+        config:
+          provider: openai
+    tests: datasets/guardrails-adversarial.yaml
 
 defaultTest:
   options:

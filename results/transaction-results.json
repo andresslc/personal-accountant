@@ -1,0 +1,4034 @@
+{
+  "evalId": "eval-rlD-2026-03-15T01:03:42",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-03-15T01:03:42.253Z",
+    "prompts": [
+      {
+        "id": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "raw": "{{input}}",
+        "label": "{{input}}",
+        "provider": "openai-transaction",
+        "metrics": {
+          "score": 39,
+          "testPassCount": 39,
+          "testFailCount": 0,
+          "testErrorCount": 1,
+          "assertPassCount": 79,
+          "assertFailCount": 0,
+          "totalLatencyMs": 64780,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "total": 0,
+            "numRequests": 40,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 50000 && data.type === 'expense';\n"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.confidence >= 0.7;\n"
+              }
+            }
+          ]
+        },
+        "id": "bc117211-9150-4557-a416-2f6fdcc918f4",
+        "latencyMs": 2185,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Gasté 50k en Uber ayer",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Gasto en Uber\",\"amount\":50000,\"type\":\"expense\",\"category_id\":\"transport\",\"date\":\"2026-03-14\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Basic expense in Spanish",
+          "vars": {
+            "input": "Gasté 50k en Uber ayer"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 50000 && data.type === 'expense';\n"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.confidence >= 0.7;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "vars": {
+          "input": "Gasté 50k en Uber ayer"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 50000;\n"
+              }
+            }
+          ]
+        },
+        "id": "80944280-4737-4e2a-973d-73f9677db9d0",
+        "latencyMs": 1574,
+        "namedScores": {},
+        "prompt": {
+          "raw": "50k en uber",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Uber ride\",\"amount\":50000,\"type\":\"expense\",\"category_id\":\"transport\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Amount multiplier - k",
+          "vars": {
+            "input": "50k en uber"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 50000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "vars": {
+          "input": "50k en uber"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 200000;\n"
+              }
+            }
+          ]
+        },
+        "id": "fd20b58a-a9fe-4828-a876-712ee90be446",
+        "latencyMs": 1616,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pagué 200 mil en el supermercado",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra en el supermercado\",\"amount\":200000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Amount multiplier - mil",
+          "vars": {
+            "input": "Pagué 200 mil en el supermercado"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 200000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "vars": {
+          "input": "Pagué 200 mil en el supermercado"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 2000000 && data.type === 'income';\n"
+              }
+            }
+          ]
+        },
+        "id": "115f8128-5a40-48d9-b931-379076a50fc8",
+        "latencyMs": 1792,
+        "namedScores": {},
+        "prompt": {
+          "raw": "2 millones de salario",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Salary\",\"amount\":2000000,\"type\":\"income\",\"category_id\":\"salary\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Amount multiplier - millones",
+          "vars": {
+            "input": "2 millones de salario"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 2000000 && data.type === 'income';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 3,
+        "vars": {
+          "input": "2 millones de salario"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 3000000 && data.type === 'income';\n"
+              }
+            }
+          ]
+        },
+        "id": "2ab3050b-3016-4f6e-a4a4-ca6bd95fbf28",
+        "latencyMs": 1514,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Me llegaron 3 palos de salario",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Salario recibido\",\"amount\":3000000,\"type\":\"income\",\"category_id\":\"salary\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Amount multiplier - palos",
+          "vars": {
+            "input": "Me llegaron 3 palos de salario"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 3000000 && data.type === 'income';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 4,
+        "vars": {
+          "input": "Me llegaron 3 palos de salario"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1);\nconst expected = yesterday.toISOString().split('T')[0];\nreturn data.date === expected;\n"
+              }
+            }
+          ]
+        },
+        "id": "d5ff089b-7eee-43cb-bc14-c56e97eabfc8",
+        "latencyMs": 1494,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Ayer gasté 30k en almuerzo",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"almuerzo\",\"amount\":30000,\"type\":\"expense\",\"category_id\":\"entertainment\",\"date\":\"2026-03-14\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Relative date - ayer (yesterday)",
+          "vars": {
+            "input": "Ayer gasté 30k en almuerzo"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1);\nconst expected = yesterday.toISOString().split('T')[0];\nreturn data.date === expected;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 5,
+        "vars": {
+          "input": "Ayer gasté 30k en almuerzo"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nconst dby = new Date();\ndby.setDate(dby.getDate() - 2);\nconst expected = dby.toISOString().split('T')[0];\nreturn data.date === expected;\n"
+              }
+            }
+          ]
+        },
+        "id": "aa53e5be-842c-48fe-ab8e-9a372de73ed6",
+        "latencyMs": 1483,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Anteayer pagué 15k en gasolina",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Gasolina\",\"amount\":15000,\"type\":\"expense\",\"category_id\":\"transport\",\"date\":\"2026-03-13\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Relative date - anteayer (day before yesterday)",
+          "vars": {
+            "input": "Anteayer pagué 15k en gasolina"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nconst dby = new Date();\ndby.setDate(dby.getDate() - 2);\nconst expected = dby.toISOString().split('T')[0];\nreturn data.date === expected;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 6,
+        "vars": {
+          "input": "Anteayer pagué 15k en gasolina"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment' && data.liability_id !== null;\n"
+              }
+            }
+          ]
+        },
+        "id": "63d5c5df-288e-4ba6-b42b-6c1e7d043ba5",
+        "latencyMs": 1622,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pagué 200k a mi tarjeta Chase",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Payment to Chase Sapphire credit card\",\"amount\":200000,\"type\":\"debt-payment\",\"category_id\":\"other\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":1,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Debt payment detection",
+          "vars": {
+            "input": "Pagué 200k a mi tarjeta Chase"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment' && data.liability_id !== null;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 7,
+        "vars": {
+          "input": "Pagué 200k a mi tarjeta Chase"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment';\n"
+              }
+            }
+          ]
+        },
+        "id": "0c9d2e80-1e64-4289-b85b-d9ef54a711e1",
+        "latencyMs": 1701,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Abono de 500k a mi préstamo del carro",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Abono a préstamo del carro\",\"amount\":500000,\"type\":\"debt-payment\",\"category_id\":\"other\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":2,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Debt payment - abono keyword",
+          "vars": {
+            "input": "Abono de 500k a mi préstamo del carro"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 8,
+        "vars": {
+          "input": "Abono de 500k a mi préstamo del carro"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'income' && data.amount === 6500000;\n"
+              }
+            }
+          ]
+        },
+        "id": "47c3bcd2-a423-4e99-b163-2fa3f21c4d07",
+        "latencyMs": 2134,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Me pagaron 6.5 millones de salario",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Salario recibido\",\"amount\":6500000,\"type\":\"income\",\"category_id\":\"salary\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Income detection",
+          "vars": {
+            "input": "Me pagaron 6.5 millones de salario"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'income' && data.amount === 6500000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 9,
+        "vars": {
+          "input": "Me pagaron 6.5 millones de salario"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount > 0;\n"
+              }
+            }
+          ]
+        },
+        "id": "6ea5291d-6255-4167-8ddc-7d6ef65e5f4f",
+        "latencyMs": 1452,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Spent $30 on groceries at Walmart",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Groceries at Walmart\",\"amount\":30000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Basic expense in English",
+          "vars": {
+            "input": "Spent $30 on groceries at Walmart"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount > 0;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 10,
+        "vars": {
+          "input": "Spent $30 on groceries at Walmart"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'income';\n"
+              }
+            }
+          ]
+        },
+        "id": "4a1c81e0-4bb2-40c9-ab8b-f81772210580",
+        "latencyMs": 1914,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Received 5 million salary deposit today",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Salary deposit\",\"amount\":5000000,\"type\":\"income\",\"category_id\":\"salary\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "English income",
+          "vars": {
+            "input": "Received 5 million salary deposit today"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'income';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 11,
+        "vars": {
+          "input": "Received 5 million salary deposit today"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.method === 'nequi' || data.method === 'transfer';\n"
+              }
+            }
+          ]
+        },
+        "id": "e8f864c4-1a9c-4fef-a824-2b93c262063f",
+        "latencyMs": 1845,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Transferí 100k por Nequi para el mercado",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Transferencia para el mercado\",\"amount\":100000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"nequi\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Payment method - Nequi",
+          "vars": {
+            "input": "Transferí 100k por Nequi para el mercado"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.method === 'nequi' || data.method === 'transfer';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 12,
+        "vars": {
+          "input": "Transferí 100k por Nequi para el mercado"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.method === 'cash';\n"
+              }
+            }
+          ]
+        },
+        "id": "2d82845d-f67e-4674-9ad6-337a48f1547d",
+        "latencyMs": 1766,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pagué 20k en efectivo por el bus",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Pago por el bus\",\"amount\":20000,\"type\":\"expense\",\"category_id\":\"transport\",\"date\":\"2026-03-15\",\"method\":\"cash\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Payment method - cash",
+          "vars": {
+            "input": "Pagué 20k en efectivo por el bus"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.method === 'cash';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 13,
+        "vars": {
+          "input": "Pagué 20k en efectivo por el bus"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.category_id === 'groceries' || data.category_id.includes('grocer');\n"
+              }
+            }
+          ]
+        },
+        "id": "13bc2dcd-329b-4195-8eec-20b326bd30df",
+        "latencyMs": 1483,
+        "namedScores": {},
+        "prompt": {
+          "raw": "180k en el Éxito comprando mercado",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra de mercado en el Éxito\",\"amount\":180000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Category matching - groceries",
+          "vars": {
+            "input": "180k en el Éxito comprando mercado"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.category_id === 'groceries' || data.category_id.includes('grocer');\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 14,
+        "vars": {
+          "input": "180k en el Éxito comprando mercado"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.category_id === 'transport' || data.category_id.includes('transport');\n"
+              }
+            }
+          ]
+        },
+        "id": "d3b9e7d4-af82-4fe4-b824-0cdc7d034976",
+        "latencyMs": 1666,
+        "namedScores": {},
+        "prompt": {
+          "raw": "25k de Uber al trabajo",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Uber al trabajo\",\"amount\":25000,\"type\":\"expense\",\"category_id\":\"transport\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Category matching - transport",
+          "vars": {
+            "input": "25k de Uber al trabajo"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.category_id === 'transport' || data.category_id.includes('transport');\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 15,
+        "vars": {
+          "input": "25k de Uber al trabajo"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "error": "[\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 0,\n    \"type\": \"number\",\n    \"inclusive\": false,\n    \"exact\": false,\n    \"message\": \"Number must be greater than 0\",\n    \"path\": [\n      \"amount\"\n    ]\n  },\n  {\n    \"received\": \"other\",\n    \"code\": \"invalid_enum_value\",\n    \"options\": [\n      \"expense\",\n      \"income\",\n      \"debt-payment\"\n    ],\n    \"path\": [\n      \"type\"\n    ],\n    \"message\": \"Invalid enum value. Expected 'expense' | 'income' | 'debt-payment', received 'other'\"\n  }\n]",
+        "gradingResult": null,
+        "id": "45ab7587-f0bb-4665-bc25-607c82a42a82",
+        "latencyMs": 1648,
+        "namedScores": {},
+        "prompt": {
+          "raw": "algo",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "error": "[\n  {\n    \"code\": \"too_small\",\n    \"minimum\": 0,\n    \"type\": \"number\",\n    \"inclusive\": false,\n    \"exact\": false,\n    \"message\": \"Number must be greater than 0\",\n    \"path\": [\n      \"amount\"\n    ]\n  },\n  {\n    \"received\": \"other\",\n    \"code\": \"invalid_enum_value\",\n    \"options\": [\n      \"expense\",\n      \"income\",\n      \"debt-payment\"\n    ],\n    \"path\": [\n      \"type\"\n    ],\n    \"message\": \"Invalid enum value. Expected 'expense' | 'income' | 'debt-payment', received 'other'\"\n  }\n]"
+        },
+        "score": 0,
+        "success": false,
+        "testCase": {
+          "description": "Low confidence on vague input",
+          "vars": {
+            "input": "algo"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.confidence < 0.7;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 16,
+        "vars": {
+          "input": "algo"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 2
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn /^\\d{4}-\\d{2}-\\d{2}$/.test(data.date);\n"
+              }
+            }
+          ]
+        },
+        "id": "78456152-c107-4090-8e4a-a9c1330ab11d",
+        "latencyMs": 1928,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Compré zapatos por 150k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra de zapatos\",\"amount\":150000,\"type\":\"expense\",\"category_id\":\"shopping\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Date format validation",
+          "vars": {
+            "input": "Compré zapatos por 150k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn /^\\d{4}-\\d{2}-\\d{2}$/.test(data.date);\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 17,
+        "vars": {
+          "input": "Compré zapatos por 150k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount > 0;\n"
+              }
+            }
+          ]
+        },
+        "id": "0050a3a5-14c2-4526-a50c-598cf3ea9a8a",
+        "latencyMs": 1480,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Gasté 80k en restaurante",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Gasto en restaurante\",\"amount\":80000,\"type\":\"expense\",\"category_id\":\"entertainment\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Amount always positive",
+          "vars": {
+            "input": "Gasté 80k en restaurante"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount > 0;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 18,
+        "vars": {
+          "input": "Gasté 80k en restaurante"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.description && data.description.length > 0;\n"
+              }
+            }
+          ]
+        },
+        "id": "3f4dc3d3-50b5-4091-bcc2-b510730c36f5",
+        "latencyMs": 1862,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Netflix subscription 45k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Netflix subscription\",\"amount\":45000,\"type\":\"expense\",\"category_id\":\"entertainment\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Description is non-empty",
+          "vars": {
+            "input": "Netflix subscription 45k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.description && data.description.length > 0;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 19,
+        "vars": {
+          "input": "Netflix subscription 45k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 100000;\n"
+              }
+            }
+          ]
+        },
+        "id": "e8a1c13f-32af-4a7d-b3e7-9ca7ebea9fd0",
+        "latencyMs": 1905,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Gasté 100k en el supermercado",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra en el supermercado\",\"amount\":100000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Bilingual parity - Spanish groceries",
+          "vars": {
+            "input": "Gasté 100k en el supermercado"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 100000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 20,
+        "vars": {
+          "input": "Gasté 100k en el supermercado"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 100000;\n"
+              }
+            }
+          ]
+        },
+        "id": "fac8663a-255d-432a-a409-7e3e28ad7e48",
+        "latencyMs": 1957,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Spent 100k at the supermarket",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Spent at the supermarket\",\"amount\":100000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Bilingual parity - English groceries",
+          "vars": {
+            "input": "Spent 100k at the supermarket"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 100000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 21,
+        "vars": {
+          "input": "Spent 100k at the supermarket"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 35000 && data.type === 'expense';\n"
+              }
+            }
+          ]
+        },
+        "id": "7de8dc24-6b19-420a-89d6-e79234281a46",
+        "latencyMs": 1810,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Compré pan, leche y huevos por 35k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra de pan, leche y huevos\",\"amount\":35000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Multiple items in description",
+          "vars": {
+            "input": "Compré pan, leche y huevos por 35k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 35000 && data.type === 'expense';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 22,
+        "vars": {
+          "input": "Compré pan, leche y huevos por 35k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 120000;\n"
+              }
+            }
+          ]
+        },
+        "id": "dc0251a1-b6a4-48c0-b9c3-895902cd221a",
+        "latencyMs": 1662,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pagué el recibo de la luz 120k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Pago del recibo de la luz\",\"amount\":120000,\"type\":\"expense\",\"category_id\":\"utilities\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Utility bill",
+          "vars": {
+            "input": "Pagué el recibo de la luz 120k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 120000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 23,
+        "vars": {
+          "input": "Pagué el recibo de la luz 120k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'income' && data.amount === 1500000;\n"
+              }
+            }
+          ]
+        },
+        "id": "2f45cad9-b353-4f36-b4ca-839d5106ebf8",
+        "latencyMs": 1512,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Cobré 1.5 millones por proyecto freelance",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Cobro por proyecto freelance\",\"amount\":1500000,\"type\":\"income\",\"category_id\":\"freelance\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Freelance income",
+          "vars": {
+            "input": "Cobré 1.5 millones por proyecto freelance"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'income' && data.amount === 1500000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 24,
+        "vars": {
+          "input": "Cobré 1.5 millones por proyecto freelance"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 500000;\n"
+              }
+            }
+          ]
+        },
+        "id": "aa2a9bf5-f570-4ab8-bd74-13aa3fc69623",
+        "latencyMs": 1402,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Transferí 500k a mi cuenta de ahorros",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Transferencia a cuenta de ahorros\",\"amount\":500000,\"type\":\"expense\",\"category_id\":\"other\",\"date\":\"2026-03-15\",\"method\":\"transfer\",\"liability_id\":null,\"confidence\":0.8}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Transfer between accounts",
+          "vars": {
+            "input": "Transferí 500k a mi cuenta de ahorros"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 500000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 25,
+        "vars": {
+          "input": "Transferí 500k a mi cuenta de ahorros"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 5000 && data.type === 'expense';\n"
+              }
+            }
+          ]
+        },
+        "id": "f59e5276-face-47de-851d-e908af84f865",
+        "latencyMs": 1564,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Café 5k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Café\",\"amount\":5000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Small daily expense",
+          "vars": {
+            "input": "Café 5k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 5000 && data.type === 'expense';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 26,
+        "vars": {
+          "input": "Café 5k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 250000;\n"
+              }
+            }
+          ]
+        },
+        "id": "c52a7739-25b0-4d97-8ebf-c41b3ae36614",
+        "latencyMs": 1433,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Gasté 250000 en mercado",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra en mercado\",\"amount\":250000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Round number without multiplier",
+          "vars": {
+            "input": "Gasté 250000 en mercado"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 250000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 27,
+        "vars": {
+          "input": "Gasté 250000 en mercado"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 16000;\n"
+              }
+            }
+          ]
+        },
+        "id": "efd528a2-3193-47f9-8f05-e265ae2dd1e2",
+        "latencyMs": 1479,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Spotify 16k mensual",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Spotify subscription\",\"amount\":16000,\"type\":\"expense\",\"category_id\":\"entertainment\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Subscription expense",
+          "vars": {
+            "input": "Spotify 16k mensual"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 16000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 28,
+        "vars": {
+          "input": "Spotify 16k mensual"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 350000 && data.type === 'expense';\n"
+              }
+            }
+          ]
+        },
+        "id": "c32be2e1-7725-44c7-9590-434e85863715",
+        "latencyMs": 1532,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pago de seguro médico 350k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Pago de seguro médico\",\"amount\":350000,\"type\":\"expense\",\"category_id\":\"healthcare\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Insurance payment",
+          "vars": {
+            "input": "Pago de seguro médico 350k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 350000 && data.type === 'expense';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 29,
+        "vars": {
+          "input": "Pago de seguro médico 350k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 1200000 && data.type === 'expense';\n"
+              }
+            }
+          ]
+        },
+        "id": "363eae32-3bf6-423b-b9aa-c704473b327d",
+        "latencyMs": 1396,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Arriendo del mes 1.2 millones",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Arriendo del mes\",\"amount\":1200000,\"type\":\"expense\",\"category_id\":\"rent\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":1}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Rent payment",
+          "vars": {
+            "input": "Arriendo del mes 1.2 millones"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 1200000 && data.type === 'expense';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 30,
+        "vars": {
+          "input": "Arriendo del mes 1.2 millones"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.amount === 4000000 && data.type === 'expense';\n"
+              }
+            }
+          ]
+        },
+        "id": "080c5995-a9d7-453b-811a-c0a0be1bfba5",
+        "latencyMs": 1305,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Matrícula universidad 4 millones",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Matrícula universidad\",\"amount\":4000000,\"type\":\"expense\",\"category_id\":\"education\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.8}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Education expense",
+          "vars": {
+            "input": "Matrícula universidad 4 millones"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.amount === 4000000 && data.type === 'expense';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 31,
+        "vars": {
+          "input": "Matrícula universidad 4 millones"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment';\n"
+              }
+            }
+          ]
+        },
+        "id": "4deaafba-fd77-4184-bbd5-a019b4c0267e",
+        "latencyMs": 1389,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Paid 300k toward my student loan",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Payment toward student loan\",\"amount\":300000,\"type\":\"debt-payment\",\"category_id\":\"other\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":3,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "English debt payment",
+          "vars": {
+            "input": "Paid 300k toward my student loan"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 32,
+        "vars": {
+          "input": "Paid 300k toward my student loan"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment' && data.liability_id !== null;\n"
+              }
+            }
+          ]
+        },
+        "id": "688bcb92-723c-4a95-b879-fb6b9eb00845",
+        "latencyMs": 1926,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pagué 250k de la tarjeta Chase Sapphire",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Pago de tarjeta Chase Sapphire\",\"amount\":250000,\"type\":\"debt-payment\",\"category_id\":\"other\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":1,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Credit card payment with card name",
+          "vars": {
+            "input": "Pagué 250k de la tarjeta Chase Sapphire"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment' && data.liability_id !== null;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 33,
+        "vars": {
+          "input": "Pagué 250k de la tarjeta Chase Sapphire"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.method === 'daviplata' || data.method === 'transfer';\n"
+              }
+            }
+          ]
+        },
+        "id": "83c6bd6d-7ebb-46b4-aec3-4f4be535ee2e",
+        "latencyMs": 1559,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Mandé 50k por DaviPlata para comida",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"comida\",\"amount\":50000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"daviplata\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "DaviPlata transfer",
+          "vars": {
+            "input": "Mandé 50k por DaviPlata para comida"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.method === 'daviplata' || data.method === 'transfer';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 34,
+        "vars": {
+          "input": "Mandé 50k por DaviPlata para comida"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 40000;\n"
+              }
+            }
+          ]
+        },
+        "id": "acf38bf4-12f7-4f6d-8b08-ea203c0da14f",
+        "latencyMs": 1422,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Boletas de cine 40k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Boletas de cine\",\"amount\":40000,\"type\":\"expense\",\"category_id\":\"entertainment\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Entertainment expense",
+          "vars": {
+            "input": "Boletas de cine 40k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 40000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 35,
+        "vars": {
+          "input": "Boletas de cine 40k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 150000;\n"
+              }
+            }
+          ]
+        },
+        "id": "a89b45e6-399f-45eb-911e-0a79c1cabc59",
+        "latencyMs": 1545,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Tanqueé el carro por 150k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Tanqueo de gasolina\",\"amount\":150000,\"type\":\"expense\",\"category_id\":\"transport\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Gas/fuel expense",
+          "vars": {
+            "input": "Tanqueé el carro por 150k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 150000;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 36,
+        "vars": {
+          "input": "Tanqueé el carro por 150k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nconst today = new Date().toISOString().split('T')[0];\nreturn data.date === today;\n"
+              }
+            }
+          ]
+        },
+        "id": "99e4fa63-9f3a-4f5c-ab29-5b2fbfab2831",
+        "latencyMs": 1441,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Compré almuerzo 25k",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"almuerzo\",\"amount\":25000,\"type\":\"expense\",\"category_id\":\"groceries\",\"date\":\"2026-03-15\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Today default date",
+          "vars": {
+            "input": "Compré almuerzo 25k"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nconst today = new Date().toISOString().split('T')[0];\nreturn data.date === today;\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 37,
+        "vars": {
+          "input": "Compré almuerzo 25k"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.date.includes('03-05') || data.date.includes('03-5');\n"
+              }
+            }
+          ]
+        },
+        "id": "5e67d3c3-68ed-4f70-a546-31a923ca44cf",
+        "latencyMs": 1194,
+        "namedScores": {},
+        "prompt": {
+          "raw": "El 5 de marzo gasté 80k en ropa",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Compra de ropa\",\"amount\":80000,\"type\":\"expense\",\"category_id\":\"shopping\",\"date\":\"2026-03-05\",\"method\":\"other\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Exact date specified",
+          "vars": {
+            "input": "El 5 de marzo gasté 80k en ropa"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.date.includes('03-05') || data.date.includes('03-5');\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 38,
+        "vars": {
+          "input": "El 5 de marzo gasté 80k en ropa"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          },
+          "componentResults": [
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "is-json"
+              }
+            },
+            {
+              "pass": true,
+              "score": 1,
+              "reason": "Assertion passed",
+              "assertion": {
+                "type": "javascript",
+                "value": "const data = JSON.parse(output);\nreturn data.method === 'card';\n"
+              }
+            }
+          ]
+        },
+        "id": "5749b38c-9f7c-4a1a-85da-3e8189e8fe70",
+        "latencyMs": 1188,
+        "namedScores": {},
+        "prompt": {
+          "raw": "Pagué con tarjeta 60k en restaurante",
+          "label": "{{input}}",
+          "config": {
+            "transformVars": "{ ...vars }"
+          }
+        },
+        "promptId": "146b33ced217be53420a9244c0ad8ec843483bbab4f32ac28e803b45b42891ba",
+        "promptIdx": 0,
+        "provider": {
+          "id": "finflow-transaction:openai",
+          "label": "openai-transaction"
+        },
+        "response": {
+          "output": "{\"description\":\"Pago en restaurante\",\"amount\":60000,\"type\":\"expense\",\"category_id\":\"entertainment\",\"date\":\"2026-03-15\",\"method\":\"card\",\"liability_id\":null,\"confidence\":0.9}"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "Card payment method",
+          "vars": {
+            "input": "Pagué con tarjeta 60k en restaurante"
+          },
+          "assert": [
+            {
+              "type": "is-json"
+            },
+            {
+              "type": "javascript",
+              "value": "const data = JSON.parse(output);\nreturn data.method === 'card';\n"
+            }
+          ],
+          "options": {
+            "transformVars": "{ ...vars }"
+          },
+          "metadata": {}
+        },
+        "testIdx": 39,
+        "vars": {
+          "input": "Pagué con tarjeta 60k en restaurante"
+        },
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 39,
+      "failures": 0,
+      "errors": 1,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 0,
+        "total": 0,
+        "numRequests": 40,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0
+          }
+        }
+      },
+      "durationMs": 16338,
+      "evaluationDurationMs": 16338
+    }
+  },
+  "config": {
+    "tags": {},
+    "description": "FinFlow Transaction Parsing Evals",
+    "prompts": [
+      "{{input}}"
+    ],
+    "providers": [
+      {
+        "id": "file://providers/finflow-transaction.ts",
+        "label": "openai-transaction",
+        "config": {
+          "provider": "openai"
+        }
+      }
+    ],
+    "tests": [
+      {
+        "description": "Basic expense in Spanish",
+        "vars": {
+          "input": "Gasté 50k en Uber ayer"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 50000 && data.type === 'expense';\n"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.confidence >= 0.7;\n"
+          }
+        ]
+      },
+      {
+        "description": "Amount multiplier - k",
+        "vars": {
+          "input": "50k en uber"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 50000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Amount multiplier - mil",
+        "vars": {
+          "input": "Pagué 200 mil en el supermercado"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 200000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Amount multiplier - millones",
+        "vars": {
+          "input": "2 millones de salario"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 2000000 && data.type === 'income';\n"
+          }
+        ]
+      },
+      {
+        "description": "Amount multiplier - palos",
+        "vars": {
+          "input": "Me llegaron 3 palos de salario"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 3000000 && data.type === 'income';\n"
+          }
+        ]
+      },
+      {
+        "description": "Relative date - ayer (yesterday)",
+        "vars": {
+          "input": "Ayer gasté 30k en almuerzo"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1);\nconst expected = yesterday.toISOString().split('T')[0];\nreturn data.date === expected;\n"
+          }
+        ]
+      },
+      {
+        "description": "Relative date - anteayer (day before yesterday)",
+        "vars": {
+          "input": "Anteayer pagué 15k en gasolina"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nconst dby = new Date();\ndby.setDate(dby.getDate() - 2);\nconst expected = dby.toISOString().split('T')[0];\nreturn data.date === expected;\n"
+          }
+        ]
+      },
+      {
+        "description": "Debt payment detection",
+        "vars": {
+          "input": "Pagué 200k a mi tarjeta Chase"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment' && data.liability_id !== null;\n"
+          }
+        ]
+      },
+      {
+        "description": "Debt payment - abono keyword",
+        "vars": {
+          "input": "Abono de 500k a mi préstamo del carro"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment';\n"
+          }
+        ]
+      },
+      {
+        "description": "Income detection",
+        "vars": {
+          "input": "Me pagaron 6.5 millones de salario"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'income' && data.amount === 6500000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Basic expense in English",
+        "vars": {
+          "input": "Spent $30 on groceries at Walmart"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount > 0;\n"
+          }
+        ]
+      },
+      {
+        "description": "English income",
+        "vars": {
+          "input": "Received 5 million salary deposit today"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'income';\n"
+          }
+        ]
+      },
+      {
+        "description": "Payment method - Nequi",
+        "vars": {
+          "input": "Transferí 100k por Nequi para el mercado"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.method === 'nequi' || data.method === 'transfer';\n"
+          }
+        ]
+      },
+      {
+        "description": "Payment method - cash",
+        "vars": {
+          "input": "Pagué 20k en efectivo por el bus"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.method === 'cash';\n"
+          }
+        ]
+      },
+      {
+        "description": "Category matching - groceries",
+        "vars": {
+          "input": "180k en el Éxito comprando mercado"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.category_id === 'groceries' || data.category_id.includes('grocer');\n"
+          }
+        ]
+      },
+      {
+        "description": "Category matching - transport",
+        "vars": {
+          "input": "25k de Uber al trabajo"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.category_id === 'transport' || data.category_id.includes('transport');\n"
+          }
+        ]
+      },
+      {
+        "description": "Low confidence on vague input",
+        "vars": {
+          "input": "algo"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.confidence < 0.7;\n"
+          }
+        ]
+      },
+      {
+        "description": "Date format validation",
+        "vars": {
+          "input": "Compré zapatos por 150k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn /^\\d{4}-\\d{2}-\\d{2}$/.test(data.date);\n"
+          }
+        ]
+      },
+      {
+        "description": "Amount always positive",
+        "vars": {
+          "input": "Gasté 80k en restaurante"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount > 0;\n"
+          }
+        ]
+      },
+      {
+        "description": "Description is non-empty",
+        "vars": {
+          "input": "Netflix subscription 45k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.description && data.description.length > 0;\n"
+          }
+        ]
+      },
+      {
+        "description": "Bilingual parity - Spanish groceries",
+        "vars": {
+          "input": "Gasté 100k en el supermercado"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 100000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Bilingual parity - English groceries",
+        "vars": {
+          "input": "Spent 100k at the supermarket"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 100000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Multiple items in description",
+        "vars": {
+          "input": "Compré pan, leche y huevos por 35k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 35000 && data.type === 'expense';\n"
+          }
+        ]
+      },
+      {
+        "description": "Utility bill",
+        "vars": {
+          "input": "Pagué el recibo de la luz 120k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 120000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Freelance income",
+        "vars": {
+          "input": "Cobré 1.5 millones por proyecto freelance"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'income' && data.amount === 1500000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Transfer between accounts",
+        "vars": {
+          "input": "Transferí 500k a mi cuenta de ahorros"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 500000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Small daily expense",
+        "vars": {
+          "input": "Café 5k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 5000 && data.type === 'expense';\n"
+          }
+        ]
+      },
+      {
+        "description": "Round number without multiplier",
+        "vars": {
+          "input": "Gasté 250000 en mercado"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 250000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Subscription expense",
+        "vars": {
+          "input": "Spotify 16k mensual"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 16000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Insurance payment",
+        "vars": {
+          "input": "Pago de seguro médico 350k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 350000 && data.type === 'expense';\n"
+          }
+        ]
+      },
+      {
+        "description": "Rent payment",
+        "vars": {
+          "input": "Arriendo del mes 1.2 millones"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 1200000 && data.type === 'expense';\n"
+          }
+        ]
+      },
+      {
+        "description": "Education expense",
+        "vars": {
+          "input": "Matrícula universidad 4 millones"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.amount === 4000000 && data.type === 'expense';\n"
+          }
+        ]
+      },
+      {
+        "description": "English debt payment",
+        "vars": {
+          "input": "Paid 300k toward my student loan"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment';\n"
+          }
+        ]
+      },
+      {
+        "description": "Credit card payment with card name",
+        "vars": {
+          "input": "Pagué 250k de la tarjeta Chase Sapphire"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'debt-payment' && data.liability_id !== null;\n"
+          }
+        ]
+      },
+      {
+        "description": "DaviPlata transfer",
+        "vars": {
+          "input": "Mandé 50k por DaviPlata para comida"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.method === 'daviplata' || data.method === 'transfer';\n"
+          }
+        ]
+      },
+      {
+        "description": "Entertainment expense",
+        "vars": {
+          "input": "Boletas de cine 40k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 40000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Gas/fuel expense",
+        "vars": {
+          "input": "Tanqueé el carro por 150k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.type === 'expense' && data.amount === 150000;\n"
+          }
+        ]
+      },
+      {
+        "description": "Today default date",
+        "vars": {
+          "input": "Compré almuerzo 25k"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nconst today = new Date().toISOString().split('T')[0];\nreturn data.date === today;\n"
+          }
+        ]
+      },
+      {
+        "description": "Exact date specified",
+        "vars": {
+          "input": "El 5 de marzo gasté 80k en ropa"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.date.includes('03-05') || data.date.includes('03-5');\n"
+          }
+        ]
+      },
+      {
+        "description": "Card payment method",
+        "vars": {
+          "input": "Pagué con tarjeta 60k en restaurante"
+        },
+        "assert": [
+          {
+            "type": "is-json"
+          },
+          {
+            "type": "javascript",
+            "value": "const data = JSON.parse(output);\nreturn data.method === 'card';\n"
+          }
+        ]
+      }
+    ],
+    "scenarios": [],
+    "env": {},
+    "defaultTest": {
+      "options": {
+        "transformVars": "{ ...vars }"
+      },
+      "vars": {},
+      "assert": [],
+      "metadata": {}
+    },
+    "outputPath": [
+      "results/transaction-results.json"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {}
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.2",
+    "nodeVersion": "v20.12.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "exportedAt": "2026-03-15T01:03:58.648Z",
+    "evaluationCreatedAt": "2026-03-15T01:03:42.253Z"
+  }
+}

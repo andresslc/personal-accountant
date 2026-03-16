@@ -1,19 +1,66 @@
-import { getAIProvider } from "@/lib/ai/provider"
+import { getAIProvider, hasAIProvider } from "@/lib/ai/provider"
 import { buildDebtAgentPrompt } from "../prompts"
 import type { FinancialContext, StreamEvent } from "../types"
+import { compareDebtStrategies } from "@/lib/predictions/debt-payoff"
+
+function buildDebtAnalysis(context: FinancialContext): string {
+  const debts = context.debts
+  if (debts.length === 0) return "No debts to analyze."
+
+  const comparison = compareDebtStrategies(debts)
+  const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`
+
+  const lines = [
+    `Total debt: ${fmt(comparison.avalanche.totalDebt)} COP`,
+    `Total minimum payments: ${fmt(comparison.avalanche.totalMinPayments)} COP/month`,
+    "",
+    `**Avalanche strategy** (highest APR first):`,
+    `  Order: ${comparison.avalanche.debts.map((d) => `${d.name} (${d.apr}%)`).join(" → ")}`,
+    `  Payoff: ~${comparison.avalanche.payoffMonths} months`,
+    `  Total interest: ${fmt(comparison.avalanche.totalInterestPaid)}`,
+    "",
+    `**Snowball strategy** (lowest balance first):`,
+    `  Order: ${comparison.snowball.debts.map((d) => `${d.name} (${fmt(d.currentBalance)})`).join(" → ")}`,
+    `  Payoff: ~${comparison.snowball.payoffMonths} months`,
+    `  Total interest: ${fmt(comparison.snowball.totalInterestPaid)}`,
+    "",
+    `**Recommendation**: ${comparison.recommendedStrategy}`,
+  ]
+
+  if (comparison.interestSaved > 0) {
+    lines.push(`  Saves ${fmt(comparison.interestSaved)} in interest and ${comparison.monthsSaved} months vs ${comparison.recommendedStrategy === "avalanche" ? "snowball" : "avalanche"}.`)
+  }
+
+  lines.push("")
+  lines.push("Per-debt breakdown:")
+  for (const d of comparison.avalanche.debts) {
+    lines.push(`  - ${d.name}: ${fmt(d.currentBalance)} at ${d.apr}% → payoff in ${d.payoffMonths} months, ${fmt(d.totalInterest)} interest`)
+  }
+
+  return lines.join("\n")
+}
 
 export async function* runDebtAgent(
   taskDescription: string,
   context: FinancialContext
 ): AsyncGenerator<StreamEvent> {
+  const debtAnalysis = buildDebtAnalysis(context)
+
+  if (!hasAIProvider()) {
+    const output = `## Debt Strategy Analysis\n\n${debtAnalysis}`
+    for (const chunk of output.match(/.{1,100}/g) ?? [output]) {
+      yield { type: "text", content: chunk }
+    }
+    yield { type: "done" }
+    return
+  }
+
   const provider = getAIProvider()
   const systemPrompt = buildDebtAgentPrompt(context)
 
-  const debtAnalysis = buildDebtAnalysis(context)
-
   const userPrompt = `${taskDescription}
 
-Here is a mathematical analysis of the current debts to use in your response:
+Here is the computed mathematical analysis of the current debts (use these exact numbers in your response):
 ${debtAnalysis}`
 
   try {
@@ -22,60 +69,12 @@ ${debtAnalysis}`
       yield { type: "text", content: chunk }
     }
   } catch (error) {
+    yield { type: "text", content: `## Debt Strategy Analysis\n\n${debtAnalysis}` }
     yield {
       type: "error",
-      message: `Debt analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      message: `LLM narration failed, showing raw analysis: ${error instanceof Error ? error.message : "Unknown error"}`,
     }
   }
 
   yield { type: "done" }
-}
-
-function buildDebtAnalysis(context: FinancialContext): string {
-  const debts = context.debts
-  if (debts.length === 0) return "No debts to analyze."
-
-  const totalDebt = debts.reduce((sum, d) => sum + d.currentBalance, 0)
-  const totalMinPayment = debts.reduce((sum, d) => sum + d.minPayment, 0)
-
-  const avalancheOrder = [...debts].sort((a, b) => b.apr - a.apr)
-  const snowballOrder = [...debts].sort((a, b) => a.currentBalance - b.currentBalance)
-
-  const avalancheMonths = estimatePayoff(debts, avalancheOrder)
-  const snowballMonths = estimatePayoff(debts, snowballOrder)
-
-  return `Total debt: $${totalDebt.toLocaleString()} COP
-Total minimum payments: $${totalMinPayment.toLocaleString()} COP/month
-
-Avalanche order (highest APR first): ${avalancheOrder.map((d) => `${d.name} (${d.apr}%)`).join(" → ")}
-Estimated payoff: ~${avalancheMonths} months paying minimums
-
-Snowball order (lowest balance first): ${snowballOrder.map((d) => `${d.name} ($${d.currentBalance.toLocaleString()})`).join(" → ")}
-Estimated payoff: ~${snowballMonths} months paying minimums`
-}
-
-function estimatePayoff(
-  debts: FinancialContext["debts"],
-  _order: FinancialContext["debts"]
-): number {
-  if (debts.length === 0) return 0
-
-  let totalBalance = debts.reduce((sum, d) => sum + d.currentBalance, 0)
-  const totalMinPayment = debts.reduce((sum, d) => sum + d.minPayment, 0)
-  const avgApr = debts.reduce((sum, d) => sum + d.apr, 0) / debts.length
-  const monthlyRate = avgApr / 100 / 12
-
-  let months = 0
-  const maxMonths = 360
-
-  while (totalBalance > 0 && months < maxMonths) {
-    const interest = totalBalance * monthlyRate
-    const principal = Math.max(totalMinPayment - interest, 0)
-    totalBalance = Math.max(totalBalance - principal, 0)
-    months++
-
-    if (principal <= 0) break
-  }
-
-  return months
 }

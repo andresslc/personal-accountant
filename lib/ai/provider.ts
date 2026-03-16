@@ -401,6 +401,10 @@ class GeminiProvider implements AIProvider {
   }
 }
 
+export function hasAIProvider(): boolean {
+  return Boolean(process.env.OPENAI_API_KEY) || Boolean(process.env.GEMINI_API_KEY)
+}
+
 export function getAIProvider(): AIProvider {
   const provider = (process.env.AI_PROVIDER ?? "gemini").toLowerCase()
   const hasOpenAIKey = Boolean(process.env.OPENAI_API_KEY)

@@ -1,4 +1,4 @@
-import { getAIProvider } from "@/lib/ai/provider"
+import { getAIProvider, hasAIProvider } from "@/lib/ai/provider"
 import { z } from "zod"
 import {
   FinancialIntentMemorySchema,
@@ -7,6 +7,7 @@ import {
   MemoryUpdateSchema,
   type FinancialIntentMemory,
   type FinanceErrorResponse,
+  type FinanceInsightsData,
   type FinanceInsightsRequest,
   type FinanceSuccessResponse,
 } from "@/lib/ai/finance-types"
@@ -22,6 +23,8 @@ import {
   getTopSpendingCategories,
   getTransactions,
 } from "@/lib/data/dashboard-data"
+import { generatePredictions } from "@/lib/predictions"
+import type { PredictionResponse } from "@/lib/predictions/types"
 
 const REQUEST_TIMEOUT_MS = 20_000
 
@@ -343,6 +346,308 @@ const buildFinanceContext = async (): Promise<FinanceContext> => {
   }
 }
 
+const PREDICTION_BASED_TYPES = new Set([
+  "spending_diagnosis",
+  "budget_recommendation",
+  "debt_strategy",
+  "anomaly_detection",
+])
+
+function getPredictionData(context: FinanceContext): PredictionResponse {
+  const txData = context.transactions.map((t) => ({
+    date: t.date,
+    category: t.category,
+    type: t.type,
+    amount: t.amount,
+    description: t.description,
+  }))
+  const budgetData = context.budgets.map((b) => ({
+    category: b.category,
+    limit: b.limit,
+    spent: b.spent,
+  }))
+  const debtData = context.debts.map((d) => ({
+    name: d.name,
+    currentBalance: d.currentBalance,
+    apr: d.apr,
+    minPayment: d.minPayment,
+  }))
+  return generatePredictions(txData, budgetData, debtData)
+}
+
+const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`
+
+function formatSpendingDiagnosis(predictions: PredictionResponse): FinanceInsightsData {
+  const diag = predictions.spendingDiagnosis
+  const anomalies = predictions.anomalies ?? []
+  const topCats = diag?.topCategories.slice(0, 5) ?? []
+
+  const insights = topCats.map((c) => ({
+    title: `${c.category}: ${fmt(c.currentMonthSpend)}`,
+    detail: c.suggestion,
+    severity: c.status === "significantly-over" ? "high" as const : c.status === "elevated" ? "medium" as const : "low" as const,
+  }))
+
+  if (insights.length === 0) {
+    insights.push({ title: "No spending data", detail: "Not enough transaction data to analyze spending patterns.", severity: "low" as const })
+  }
+
+  const risks = anomalies.slice(0, 3).map((a) => ({
+    title: `Unusual: ${a.description}`,
+    detail: a.explanation,
+    severity: a.zScore > 3 ? "high" as const : "medium" as const,
+  }))
+
+  const actions = topCats
+    .filter((c) => c.status !== "within-norm")
+    .slice(0, 5)
+    .map((c) => ({
+      action: `Review ${c.category} spending`,
+      reason: c.suggestion,
+      estimated_impact: c.changePercent > 0 ? `Save ${fmt(c.currentMonthSpend - c.historicalAvg)}/month by returning to average` : "Maintain current trend",
+    }))
+
+  if (actions.length === 0) {
+    actions.push({ action: "Continue current spending habits", reason: "All categories are within normal range.", estimated_impact: "Stable finances" })
+  }
+
+  return {
+    summary: `Spending analysis: ${fmt(diag?.totalCurrentSpend ?? 0)} this period across ${topCats.length} categories. ${anomalies.length > 0 ? `${anomalies.length} unusual transaction(s) detected.` : "No anomalies detected."} Potential monthly savings: ${fmt(diag?.potentialMonthlySavings ?? 0)}.`,
+    insights,
+    risks,
+    recommended_actions: actions,
+    confidence: predictions.metadata.isLimitedData ? 0.5 : 0.8,
+    period_covered: "Current month",
+    data_points_used: predictions.metadata.dataMonths,
+  }
+}
+
+function formatBudgetRecommendation(predictions: PredictionResponse): FinanceInsightsData {
+  const adherence = predictions.budgetAdherence ?? []
+  const forecasts = predictions.spendingForecasts ?? []
+
+  const insights = adherence.map((b) => ({
+    title: `${b.category}: ${b.percentUsed.toFixed(0)}% of budget`,
+    detail: `Spent ${fmt(b.spentSoFar)} of ${fmt(b.budgetLimit)}. Projected end-of-month: ${fmt(b.projectedEndOfMonth)}. Safe daily budget: ${fmt(b.safeDailyBudget)}/day (${b.daysRemaining} days left).`,
+    severity: b.status === "over-budget" ? "high" as const : b.status === "at-risk" ? "medium" as const : "low" as const,
+  }))
+
+  if (insights.length === 0) {
+    insights.push({ title: "No budgets set", detail: "Create budgets to track your spending against targets.", severity: "low" as const })
+  }
+
+  const atRisk = adherence.filter((b) => b.status !== "on-track")
+  const risks = atRisk.map((b) => ({
+    title: `${b.category} ${b.status === "over-budget" ? "over budget" : "at risk"}`,
+    detail: `Projected ${fmt(b.projectedEndOfMonth)} vs ${fmt(b.budgetLimit)} limit.`,
+    severity: b.status === "over-budget" ? "high" as const : "medium" as const,
+  }))
+
+  const actions = atRisk.slice(0, 5).map((b) => ({
+    action: `Reduce daily ${b.category} spending to ${fmt(b.safeDailyBudget)}/day`,
+    reason: `Currently on track to spend ${fmt(b.projectedEndOfMonth)}, which is ${b.status === "over-budget" ? "over" : "near"} the ${fmt(b.budgetLimit)} limit.`,
+    estimated_impact: `Stay within ${fmt(b.budgetLimit)} budget`,
+  }))
+
+  const forecastInsights = forecasts.slice(0, 3).map((f) => ({
+    action: `Plan for ${f.category}: ~${fmt(f.predictedNextMonth)} next month`,
+    reason: `Trend: ${f.trend} (${f.changePercent > 0 ? "+" : ""}${f.changePercent.toFixed(1)}%). Set budget accordingly.`,
+    estimated_impact: `Budget range: ${fmt(f.lowerBound)} – ${fmt(f.upperBound)}`,
+  }))
+
+  if (actions.length === 0 && forecastInsights.length === 0) {
+    actions.push({ action: "All budgets on track", reason: "No immediate adjustments needed.", estimated_impact: "Continue current habits" })
+  }
+
+  return {
+    summary: `Budget status: ${adherence.filter((b) => b.status === "on-track").length} on track, ${adherence.filter((b) => b.status === "at-risk").length} at risk, ${adherence.filter((b) => b.status === "over-budget").length} over budget.`,
+    insights,
+    risks,
+    recommended_actions: [...actions, ...forecastInsights].slice(0, 5),
+    confidence: predictions.metadata.isLimitedData ? 0.6 : 0.85,
+    period_covered: "Current month",
+    data_points_used: predictions.metadata.dataMonths,
+  }
+}
+
+function formatDebtStrategy(predictions: PredictionResponse): FinanceInsightsData {
+  const dp = predictions.debtPayoff
+  if (!dp || dp.avalanche.totalDebt === 0) {
+    return {
+      summary: "No debts to analyze.",
+      insights: [{ title: "Debt-free", detail: "You have no active debts. Great job!", severity: "low" }],
+      risks: [],
+      recommended_actions: [{ action: "Build emergency fund", reason: "With no debt, focus on savings.", estimated_impact: "Financial security" }],
+      confidence: 1,
+      period_covered: "N/A",
+      data_points_used: 0,
+    }
+  }
+
+  const insights = [
+    {
+      title: `Total debt: ${fmt(dp.avalanche.totalDebt)}`,
+      detail: `Monthly minimum payments: ${fmt(dp.avalanche.totalMinPayments)}. ${dp.avalanche.debts.length} active debt(s).`,
+      severity: "high" as const,
+    },
+    {
+      title: `Avalanche: ${dp.avalanche.payoffMonths} months`,
+      detail: `Pay highest APR first. Total interest: ${fmt(dp.avalanche.totalInterestPaid)}. Order: ${dp.avalanche.debts.map((d) => `${d.name} (${d.apr}%)`).join(" → ")}.`,
+      severity: "medium" as const,
+    },
+    {
+      title: `Snowball: ${dp.snowball.payoffMonths} months`,
+      detail: `Pay lowest balance first. Total interest: ${fmt(dp.snowball.totalInterestPaid)}. Order: ${dp.snowball.debts.map((d) => `${d.name} (${fmt(d.currentBalance)})`).join(" → ")}.`,
+      severity: "medium" as const,
+    },
+  ]
+
+  if (dp.interestSaved > 0) {
+    insights.push({
+      title: `Avalanche saves ${fmt(dp.interestSaved)} in interest`,
+      detail: `${dp.monthsSaved} fewer months compared to snowball strategy.`,
+      severity: "high" as const,
+    })
+  }
+
+  const highestApr = dp.avalanche.debts[0]
+  const risks = highestApr
+    ? [{
+        title: `${highestApr.name} at ${highestApr.apr}% APR`,
+        detail: `This debt costs ${fmt(highestApr.totalInterest)} in total interest. ${highestApr.apr > 15 ? "Consider refinancing." : ""}`,
+        severity: highestApr.apr > 15 ? "high" as const : "medium" as const,
+      }]
+    : []
+
+  return {
+    summary: `Debt analysis: ${fmt(dp.avalanche.totalDebt)} total across ${dp.avalanche.debts.length} debts. Recommended: ${dp.recommendedStrategy} strategy (${dp[dp.recommendedStrategy].payoffMonths} months to payoff, ${fmt(dp[dp.recommendedStrategy].totalInterestPaid)} interest).`,
+    insights,
+    risks,
+    recommended_actions: [
+      {
+        action: `Use ${dp.recommendedStrategy} strategy`,
+        reason: dp.recommendedStrategy === "avalanche" ? `Saves ${fmt(dp.interestSaved)} vs snowball.` : "Faster psychological wins by clearing small balances first.",
+        estimated_impact: `Debt-free in ~${dp[dp.recommendedStrategy].payoffMonths} months`,
+      },
+      {
+        action: `Prioritize ${highestApr?.name ?? "highest APR debt"}`,
+        reason: `At ${highestApr?.apr ?? 0}% APR, this debt accumulates the most interest.`,
+        estimated_impact: `Save ${fmt(highestApr?.totalInterest ?? 0)} in interest`,
+      },
+    ],
+    confidence: 0.95,
+    period_covered: `Next ${dp[dp.recommendedStrategy].payoffMonths} months`,
+    data_points_used: dp.avalanche.debts.length,
+  }
+}
+
+function formatAnomalyDetection(predictions: PredictionResponse): FinanceInsightsData {
+  const anomalies = predictions.anomalies ?? []
+
+  const insights = anomalies.slice(0, 5).map((a) => ({
+    title: `${a.description}: ${fmt(a.amount)}`,
+    detail: a.explanation,
+    severity: a.zScore > 3 ? "high" as const : "medium" as const,
+  }))
+
+  if (insights.length === 0) {
+    insights.push({ title: "No anomalies detected", detail: "All transactions are within expected ranges for their categories.", severity: "low" as const })
+  }
+
+  return {
+    summary: anomalies.length > 0
+      ? `Detected ${anomalies.length} unusual transaction(s). Most notable: ${anomalies[0].description} (${fmt(anomalies[0].amount)}, ${anomalies[0].zScore.toFixed(1)}σ above average).`
+      : "No spending anomalies detected. All transactions are within normal patterns.",
+    insights,
+    risks: anomalies.slice(0, 3).map((a) => ({
+      title: `Review: ${a.category}`,
+      detail: `${a.description} on ${a.date} was ${(a.amount / a.categoryAvg).toFixed(1)}x the category average.`,
+      severity: a.zScore > 3 ? "high" as const : "medium" as const,
+    })),
+    recommended_actions: anomalies.length > 0
+      ? anomalies.slice(0, 3).map((a) => ({
+          action: `Review ${a.description} (${a.date})`,
+          reason: a.explanation,
+          estimated_impact: `Potential overspend of ${fmt(a.amount - a.categoryAvg)} vs average`,
+        }))
+      : [{ action: "Continue monitoring", reason: "No anomalies found.", estimated_impact: "Stay on track" }],
+    confidence: predictions.metadata.isLimitedData ? 0.5 : 0.85,
+    period_covered: "Recent transactions",
+    data_points_used: predictions.metadata.dataMonths,
+  }
+}
+
+function formatPredictionInsights(
+  analysisType: string,
+  predictions: PredictionResponse
+): FinanceInsightsData {
+  switch (analysisType) {
+    case "spending_diagnosis":
+      return formatSpendingDiagnosis(predictions)
+    case "budget_recommendation":
+      return formatBudgetRecommendation(predictions)
+    case "debt_strategy":
+      return formatDebtStrategy(predictions)
+    case "anomaly_detection":
+      return formatAnomalyDetection(predictions)
+    default:
+      return formatSpendingDiagnosis(predictions)
+  }
+}
+
+function buildPredictionContext(predictions: PredictionResponse): string {
+  const parts: string[] = ["=== COMPUTED PREDICTION DATA (use these exact numbers) ==="]
+
+  if (predictions.spendingForecasts?.length) {
+    parts.push("\n## Spending Forecasts (next month)")
+    for (const f of predictions.spendingForecasts) {
+      parts.push(`- ${f.category}: ${fmt(f.predictedNextMonth)} (${f.trend}, ${f.changePercent > 0 ? "+" : ""}${f.changePercent.toFixed(1)}%, confidence: ${(f.confidence * 100).toFixed(0)}%)`)
+    }
+  }
+
+  if (predictions.budgetAdherence?.length) {
+    parts.push("\n## Budget Adherence (current month)")
+    for (const b of predictions.budgetAdherence) {
+      parts.push(`- ${b.category}: ${fmt(b.spentSoFar)}/${fmt(b.budgetLimit)} (${b.percentUsed.toFixed(0)}% used, ${b.status}, safe daily: ${fmt(b.safeDailyBudget)})`)
+    }
+  }
+
+  if (predictions.debtPayoff) {
+    const dp = predictions.debtPayoff
+    parts.push(`\n## Debt Payoff`)
+    parts.push(`- Total: ${fmt(dp.avalanche.totalDebt)}, Min payments: ${fmt(dp.avalanche.totalMinPayments)}/mo`)
+    parts.push(`- Avalanche: ${dp.avalanche.payoffMonths} months, ${fmt(dp.avalanche.totalInterestPaid)} interest`)
+    parts.push(`- Snowball: ${dp.snowball.payoffMonths} months, ${fmt(dp.snowball.totalInterestPaid)} interest`)
+    parts.push(`- Recommended: ${dp.recommendedStrategy} (saves ${fmt(dp.interestSaved)} interest)`)
+  }
+
+  if (predictions.savingsProjection) {
+    const sp = predictions.savingsProjection
+    parts.push(`\n## Savings Projection`)
+    parts.push(`- Monthly avg savings: ${fmt(sp.monthlyAvgSavings)} (${sp.savingsRate.toFixed(1)}% rate, ${sp.trend})`)
+    parts.push(`- 3mo: ${fmt(sp.projections.threeMonths)}, 6mo: ${fmt(sp.projections.sixMonths)}, 12mo: ${fmt(sp.projections.twelveMonths)}`)
+  }
+
+  if (predictions.spendingDiagnosis) {
+    const diag = predictions.spendingDiagnosis
+    parts.push(`\n## Spending Diagnosis`)
+    parts.push(`- Total current: ${fmt(diag.totalCurrentSpend)}, Historical avg: ${fmt(diag.totalHistoricalAvg)}`)
+    parts.push(`- Potential savings: ${fmt(diag.potentialMonthlySavings)}/month`)
+    for (const c of diag.topCategories.slice(0, 5)) {
+      parts.push(`  - ${c.category}: ${fmt(c.currentMonthSpend)} (avg: ${fmt(c.historicalAvg)}, ${c.changePercent > 0 ? "+" : ""}${c.changePercent.toFixed(1)}%, ${c.status})`)
+    }
+  }
+
+  if (predictions.anomalies?.length) {
+    parts.push(`\n## Anomalies (${predictions.anomalies.length} found)`)
+    for (const a of predictions.anomalies.slice(0, 5)) {
+      parts.push(`- ${a.description}: ${fmt(a.amount)} (avg: ${fmt(a.categoryAvg)}, z=${a.zScore.toFixed(1)})`)
+    }
+  }
+
+  return parts.join("\n")
+}
+
 export const analyzeFinanceInsights = async (
   rawRequest: unknown
 ): Promise<FinanceSuccessResponse> => {
@@ -368,10 +673,66 @@ export const analyzeFinanceInsights = async (
     existing_user_memory: resolvedMemory,
   }
   const context = await buildFinanceContext()
-  const provider = getAIProvider()
   const startedAt = Date.now()
+  const predictions = getPredictionData(context)
+  const usePredictionOnly = PREDICTION_BASED_TYPES.has(request.analysis_type)
+  const aiAvailable = hasAIProvider()
+
+  if (usePredictionOnly || !aiAvailable) {
+    const data = formatPredictionInsights(request.analysis_type, predictions)
+
+    if (aiAvailable && (request.analysis_type === "report_summary" || request.analysis_type === "overview")) {
+      const provider = getAIProvider()
+      const predictionContext = buildPredictionContext(predictions)
+      const userPrompt = buildFinanceUserPrompt(requestWithMemory)
+      const systemPrompt = buildFinanceSystemPrompt(requestWithMemory, context) +
+        "\n\n" + predictionContext +
+        "\n\nIMPORTANT: Use the computed prediction data above as the source of truth for all numbers. Do not invent different numbers."
+
+      try {
+        const aiData = await withTimeout(
+          provider.generateStructured({
+            systemPrompt,
+            userPrompt,
+            schema: FinanceInsightsDataSchema,
+          }),
+          REQUEST_TIMEOUT_MS
+        )
+        return {
+          success: true,
+          data: aiData,
+          meta: {
+            provider: provider.getProviderName(),
+            model: provider.getModelName(),
+            latency_ms: Date.now() - startedAt,
+            input_chars: systemPrompt.length + userPrompt.length,
+            output_chars: JSON.stringify(aiData).length,
+          },
+        }
+      } catch {
+        // Fall back to template-formatted data if LLM fails
+      }
+    }
+
+    return {
+      success: true,
+      data,
+      meta: {
+        provider: "prediction-engine",
+        model: "statistical",
+        latency_ms: Date.now() - startedAt,
+        input_chars: 0,
+        output_chars: JSON.stringify(data).length,
+      },
+    }
+  }
+
+  const provider = getAIProvider()
+  const predictionContext = buildPredictionContext(predictions)
   const userPrompt = buildFinanceUserPrompt(requestWithMemory)
-  const systemPrompt = buildFinanceSystemPrompt(requestWithMemory, context)
+  const systemPrompt = buildFinanceSystemPrompt(requestWithMemory, context) +
+    "\n\n" + predictionContext +
+    "\n\nIMPORTANT: Use the computed prediction data above as the source of truth for all numbers. Do not invent different numbers."
 
   try {
     const data = await withTimeout(

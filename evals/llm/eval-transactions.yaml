@@ -1,0 +1,18 @@
+description: FinFlow Transaction Parsing Evals
+
+providers:
+  - id: file://providers/finflow-transaction.ts
+    label: openai-transaction
+    config:
+      provider: openai
+
+prompts:
+  - "{{input}}"
+
+tests: datasets/transaction-parsing.yaml
+
+defaultTest:
+  options:
+    transformVars: "{ ...vars }"
+
+outputPath: results/transaction-results.json

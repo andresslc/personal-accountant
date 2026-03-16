@@ -1,0 +1,20 @@
+description: FinFlow Chat and Guardrails Evals
+
+providers:
+  - id: file://providers/finflow-chat.ts
+    label: openai-chat
+    config:
+      provider: openai
+
+prompts:
+  - "{{input}}"
+
+tests:
+  - datasets/chat-tool-selection.yaml
+  - datasets/guardrails-adversarial.yaml
+
+defaultTest:
+  options:
+    transformVars: "{ ...vars }"
+
+outputPath: results/chat-results.json
