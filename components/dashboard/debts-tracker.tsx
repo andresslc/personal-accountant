@@ -25,6 +25,7 @@ import {
   ResponsiveContainer,
 } from "recharts"
 import { CreditCard, Percent, Calendar, Eye, Plus } from "lucide-react"
+import { useCurrency } from "@/components/currency-provider"
 import {
   type LiabilityUI as Liability,
   payoffTimelineData,
@@ -36,6 +37,7 @@ import {
 
 export function DebtsTracker() {
   const searchParams = useSearchParams()
+  const { format, compact } = useCurrency()
   const [payoffStrategy, setPayoffStrategy] = useState("avalanche")
   const [liabilities, setLiabilities] = useState<Liability[]>([])
   const [isDebtDialogOpen, setIsDebtDialogOpen] = useState(false)
@@ -117,7 +119,7 @@ export function DebtsTracker() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              ${totalDebt.toLocaleString()}
+              {format(totalDebt)}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               Across {liabilities.length} liabilities
@@ -202,7 +204,7 @@ export function DebtsTracker() {
                         Current Balance
                       </p>
                       <p className="text-lg font-bold text-foreground">
-                        ${liability.currentBalance.toLocaleString()}
+                        {format(liability.currentBalance)}
                       </p>
                     </div>
                     <Progress value={progressPercent} className="h-2" />
@@ -217,7 +219,7 @@ export function DebtsTracker() {
                         Min. Payment
                       </p>
                       <p className="text-sm font-bold text-foreground">
-                        ${liability.minPayment}/mo
+                        {format(liability.minPayment)}/mo
                       </p>
                     </div>
                     <div>
@@ -280,7 +282,7 @@ export function DebtsTracker() {
               <XAxis dataKey="month" stroke="var(--muted-foreground)" />
               <YAxis
                 stroke="var(--muted-foreground)"
-                tickFormatter={(value) => `$${value / 1000}k`}
+                tickFormatter={(value) => compact(value)}
               />
               <Tooltip
                 contentStyle={{
@@ -288,7 +290,7 @@ export function DebtsTracker() {
                   border: "1px solid var(--border)",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => `$${value.toLocaleString()}`}
+                formatter={(value: number) => format(value)}
               />
               <Area
                 type="monotone"

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AuthProvider } from '@/components/auth-provider'
+import { CurrencyProvider } from '@/components/currency-provider'
 import { Sidebar, SidebarProvider } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
 
@@ -18,15 +19,17 @@ export default async function DashboardLayout({
 
   return (
     <AuthProvider initialUser={user}>
-      <SidebarProvider>
-        <div className="flex h-screen bg-background overflow-hidden">
-          <Sidebar />
-          <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
-            <Header />
-            <div className="flex-1 overflow-y-auto p-8">{children}</div>
-          </main>
-        </div>
-      </SidebarProvider>
+      <CurrencyProvider>
+        <SidebarProvider>
+          <div className="flex h-screen bg-background overflow-hidden">
+            <Sidebar />
+            <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+              <Header />
+              <div className="flex-1 overflow-y-auto p-8">{children}</div>
+            </main>
+          </div>
+        </SidebarProvider>
+      </CurrencyProvider>
     </AuthProvider>
   )
 }

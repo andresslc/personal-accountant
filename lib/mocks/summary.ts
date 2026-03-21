@@ -1,5 +1,6 @@
 // Mock summary/overview data
 import { TrendingUp, TrendingDown, DollarSign, Wallet, type LucideIcon } from "lucide-react"
+import { formatCurrency as formatCurrencyUtil } from "@/lib/utils/currency"
 
 export interface SummaryCard {
   title: string
@@ -13,7 +14,7 @@ export interface SummaryCard {
 export const summaryCardsData: SummaryCard[] = [
   {
     title: "Total Balance",
-    value: "$24,582.50",
+    value: formatCurrencyUtil(24582.50),
     change: "+12.5%",
     positive: true,
     icon: DollarSign,
@@ -21,7 +22,7 @@ export const summaryCardsData: SummaryCard[] = [
   },
   {
     title: "Income",
-    value: "$8,450.00",
+    value: formatCurrencyUtil(8450.00),
     change: "+5.2%",
     positive: true,
     icon: TrendingUp,
@@ -29,7 +30,7 @@ export const summaryCardsData: SummaryCard[] = [
   },
   {
     title: "Expenses",
-    value: "$3,120.50",
+    value: formatCurrencyUtil(3120.50),
     change: "-2.1%",
     positive: false,
     icon: TrendingDown,
@@ -37,7 +38,7 @@ export const summaryCardsData: SummaryCard[] = [
   },
   {
     title: "Savings",
-    value: "$5,330.50",
+    value: formatCurrencyUtil(5330.50),
     change: "+18.3%",
     positive: true,
     icon: Wallet,
@@ -57,13 +58,8 @@ export const summaryValues = {
   savingsChange: 18.3,
 }
 
-// Format currency helper
-export const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(value)
-}
+// Format currency helper — re-export from shared utility
+export { formatCurrency } from "@/lib/utils/currency"
 
 // Format percentage helper
 export const formatPercentage = (value: number, showSign: boolean = true): string => {

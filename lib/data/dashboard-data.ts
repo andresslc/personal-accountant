@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { USE_MOCK_DATA } from "@/lib/config/data-source"
+import { formatCurrency, type SupportedCurrency } from "@/lib/utils/currency"
 import { createClient } from "@/lib/supabase/client"
 import {
   allTransactions,
@@ -164,8 +165,10 @@ export const getTransactionCategories = async (): Promise<string[]> => {
   return ["all", ...categories]
 }
 
-export const getSummaryCards = async () => {
+export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
   if (USE_MOCK_DATA) return summaryCardsData
+
+  const fmt = (v: number) => formatCurrency(v, currency)
 
   const transactions = await getTransactions()
   const income = transactions
@@ -185,7 +188,7 @@ export const getSummaryCards = async () => {
   return [
     {
       title: "Total Balance",
-      value: `$${totalBalance.toFixed(2)}`,
+      value: fmt(totalBalance),
       change: "Live",
       positive: totalBalance >= 0,
       icon: DollarSign,
@@ -193,7 +196,7 @@ export const getSummaryCards = async () => {
     },
     {
       title: "Income",
-      value: `$${income.toFixed(2)}`,
+      value: fmt(income),
       change: "Live",
       positive: true,
       icon: TrendingUp,
@@ -201,7 +204,7 @@ export const getSummaryCards = async () => {
     },
     {
       title: "Expenses",
-      value: `$${expenses.toFixed(2)}`,
+      value: fmt(expenses),
       change: "Live",
       positive: false,
       icon: TrendingDown,
@@ -209,7 +212,7 @@ export const getSummaryCards = async () => {
     },
     {
       title: "Savings",
-      value: `$${savings.toFixed(2)}`,
+      value: fmt(savings),
       change: "Live",
       positive: savings >= 0,
       icon: Wallet,

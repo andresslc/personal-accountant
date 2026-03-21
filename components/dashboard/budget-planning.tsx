@@ -15,9 +15,11 @@ import {
   getRemainingBudget,
   type BudgetItemUI as BudgetItem,
 } from "@/lib/data/dashboard-data"
+import { useCurrency } from "@/components/currency-provider"
 
 export function BudgetPlanning() {
   const searchParams = useSearchParams()
+  const { format } = useCurrency()
   const [budgets, setBudgets] = useState<BudgetItem[]>([])
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
 
@@ -54,16 +56,16 @@ export function BudgetPlanning() {
       <div className="grid md:grid-cols-3 gap-6">
         <Card className="p-6 border border-border">
           <p className="text-foreground/70 text-sm mb-2">Total Budget</p>
-          <p className="text-3xl font-bold text-foreground">${totalBudget.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-foreground">{format(totalBudget)}</p>
         </Card>
         <Card className="p-6 border border-border">
           <p className="text-foreground/70 text-sm mb-2">Total Spent</p>
-          <p className="text-3xl font-bold text-red-600">${totalSpent.toFixed(2)}</p>
+          <p className="text-3xl font-bold text-red-600">{format(totalSpent)}</p>
         </Card>
         <Card className="p-6 border border-border flex flex-col justify-between">
           <div>
             <p className="text-foreground/70 text-sm mb-2">Remaining</p>
-            <p className="text-3xl font-bold text-green-600">${remaining.toFixed(2)}</p>
+            <p className="text-3xl font-bold text-green-600">{format(remaining)}</p>
           </div>
           <p className="text-xs text-foreground/70 mt-4">{daysLeft !== null ? `${daysLeft} days left in month` : "\u00A0"}</p>
         </Card>
@@ -125,7 +127,7 @@ export function BudgetPlanning() {
               {/* Spent Info */}
               <div className="mb-4">
                 <p className={`text-sm font-semibold ${isOverBudget ? "text-red-600" : "text-foreground"}`}>
-                  ${budget.spent.toFixed(2)} of ${budget.limit.toFixed(2)}
+                  {format(budget.spent)} of {format(budget.limit)}
                 </p>
                 <p className="text-xs text-foreground/70 mt-1">{daysLeft !== null ? `${daysLeft} days left in month` : "\u00A0"}</p>
               </div>
@@ -133,7 +135,7 @@ export function BudgetPlanning() {
               {/* Warning if over budget */}
               {isOverBudget && (
                 <p className="text-xs text-red-600 font-medium">
-                  Over budget by ${(budget.spent - budget.limit).toFixed(2)}
+                  Over budget by {format(budget.spent - budget.limit)}
                 </p>
               )}
             </Card>

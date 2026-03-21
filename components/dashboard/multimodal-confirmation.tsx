@@ -18,15 +18,7 @@ import {
 import { TransactionConfirmationCard } from "./transaction-confirmation-card"
 import type { MultimodalParseResult, ParsedBudget, ParsedDebt } from "@/lib/ai/multimodal-types"
 import { getCategoryById } from "@/lib/data/dashboard-data"
-
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
+import { useCurrency } from "@/components/currency-provider"
 
 interface ConfirmationProps {
   onConfirm: () => void
@@ -38,6 +30,7 @@ function BudgetConfirmationCard({
   onConfirm,
   onTryAgain,
 }: ConfirmationProps & { budget: ParsedBudget }) {
+  const { format } = useCurrency()
   const category = getCategoryById(budget.category_id)
   const lowConfidence = budget.confidence < 0.7
 
@@ -73,7 +66,7 @@ function BudgetConfirmationCard({
           <DollarSign className="w-4 h-4 text-muted-foreground shrink-0" />
           <div>
             <p className="text-sm text-muted-foreground">Monthly Limit</p>
-            <p className="font-semibold text-lg">{formatCOP(budget.budget_limit)}</p>
+            <p className="font-semibold text-lg">{format(budget.budget_limit)}</p>
           </div>
         </div>
 
@@ -113,6 +106,7 @@ function DebtConfirmationCard({
   onConfirm,
   onTryAgain,
 }: ConfirmationProps & { debt: ParsedDebt }) {
+  const { format } = useCurrency()
   const lowConfidence = debt.confidence < 0.7
 
   const debtTypeLabels: Record<string, string> = {
@@ -153,7 +147,7 @@ function DebtConfirmationCard({
           <DollarSign className="w-4 h-4 text-muted-foreground shrink-0" />
           <div>
             <p className="text-sm text-muted-foreground">Current Balance</p>
-            <p className="font-semibold text-lg">{formatCOP(debt.current_balance)}</p>
+            <p className="font-semibold text-lg">{format(debt.current_balance)}</p>
           </div>
         </div>
 
@@ -161,7 +155,7 @@ function DebtConfirmationCard({
           <CreditCard className="w-4 h-4 text-muted-foreground shrink-0" />
           <div>
             <p className="text-sm text-muted-foreground">Min. Payment</p>
-            <p className="font-medium">{formatCOP(debt.min_payment)}</p>
+            <p className="font-medium">{format(debt.min_payment)}</p>
           </div>
         </div>
 

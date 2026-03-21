@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { AlertTriangle, Check, RotateCcw, Calendar, CreditCard, Tag, DollarSign } from "lucide-react"
 import type { ParsedTransaction } from "@/lib/ai/types"
 import { getCategoryById, liabilitiesData } from "@/lib/data/dashboard-data"
+import { useCurrency } from "@/components/currency-provider"
 
 interface TransactionConfirmationCardProps {
   transaction: ParsedTransaction
@@ -25,20 +26,12 @@ const typeLabels: Record<string, string> = {
   "debt-payment": "Debt Payment",
 }
 
-function formatCOP(amount: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
 export function TransactionConfirmationCard({
   transaction,
   onConfirm,
   onTryAgain,
 }: TransactionConfirmationCardProps) {
+  const { format } = useCurrency()
   const category = getCategoryById(transaction.category_id)
   const liability = transaction.liability_id
     ? liabilitiesData.find((l) => l.id === transaction.liability_id)
@@ -67,7 +60,7 @@ export function TransactionConfirmationCard({
           <DollarSign className="w-4 h-4 text-muted-foreground shrink-0" />
           <div>
             <p className="text-sm text-muted-foreground">Amount</p>
-            <p className="font-semibold text-lg">{formatCOP(transaction.amount)}</p>
+            <p className="font-semibold text-lg">{format(transaction.amount)}</p>
           </div>
         </div>
 

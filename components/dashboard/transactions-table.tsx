@@ -5,8 +5,10 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getRecentTransactions } from "@/lib/data/dashboard-data"
 import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
+import { useCurrency } from "@/components/currency-provider"
 
 export function TransactionsTable() {
+  const { format } = useCurrency()
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
   useEffect(() => {
@@ -57,8 +59,7 @@ export function TransactionsTable() {
                   <td
                     className={`px-6 py-4 text-right text-sm font-semibold ${isIncome ? "text-green-600" : "text-red-600"}`}
                   >
-                    {isIncome ? "+" : ""}
-                    {transaction.amount.toFixed(2)}
+                    {isIncome ? "+" : ""}{format(Math.abs(transaction.amount))}
                   </td>
                 </tr>
               )

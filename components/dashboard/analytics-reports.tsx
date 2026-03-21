@@ -31,8 +31,10 @@ import {
 } from "@/lib/data/dashboard-data"
 import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
+import { useCurrency } from "@/components/currency-provider"
 
 export function AnalyticsReports() {
+  const { format } = useCurrency()
   const [cashFlow, setCashFlow] = useState<MonthlyData[]>([])
   const [breakdown, setBreakdown] = useState<CategoryExpense[]>([])
   const [spendingCategories, setSpendingCategories] = useState<SpendingRank[]>([])
@@ -145,7 +147,7 @@ export function AnalyticsReports() {
                     style={{ backgroundColor: chartColors[index % chartColors.length] }}
                   ></div>
                   <span className="text-sm text-foreground">{item.name}</span>
-                  <span className="text-sm font-semibold text-foreground/70 ml-auto">${item.value}</span>
+                  <span className="text-sm font-semibold text-foreground/70 ml-auto">{format(item.value)}</span>
                 </div>
               ))}
             </div>
@@ -165,7 +167,7 @@ export function AnalyticsReports() {
                   <span className="text-sm font-bold text-foreground/50">{item.rank}</span>
                   <span className="text-sm font-medium text-foreground">{item.category}</span>
                 </div>
-                <span className="text-sm font-bold text-foreground">${item.amount.toFixed(2)}</span>
+                <span className="text-sm font-bold text-foreground">{format(item.amount)}</span>
               </div>
             ))}
           </div>
@@ -184,7 +186,7 @@ export function AnalyticsReports() {
                   <p className="text-sm font-medium text-foreground">{sub.name}</p>
                   <p className="text-xs text-foreground/70">{sub.frequency}</p>
                 </div>
-                <p className="text-sm font-bold text-foreground">${sub.amount.toFixed(2)}</p>
+                <p className="text-sm font-bold text-foreground">{format(sub.amount)}</p>
               </div>
             ))}
           </div>

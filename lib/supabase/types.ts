@@ -94,6 +94,14 @@ export interface ChatSummary {
   created_at: string
 }
 
+export interface UserPreferences {
+  id: string
+  user_id: string
+  currency: 'COP' | 'USD'
+  created_at: string
+  updated_at: string
+}
+
 // Database type map for the Supabase client generic
 export interface Database {
   public: {
@@ -132,6 +140,11 @@ export interface Database {
         Row: ChatSummary
         Insert: Omit<ChatSummary, 'id' | 'created_at'>
         Update: Partial<Omit<ChatSummary, 'id' | 'user_id' | 'created_at'>>
+      }
+      user_preferences: {
+        Row: UserPreferences
+        Insert: Omit<UserPreferences, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<UserPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
       }
     }
     Views: {

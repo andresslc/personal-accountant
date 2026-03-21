@@ -3,7 +3,7 @@
 import { createContext, useContext, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft } from "lucide-react"
+import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type SidebarContextType = {
@@ -36,6 +36,7 @@ const navigationItems = [
   { href: "/dashboard/debts", label: "Debts", icon: CreditCard },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
   { href: "/dashboard/chat", label: "AI Chat", icon: MessageSquare },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 
 export function Sidebar() {

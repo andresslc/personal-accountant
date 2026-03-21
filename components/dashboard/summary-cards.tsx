@@ -4,18 +4,20 @@ import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { getSummaryCards } from "@/lib/data/dashboard-data"
 import type { SummaryCard } from "@/lib/data/dashboard-data"
+import { useCurrency } from "@/components/currency-provider"
 
 export function SummaryCards() {
+  const { currency } = useCurrency()
   const [cards, setCards] = useState<SummaryCard[]>([])
 
   useEffect(() => {
     const loadCards = async () => {
-      const data = await getSummaryCards()
+      const data = await getSummaryCards(currency)
       setCards(data)
     }
 
     void loadCards()
-  }, [])
+  }, [currency])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

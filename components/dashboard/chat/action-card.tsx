@@ -2,6 +2,7 @@
 
 import { Check, CreditCard, Wallet, TrendingDown, Trash2, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { useCurrency } from "@/components/currency-provider"
 
 type ActionKind =
   | "transaction_created"
@@ -16,13 +17,7 @@ interface ActionCardProps {
 }
 
 export function ActionCard({ kind, data }: ActionCardProps) {
-  const formatCOP = (amount: number) =>
-    new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount)
+  const { format } = useCurrency()
 
   switch (kind) {
     case "transaction_created": {
@@ -47,7 +42,7 @@ export function ActionCard({ kind, data }: ActionCardProps) {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{data.description as string}</span>
-              <span className="font-medium">{formatCOP(data.amount as number)}</span>
+              <span className="font-medium">{format(data.amount as number)}</span>
             </div>
             <div className="flex gap-2">
               <Badge variant="outline" className="text-xs">
@@ -75,7 +70,7 @@ export function ActionCard({ kind, data }: ActionCardProps) {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{data.category_id as string}</span>
-              <span className="font-medium">{formatCOP(data.budget_limit as number)}/mo</span>
+              <span className="font-medium">{format(data.budget_limit as number)}/mo</span>
             </div>
             {data.recurring && (
               <Badge variant="outline" className="text-xs">Recurring</Badge>
@@ -97,7 +92,7 @@ export function ActionCard({ kind, data }: ActionCardProps) {
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">{data.name as string}</span>
-              <span className="font-medium">{formatCOP(data.current_balance as number)}</span>
+              <span className="font-medium">{format(data.current_balance as number)}</span>
             </div>
             <div className="flex gap-2">
               <Badge variant="outline" className="text-xs">{data.type as string}</Badge>

@@ -10,10 +10,12 @@ import { Download, Grid, List } from "lucide-react"
 import { getTransactionCategories, getTransactions } from "@/lib/data/dashboard-data"
 import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
+import { useCurrency } from "@/components/currency-provider"
 
 const PAGE_SIZE = 8
 
 export function TransactionsManager() {
+  const { format } = useCurrency()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["all"])
   const [search, setSearch] = useState("")
@@ -172,8 +174,7 @@ export function TransactionsManager() {
                       <td
                         className={`px-6 py-4 text-right text-sm font-semibold ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}
                       >
-                        {transaction.amount > 0 ? "+" : ""}
-                        {transaction.amount.toFixed(2)}
+                        {transaction.amount > 0 ? "+" : ""}{format(Math.abs(transaction.amount))}
                       </td>
                     </tr>
                   ))}
@@ -239,8 +240,7 @@ export function TransactionsManager() {
                 </div>
                 <div className="pt-3 border-t border-border">
                   <p className={`text-lg font-bold ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}>
-                    {transaction.amount > 0 ? "+" : ""}
-                    {transaction.amount.toFixed(2)}
+                    {transaction.amount > 0 ? "+" : ""}{format(Math.abs(transaction.amount))}
                   </p>
                   <p className="text-xs text-foreground/70 mt-1">{transaction.method}</p>
                 </div>
