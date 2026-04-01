@@ -114,7 +114,14 @@ export function MobileSidebar() {
 
 export function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { collapsed, setCollapsed } = useSidebar()
+
+  const handleLogout = async () => {
+    await fetch("/auth/signout", { method: "POST" })
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <aside
@@ -174,6 +181,23 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Logout */}
+      <div className="border-t border-border p-2">
+        <button
+          onClick={handleLogout}
+          title={collapsed ? "Logout" : undefined}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-destructive hover:bg-destructive/10 w-full",
+            collapsed && "justify-center px-0",
+          )}
+        >
+          <LogOut className="w-5 h-5 shrink-0" />
+          {!collapsed && (
+            <span className="font-medium whitespace-nowrap">Logout</span>
+          )}
+        </button>
+      </div>
     </aside>
   )
 }

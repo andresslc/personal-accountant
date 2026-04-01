@@ -20,7 +20,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Settings</h1>
         <p className="text-muted-foreground mt-1">Manage your account preferences.</p>
       </div>
 
@@ -49,13 +49,13 @@ export default function SettingsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <Label htmlFor="currency-select" className="shrink-0">Display Currency</Label>
             <Select
               value={currency}
               onValueChange={(value) => setCurrency(value as SupportedCurrency)}
             >
-              <SelectTrigger id="currency-select" className="w-64">
+              <SelectTrigger id="currency-select" className="w-full sm:w-64">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -1,17 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Bell, Settings, Sun, Moon, LogOut, Menu } from "lucide-react"
+import { Bell, Sun, Moon, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/components/auth-provider"
 import { useSidebar } from "@/components/dashboard/sidebar"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
@@ -37,7 +29,6 @@ export function Header() {
   const { resolvedTheme, setTheme } = useTheme()
   const { setMobileOpen } = useSidebar()
   const [mounted, setMounted] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     setMounted(true)
@@ -49,12 +40,6 @@ export function Header() {
     user?.email ||
     "User"
 
-  const handleLogout = async () => {
-    await fetch("/auth/signout", { method: "POST" })
-    router.push("/login")
-    router.refresh()
-  }
-
   const toggleTheme = () => {
     setTheme(resolvedTheme === "dark" ? "light" : "dark")
   }
@@ -64,11 +49,11 @@ export function Header() {
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
       <div className="px-4 py-3 md:px-8 md:py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden shrink-0"
             onClick={() => setMobileOpen(true)}
           >
             <Menu className="w-5 h-5" />
@@ -78,7 +63,7 @@ export function Header() {
             <p className="text-sm text-foreground/70 hidden sm:block">{dateStr}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 md:gap-4 shrink-0">
           <div className="hidden sm:block">
             <AIRecommendationsDialog
               endpoint="/api/ai/insights/finance"
@@ -92,30 +77,13 @@ export function Header() {
             <Bell className="w-5 h-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
           </Button>
-          <div className="hidden md:block">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={toggleTheme}>
-                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                  {isDark ? "Light Mode" : "Dark Mode"}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
-                  <Settings className="w-4 h-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleTheme}
+          >
+            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
         </div>
       </div>
     </header>
