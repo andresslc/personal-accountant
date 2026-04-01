@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft, Settings } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft, Settings, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -52,11 +52,19 @@ const navigationItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const { mobileOpen, setMobileOpen } = useSidebar()
+
+  const handleLogout = async () => {
+    setMobileOpen(false)
+    await fetch("/auth/signout", { method: "POST" })
+    router.push("/login")
+    router.refresh()
+  }
 
   return (
     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-      <SheetContent side="left" className="w-64 p-0">
+      <SheetContent side="left" className="w-64 p-0 flex flex-col">
         <SheetHeader className="border-b border-border p-4">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
@@ -90,6 +98,15 @@ export function MobileSidebar() {
             )
           })}
         </nav>
+        <div className="border-t border-border p-2">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-destructive hover:bg-destructive/10 w-full"
+          >
+            <LogOut className="w-5 h-5 shrink-0" />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
       </SheetContent>
     </Sheet>
   )

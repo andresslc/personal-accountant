@@ -73,45 +73,49 @@ export function Header() {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <div>
-            <p className="text-base md:text-lg font-semibold text-foreground">{greeting}, {displayName}</p>
+          <div className="min-w-0">
+            <p className="text-base md:text-lg font-semibold text-foreground truncate">{greeting}, {displayName}</p>
             <p className="text-sm text-foreground/70 hidden sm:block">{dateStr}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 md:gap-4">
-          <AIRecommendationsDialog
-            endpoint="/api/ai/insights/finance"
-            title="Financial Recommendations"
-            description="Get a comprehensive overview with recommendations across all your finances."
-            triggerLabel="AI Recommendations"
-            defaultAnalysisType="overview"
-          />
+          <div className="hidden sm:block">
+            <AIRecommendationsDialog
+              endpoint="/api/ai/insights/finance"
+              title="Financial Recommendations"
+              description="Get a comprehensive overview with recommendations across all your finances."
+              triggerLabel="AI Recommendations"
+              defaultAnalysisType="overview"
+            />
+          </div>
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="w-5 h-5" />
             <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Settings className="w-5 h-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={toggleTheme}>
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                {isDark ? "Light Mode" : "Dark Mode"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
-                <Settings className="w-4 h-4" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={handleLogout}>
-                <LogOut className="w-4 h-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="hidden md:block">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Settings className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={toggleTheme}>
+                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                  {isDark ? "Light Mode" : "Dark Mode"}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
+                  <Settings className="w-4 h-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" onClick={handleLogout}>
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </header>

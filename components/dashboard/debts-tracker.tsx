@@ -232,13 +232,13 @@ export function DebtsTracker() {
                 </CardContent>
 
                 <CardFooter className="gap-2">
-                  <Button variant="ghost" className="flex-1 text-xs h-9">
+                  <Button variant="ghost" className="flex-1 text-xs h-10">
                     <Eye className="w-4 h-4 mr-1" />
                     View Details
                   </Button>
                   <Button
                     variant="outline"
-                    className="flex-1 text-xs h-9 border-amber-500 text-amber-500 hover:bg-amber-500/10 bg-transparent"
+                    className="flex-1 text-xs h-10 border-amber-500 text-amber-500 hover:bg-amber-500/10 bg-transparent"
                   >
                     Record Payment
                   </Button>
