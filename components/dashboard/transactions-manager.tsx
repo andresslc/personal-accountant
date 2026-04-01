@@ -106,7 +106,7 @@ export function TransactionsManager() {
             </Select>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex gap-2">
               <Button
                 variant={view === "table" ? "default" : "outline"}
@@ -129,7 +129,7 @@ export function TransactionsManager() {
             </div>
             <div className="flex items-center gap-2">
               <AIRecommendationsDialog
-                endpoint="/api/ai/transactions-insights"
+                endpoint="/api/ai/insights/transactions"
                 title="Spending Recommendations"
                 description="Get actionable advice to reduce spending and optimize your expenses."
                 triggerLabel="Spending Advice"
@@ -153,26 +153,26 @@ export function TransactionsManager() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Date</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Category</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Description</th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">Method</th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">Amount</th>
+                    <th className="px-3 py-2 md:px-6 md:py-3 text-left text-sm font-semibold text-foreground">Date</th>
+                    <th className="px-3 py-2 md:px-6 md:py-3 text-left text-sm font-semibold text-foreground">Category</th>
+                    <th className="px-3 py-2 md:px-6 md:py-3 text-left text-sm font-semibold text-foreground">Description</th>
+                    <th className="px-3 py-2 md:px-6 md:py-3 text-left text-sm font-semibold text-foreground hidden sm:table-cell">Method</th>
+                    <th className="px-3 py-2 md:px-6 md:py-3 text-right text-sm font-semibold text-foreground">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedTransactions.map((transaction) => (
                     <tr key={transaction.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4 text-sm text-foreground">{transaction.date}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-foreground">{transaction.date}</td>
+                      <td className="px-3 py-3 md:px-6 md:py-4">
                         <Badge variant="secondary" className="font-normal">
                           {transaction.category}
                         </Badge>
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground">{transaction.description}</td>
-                      <td className="px-6 py-4 text-sm text-foreground/70">{transaction.method}</td>
+                      <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-foreground">{transaction.description}</td>
+                      <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-foreground/70 hidden sm:table-cell">{transaction.method}</td>
                       <td
-                        className={`px-6 py-4 text-right text-sm font-semibold ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}
+                        className={`px-3 py-3 md:px-6 md:py-4 text-right text-sm font-semibold ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}
                       >
                         {transaction.amount > 0 ? "+" : ""}{format(Math.abs(transaction.amount))}
                       </td>
@@ -196,7 +196,7 @@ export function TransactionsManager() {
 
           {/* Pagination */}
           {filteredTransactions.length > 0 && (
-            <div className="border-t border-border p-4 flex items-center justify-between bg-muted/50">
+            <div className="border-t border-border p-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-muted/50">
               <p className="text-sm text-foreground/70">
                 Page {currentPage} of {totalPages} ({filteredTransactions.length} transactions)
               </p>

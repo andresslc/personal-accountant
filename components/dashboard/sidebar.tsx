@@ -5,15 +5,25 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 
 type SidebarContextType = {
   collapsed: boolean
   setCollapsed: (v: boolean) => void
+  mobileOpen: boolean
+  setMobileOpen: (v: boolean) => void
 }
 
 const SidebarContext = createContext<SidebarContextType>({
   collapsed: false,
   setCollapsed: () => {},
+  mobileOpen: false,
+  setMobileOpen: () => {},
 })
 
 export function useSidebar() {
@@ -22,8 +32,9 @@ export function useSidebar() {
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   return (
-    <SidebarContext value={{ collapsed, setCollapsed }}>
+    <SidebarContext value={{ collapsed, setCollapsed, mobileOpen, setMobileOpen }}>
       {children}
     </SidebarContext>
   )
@@ -39,6 +50,51 @@ const navigationItems = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ]
 
+export function MobileSidebar() {
+  const pathname = usePathname()
+  const { mobileOpen, setMobileOpen } = useSidebar()
+
+  return (
+    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+      <SheetContent side="left" className="w-64 p-0">
+        <SheetHeader className="border-b border-border p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
+              <TrendingUp className="w-5 h-5 text-primary-foreground" />
+            </div>
+            <SheetTitle className="font-bold text-lg">FinFlow</SheetTitle>
+          </div>
+        </SheetHeader>
+        <nav className="flex-1 p-2 space-y-1">
+          {navigationItems.map((item) => {
+            const isActive = item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href)
+            const Icon = item.icon
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors",
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground/70 hover:text-foreground hover:bg-muted",
+                )}
+              >
+                <Icon className="w-5 h-5 shrink-0" />
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 export function Sidebar() {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
@@ -46,7 +102,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 h-screen border-r border-border bg-card flex flex-col shrink-0 transition-all duration-300 overflow-hidden",
+        "hidden md:flex sticky top-0 h-screen border-r border-border bg-card flex-col shrink-0 transition-all duration-300 overflow-hidden",
         collapsed ? "w-16" : "w-64"
       )}
     >

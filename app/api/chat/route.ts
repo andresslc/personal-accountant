@@ -8,6 +8,8 @@ import type { StreamEvent } from "@/lib/ai/chat/types"
 export const runtime = "nodejs"
 export const maxDuration = 60
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get("content-type") || ""
@@ -56,10 +58,32 @@ export async function POST(request: Request) {
     const {
       data: { user },
     } = await supabase.auth.getUser()
-    const userId = user?.id ?? "anonymous"
+
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
+      )
+    }
+
+    const userId = user.id
 
     if (action === "summarize") {
       return handleSummarize(messages, userId, supabase)
+    }
+
+    if (audioFile && audioFile.size > MAX_FILE_SIZE) {
+      return new Response(
+        JSON.stringify({ error: "Audio file too large. Maximum size is 10 MB." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      )
+    }
+
+    if (imageFile && imageFile.size > MAX_FILE_SIZE) {
+      return new Response(
+        JSON.stringify({ error: "Image file too large. Maximum size is 10 MB." }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      )
     }
 
     if (audioFile) {
@@ -172,9 +196,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Chat API error:", error)
     return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Internal server error",
-      }),
+      JSON.stringify({ error: "An unexpected error occurred. Please try again." }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     )
   }
@@ -201,7 +223,7 @@ async function handleSummarize(
       }),
     })
 
-    if (userId !== "anonymous" && supabase) {
+    if (supabase) {
       await supabase.from("chat_summaries").insert({
         user_id: userId,
         summary: result.summary,

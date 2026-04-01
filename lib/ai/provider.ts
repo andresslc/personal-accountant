@@ -313,14 +313,15 @@ class GeminiProvider implements AIProvider {
   ): AsyncIterable<ChatStreamChunk> {
     const model = this.client.getGenerativeModel({
       model: this.modelName,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       tools: tools.length > 0
         ? [{
             functionDeclarations: tools.map((t) => ({
               name: t.function.name,
               description: t.function.description,
-              parameters: t.function.parameters as Record<string, unknown>,
+              parameters: t.function.parameters,
             })),
-          }]
+          }] as any
         : undefined,
     })
 

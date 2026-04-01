@@ -2,8 +2,12 @@ import { NextResponse } from "next/server"
 import { ZodError } from "zod"
 import { getAIProvider } from "@/lib/ai/provider"
 import { applyInputGuardrails } from "@/lib/ai/guardrails"
+import { requireAuth } from "@/lib/auth-guard"
 
 export async function POST(request: Request) {
+  const { response } = await requireAuth()
+  if (response) return response
+
   try {
     const body = await request.json()
     const text = body?.text?.trim()

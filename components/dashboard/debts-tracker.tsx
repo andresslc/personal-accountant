@@ -60,19 +60,19 @@ export function DebtsTracker() {
   const totalDebt = getTotalDebt(liabilities)
   const avgApr = getWeightedAverageApr(liabilities)
   return (
-    <div className="flex-1 p-8 space-y-8">
+    <div className="flex-1 space-y-6 md:space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
             Debt Payoff Tracker
           </h1>
           <p className="text-muted-foreground mt-1">
             Manage your liabilities and visualize your road to freedom.
           </p>
         </div>
-        <div className="flex items-end gap-3">
-          <div className="w-56">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-full sm:w-56">
             <label className="text-sm font-medium text-foreground mb-2 block">Payoff Strategy</label>
             <Select value={payoffStrategy} onValueChange={setPayoffStrategy}>
               <SelectTrigger>
@@ -85,7 +85,7 @@ export function DebtsTracker() {
             </Select>
           </div>
           <AIRecommendationsDialog
-            endpoint="/api/ai/debts-insights"
+            endpoint="/api/ai/insights/debts"
             title="Debt Payoff Strategy"
             description="Get a personalized debt payoff plan to save on interest and become debt-free faster."
             triggerLabel="Debt Advice"
@@ -290,7 +290,7 @@ export function DebtsTracker() {
                   border: "1px solid var(--border)",
                   borderRadius: "8px",
                 }}
-                formatter={(value: number) => format(value)}
+                formatter={(value) => format(value as number)}
               />
               <Area
                 type="monotone"

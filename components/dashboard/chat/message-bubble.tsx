@@ -1,5 +1,3 @@
-"use client"
-
 import { Bot, User } from "lucide-react"
 import { ActionCard } from "./action-card"
 import type { ChatMessage } from "@/lib/ai/chat/types"

@@ -85,7 +85,7 @@ export function BudgetPlanning() {
           }
         />
         <AIRecommendationsDialog
-          endpoint="/api/ai/budget-insights"
+          endpoint="/api/ai/insights/budget"
           title="Budget Recommendations"
           description="Get budget allocation advice and category optimization suggestions."
           triggerLabel="Budget Advice"

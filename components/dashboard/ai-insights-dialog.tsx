@@ -283,7 +283,7 @@ export function AIRecommendationsDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">From</p>
               <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />

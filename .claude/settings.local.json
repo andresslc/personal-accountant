@@ -5,7 +5,12 @@
       "mcp__plugin_supabase_supabase__execute_sql",
       "mcp__plugin_supabase_supabase__get_logs",
       "mcp__plugin_supabase_supabase__apply_migration",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(grep -n \"useEffect\\\\|useState\\\\|async\" /c/Users/andres/documents/github/personal-accountant/components/dashboard/*.tsx)",
+      "Bash(grep -n \"get.*Dialog\\\\|Dialog.*\\\\|Card.*\\\\|createDialog\" /c/Users/andres/documents/github/personal-accountant/components/dashboard/*.tsx)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -n \"export const\\\\|export function\" /c/Users/andres/documents/github/personal-accountant/lib/mocks/*.ts)",
+      "Bash(npm ls:*)"
     ]
   }
 }

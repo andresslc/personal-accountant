@@ -1,0 +1,1 @@
+- [Data layer architecture](data-layer-architecture.md) -- dashboard-data.ts has request-scoped caching, direct Supabase queries for recent transactions and categories

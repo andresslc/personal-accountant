@@ -1,3 +1,4 @@
+// @ts-expect-error -- promptfoo type name varies by version
 import type { AssertionResult } from "promptfoo"
 
 export default async function groundingCheck(

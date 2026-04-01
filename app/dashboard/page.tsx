@@ -19,7 +19,7 @@ export default function Dashboard() {
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
         <QuickAddMenu
           onAddTransaction={() => setIsTransactionDialogOpen(true)}
           onCreateBudget={() => setIsBudgetDialogOpen(true)}

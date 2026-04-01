@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server"
 import { runMultimodalGraph } from "@/lib/ai/multimodal-graph"
 import { applyInputGuardrails } from "@/lib/ai/guardrails"
+import { requireAuth } from "@/lib/auth-guard"
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
 export async function POST(request: Request) {
+  const { response } = await requireAuth()
+  if (response) return response
+
   try {
     const formData = await request.formData()
     const type = formData.get("type") as string | null
@@ -40,6 +46,13 @@ export async function POST(request: Request) {
       )
     }
 
+    if (file && file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { success: false, error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024} MB.` },
+        { status: 400 }
+      )
+    }
+
     let imageBase64: string | undefined
     let imageMimeType: string | undefined
     let audioBuffer: Buffer | undefined
@@ -69,10 +82,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, ...result })
   } catch (error) {
     console.error("parse-multimodal error:", error)
-
-    const message =
-      error instanceof Error ? error.message : "Failed to parse input. Please try again."
-
-    return NextResponse.json({ success: false, error: message }, { status: 500 })
+    return NextResponse.json(
+      { success: false, error: "Failed to parse input. Please try again." },
+      { status: 500 }
+    )
   }
 }

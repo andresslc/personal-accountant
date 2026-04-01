@@ -72,7 +72,7 @@ export function ActionCard({ kind, data }: ActionCardProps) {
               <span className="text-muted-foreground">{data.category_id as string}</span>
               <span className="font-medium">{format(data.budget_limit as number)}/mo</span>
             </div>
-            {data.recurring && (
+            {Boolean(data.recurring) && (
               <Badge variant="outline" className="text-xs">Recurring</Badge>
             )}
           </div>

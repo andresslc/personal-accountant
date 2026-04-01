@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { getTransactions, getBudgets, getDebts } from "@/lib/data/dashboard-data"
 import { generatePredictions, type PredictionType } from "@/lib/predictions"
+import { requireAuth } from "@/lib/auth-guard"
 
 const PredictionRequestSchema = z.object({
   prediction_types: z
@@ -18,7 +19,41 @@ const PredictionRequestSchema = z.object({
     .optional(),
 })
 
+async function fetchAndPredict(predictionTypes?: PredictionType[]) {
+  const [transactions, budgets, debts] = await Promise.all([
+    getTransactions(),
+    getBudgets(),
+    getDebts(),
+  ])
+
+  const txData = transactions.map((t) => ({
+    date: t.date,
+    category: t.category,
+    type: t.type,
+    amount: t.amount,
+    description: t.description,
+  }))
+
+  const budgetData = budgets.map((b) => ({
+    category: b.category,
+    limit: b.limit,
+    spent: b.spent,
+  }))
+
+  const debtData = debts.map((d) => ({
+    name: d.name,
+    currentBalance: d.currentBalance,
+    apr: d.apr,
+    minPayment: d.minPayment,
+  }))
+
+  return generatePredictions(txData, budgetData, debtData, predictionTypes)
+}
+
 export async function POST(request: Request) {
+  const { response } = await requireAuth()
+  if (response) return response
+
   try {
     const body = await request.json().catch(() => ({}))
     const parsed = PredictionRequestSchema.safeParse(body)
@@ -30,98 +65,28 @@ export async function POST(request: Request) {
       )
     }
 
-    const [transactions, budgets, debts] = await Promise.all([
-      getTransactions(),
-      getBudgets(),
-      getDebts(),
-    ])
-
-    const txData = transactions.map((t) => ({
-      date: t.date,
-      category: t.category,
-      type: t.type,
-      amount: t.amount,
-      description: t.description,
-    }))
-
-    const budgetData = budgets.map((b) => ({
-      category: b.category,
-      limit: b.limit,
-      spent: b.spent,
-    }))
-
-    const debtData = debts.map((d) => ({
-      name: d.name,
-      currentBalance: d.currentBalance,
-      apr: d.apr,
-      minPayment: d.minPayment,
-    }))
-
-    const predictions = generatePredictions(
-      txData,
-      budgetData,
-      debtData,
-      parsed.data.prediction_types as PredictionType[] | undefined
-    )
-
+    const predictions = await fetchAndPredict(parsed.data.prediction_types as PredictionType[] | undefined)
     return NextResponse.json({ success: true, data: predictions })
   } catch (error) {
+    console.error("predictions error:", error)
     return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: error instanceof Error ? error.message : "Unknown error",
-          retryable: true,
-        },
-      },
+      { success: false, error: { code: "INTERNAL_ERROR", message: "Failed to generate predictions.", retryable: true } },
       { status: 500 }
     )
   }
 }
 
 export async function GET() {
+  const { response } = await requireAuth()
+  if (response) return response
+
   try {
-    const [transactions, budgets, debts] = await Promise.all([
-      getTransactions(),
-      getBudgets(),
-      getDebts(),
-    ])
-
-    const txData = transactions.map((t) => ({
-      date: t.date,
-      category: t.category,
-      type: t.type,
-      amount: t.amount,
-      description: t.description,
-    }))
-
-    const budgetData = budgets.map((b) => ({
-      category: b.category,
-      limit: b.limit,
-      spent: b.spent,
-    }))
-
-    const debtData = debts.map((d) => ({
-      name: d.name,
-      currentBalance: d.currentBalance,
-      apr: d.apr,
-      minPayment: d.minPayment,
-    }))
-
-    const predictions = generatePredictions(txData, budgetData, debtData)
-
+    const predictions = await fetchAndPredict()
     return NextResponse.json({ success: true, data: predictions })
   } catch (error) {
+    console.error("predictions error:", error)
     return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: "INTERNAL_ERROR",
-          message: error instanceof Error ? error.message : "Unknown error",
-          retryable: true,
-        },
-      },
+      { success: false, error: { code: "INTERNAL_ERROR", message: "Failed to generate predictions.", retryable: true } },
       { status: 500 }
     )
   }

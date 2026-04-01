@@ -75,14 +75,34 @@ const typeIconMap: Record<MockLiability["type"], LucideIcon> = {
 const toMonthLabel = (dateString: string) =>
   new Date(dateString).toLocaleString("en-US", { month: "short" })
 
-const safeDateValue = (dateString: string) => {
-  const parsed = new Date(dateString)
-  return Number.isNaN(parsed.getTime()) ? new Date(0).getTime() : parsed.getTime()
-}
-
 const getCategoryIcon = (category: string): LucideIcon => {
   const normalized = category.trim().toLowerCase()
   return categoryIconMap[normalized] ?? CreditCard
+}
+
+// --- Request-scoped cache for deduplicating underlying queries ---
+// Each cache entry stores its creation timestamp. Entries older than
+// the TTL are treated as stale so that successive user-initiated
+// navigations always hit the database while concurrent fetches within
+// the same logical request share a single query.
+const REQUEST_CACHE_TTL_MS = 5_000
+
+type CacheEntry<T> = { data: T; ts: number }
+
+const queryCache = new Map<string, CacheEntry<unknown>>()
+
+function getCached<T>(key: string): T | undefined {
+  const entry = queryCache.get(key)
+  if (!entry) return undefined
+  if (Date.now() - entry.ts > REQUEST_CACHE_TTL_MS) {
+    queryCache.delete(key)
+    return undefined
+  }
+  return entry.data as T
+}
+
+function setCached<T>(key: string, data: T): void {
+  queryCache.set(key, { data, ts: Date.now() })
 }
 
 const getCategoryMap = async (): Promise<CategoryMap> => {
@@ -127,6 +147,10 @@ const mapSupabaseTransactionToUi = (
 
 export const getTransactions = async (): Promise<MockTransaction[]> => {
   if (USE_MOCK_DATA) return allTransactions
+
+  const cached = getCached<MockTransaction[]>("transactions")
+  if (cached) return cached
+
   const supabase = getSupabaseClient()
   if (!supabase) return []
 
@@ -139,20 +163,27 @@ export const getTransactions = async (): Promise<MockTransaction[]> => {
 
   if (error || !data) return []
 
-  return data.map((row) => mapSupabaseTransactionToUi(row, categories))
+  const result = data.map((row) => mapSupabaseTransactionToUi(row, categories))
+  setCached("transactions", result)
+  return result
 }
 
 export const getRecentTransactions = async (): Promise<MockTransaction[]> => {
   if (USE_MOCK_DATA) return recentTransactions
 
-  const all = await getTransactions()
-  return [...all]
-    .sort((a, b) => safeDateValue(b.date) - safeDateValue(a.date))
-    .slice(0, 5)
-    .map((transaction) => ({
-      ...transaction,
-      icon: getCategoryIcon(transaction.category),
-    }))
+  const supabase = getSupabaseClient()
+  if (!supabase) return []
+
+  const categories = await getCategoryMap()
+  const { data, error } = await supabase
+    .from("transactions")
+    .select("id,date,description,amount,type,method,category_id")
+    .order("date", { ascending: false })
+    .limit(5)
+
+  if (error || !data) return []
+
+  return data.map((row) => mapSupabaseTransactionToUi(row, categories))
 }
 
 export const getTransactionCategories = async (): Promise<string[]> => {
@@ -160,9 +191,17 @@ export const getTransactionCategories = async (): Promise<string[]> => {
     return ["all", ...new Set(allTransactions.map((transaction) => transaction.category))]
   }
 
-  const transactions = await getTransactions()
-  const categories = [...new Set(transactions.map((transaction) => transaction.category))]
-  return ["all", ...categories]
+  const supabase = getSupabaseClient()
+  if (!supabase) return ["all"]
+
+  const { data, error } = await supabase
+    .from("categories")
+    .select("name")
+    .order("name", { ascending: true })
+
+  if (error || !data) return ["all"]
+
+  return ["all", ...data.map((row) => row.name)]
 }
 
 export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
@@ -224,6 +263,9 @@ export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
 export const getIncomeVsExpenses = async () => {
   if (USE_MOCK_DATA) return incomeVsExpensesData
 
+  const cached = getCached<{ month: string; income: number; expenses: number }[]>("incomeVsExpenses")
+  if (cached) return cached
+
   const transactions = await getTransactions()
   const monthMap = new Map<string, { month: string; income: number; expenses: number }>()
 
@@ -238,11 +280,16 @@ export const getIncomeVsExpenses = async () => {
     monthMap.set(month, existing)
   }
 
-  return Array.from(monthMap.values())
+  const result = Array.from(monthMap.values())
+  setCached("incomeVsExpenses", result)
+  return result
 }
 
 export const getExpensesByCategory = async () => {
   if (USE_MOCK_DATA) return expensesByCategoryData
+
+  const cached = getCached<{ name: string; value: number }[]>("expensesByCategory")
+  if (cached) return cached
 
   const transactions = await getTransactions()
   const categoryTotals = new Map<string, number>()
@@ -255,7 +302,9 @@ export const getExpensesByCategory = async () => {
     )
   }
 
-  return Array.from(categoryTotals.entries()).map(([name, value]) => ({ name, value }))
+  const result = Array.from(categoryTotals.entries()).map(([name, value]) => ({ name, value }))
+  setCached("expensesByCategory", result)
+  return result
 }
 
 export const getChartColors = () => CHART_COLORS

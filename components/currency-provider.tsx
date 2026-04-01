@@ -34,18 +34,19 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    const supabase = createClient()
-    supabase
-      .from('user_preferences')
-      .select('currency')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.currency) {
-          setCurrencyState(data.currency as SupportedCurrency)
-        }
-        setLoading(false)
-      })
+    const loadPreferences = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('user_preferences')
+        .select('currency')
+        .eq('user_id', user.id)
+        .single<{ currency: string }>()
+      if (data?.currency) {
+        setCurrencyState(data.currency as SupportedCurrency)
+      }
+      setLoading(false)
+    }
+    void loadPreferences()
   }, [user])
 
   const setCurrency = useCallback(async (newCurrency: SupportedCurrency) => {
@@ -54,9 +55,9 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     if (!user || USE_MOCK_DATA) return
 
     const supabase = createClient()
-    await supabase
-      .from('user_preferences')
-      .upsert({ user_id: user.id, currency: newCurrency, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    await (supabase
+      .from('user_preferences') as ReturnType<typeof supabase.from>)
+      .upsert({ user_id: user.id, currency: newCurrency } as Record<string, unknown>, { onConflict: 'user_id' })
   }, [user])
 
   const format = useCallback((amount: number) => formatCurrency(amount, currency), [currency])

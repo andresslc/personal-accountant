@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { Bell, Settings, Sun, Moon, LogOut } from "lucide-react"
+import { Bell, Settings, Sun, Moon, LogOut, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/components/auth-provider"
+import { useSidebar } from "@/components/dashboard/sidebar"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 
 function useClientDate() {
@@ -34,6 +35,7 @@ export function Header() {
   const { user } = useAuth()
   const { greeting, dateStr } = useClientDate()
   const { resolvedTheme, setTheme } = useTheme()
+  const { setMobileOpen } = useSidebar()
   const [mounted, setMounted] = useState(false)
   const router = useRouter()
 
@@ -61,14 +63,24 @@ export function Header() {
 
   return (
     <header className="border-b border-border bg-card/50 backdrop-blur">
-      <div className="px-8 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-lg font-semibold text-foreground">{greeting}, {displayName}</p>
-          <p className="text-sm text-foreground/70">{dateStr}</p>
+      <div className="px-4 py-3 md:px-8 md:py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div>
+            <p className="text-base md:text-lg font-semibold text-foreground">{greeting}, {displayName}</p>
+            <p className="text-sm text-foreground/70 hidden sm:block">{dateStr}</p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <AIRecommendationsDialog
-            endpoint="/api/ai/finance-insights"
+            endpoint="/api/ai/insights/finance"
             title="Financial Recommendations"
             description="Get a comprehensive overview with recommendations across all your finances."
             triggerLabel="AI Recommendations"

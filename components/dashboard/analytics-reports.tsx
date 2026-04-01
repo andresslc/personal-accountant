@@ -87,7 +87,7 @@ export function AnalyticsReports() {
         </div>
         <div className="flex items-center gap-2">
           <AIRecommendationsDialog
-            endpoint="/api/ai/reports-insights"
+            endpoint="/api/ai/insights/reports"
             title="AI Financial Report"
             description="Generate a comprehensive written financial report with trends and outlook."
             triggerLabel="Full Report"
@@ -129,25 +129,27 @@ export function AnalyticsReports() {
         {/* Expense Breakdown */}
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Expense Breakdown</h3>
-          <div className="flex gap-6">
-            <ResponsiveContainer width="50%" height={300}>
-              <PieChart>
-                <Pie data={breakdown} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
-                  {breakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex flex-col sm:flex-row gap-6">
+            <div className="w-full sm:w-1/2">
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie data={breakdown} cx="50%" cy="50%" outerRadius="75%" fill="#8884d8" dataKey="value">
+                    {breakdown.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
             <div className="flex flex-col justify-center">
               {breakdown.map((item, index) => (
                 <div key={item.name} className="flex items-center gap-2 mb-3">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-3 h-3 rounded-full shrink-0"
                     style={{ backgroundColor: chartColors[index % chartColors.length] }}
                   ></div>
                   <span className="text-sm text-foreground">{item.name}</span>
-                  <span className="text-sm font-semibold text-foreground/70 ml-auto">{format(item.value)}</span>
+                  <span className="text-sm font-semibold text-foreground/70 ml-auto whitespace-nowrap">{format(item.value)}</span>
                 </div>
               ))}
             </div>

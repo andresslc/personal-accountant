@@ -66,7 +66,10 @@ components/
     analytics-reports.tsx               # Reports page charts and tables
     transaction-confirmation-card.tsx   # AI parse result confirmation
   ui/                                   # shadcn/ui primitives (do NOT edit manually)
-  *.tsx (root-level)                    # OLD/unused components — ignore these
+  auth-card.tsx                          # Shared auth layout (Google OAuth + branding)
+  auth-provider.tsx                      # React context for auth state
+  currency-provider.tsx                  # Currency formatting context
+  theme-provider.tsx                     # next-themes wrapper
 
 lib/
   config/data-source.ts                 # USE_MOCK_DATA flag

@@ -110,41 +110,49 @@ export interface Database {
         Row: Category
         Insert: Omit<Category, 'created_at'>
         Update: Partial<Omit<Category, 'id' | 'created_at'>>
+        Relationships: []
       }
       liabilities: {
         Row: Liability
         Insert: Omit<Liability, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Liability, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+        Relationships: []
       }
       transactions: {
         Row: Transaction
         Insert: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+        Relationships: []
       }
       budget_items: {
         Row: BudgetItem
         Insert: Omit<BudgetItem, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<BudgetItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+        Relationships: []
       }
       subscriptions: {
         Row: Subscription
         Insert: Omit<Subscription, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Subscription, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+        Relationships: []
       }
       user_financial_memory: {
         Row: UserFinancialMemory
         Insert: Omit<UserFinancialMemory, 'updated_at'>
         Update: Partial<Omit<UserFinancialMemory, 'user_id' | 'updated_at'>>
+        Relationships: []
       }
       chat_summaries: {
         Row: ChatSummary
         Insert: Omit<ChatSummary, 'id' | 'created_at'>
         Update: Partial<Omit<ChatSummary, 'id' | 'user_id' | 'created_at'>>
+        Relationships: []
       }
       user_preferences: {
         Row: UserPreferences
         Insert: Omit<UserPreferences, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<UserPreferences, 'id' | 'user_id' | 'created_at' | 'updated_at'>>
+        Relationships: []
       }
     }
     Views: {
@@ -155,5 +163,8 @@ export interface Database {
         Row: BudgetWithSpending
       }
     }
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }

@@ -136,7 +136,7 @@ export function DebtQuickCreateDialog({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Current Balance</label>
               <Input
@@ -161,7 +161,7 @@ export function DebtQuickCreateDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-sm font-medium text-foreground mb-2 block">Min Payment</label>
               <Input

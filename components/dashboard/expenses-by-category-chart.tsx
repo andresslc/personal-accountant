@@ -24,7 +24,7 @@ export function ExpensesByCategoryChart() {
       <h3 className="text-lg font-bold text-foreground mb-6">Expenses by Category</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
-          <Pie data={chartData} cx="50%" cy="50%" labelLine={false} outerRadius={80} fill="#8884d8" dataKey="value">
+          <Pie data={chartData} cx="50%" cy="50%" labelLine={false} outerRadius="75%" fill="#8884d8" dataKey="value">
             {chartData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
             ))}

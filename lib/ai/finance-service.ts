@@ -551,7 +551,7 @@ function formatAnomalyDetection(predictions: PredictionResponse): FinanceInsight
   }))
 
   if (insights.length === 0) {
-    insights.push({ title: "No anomalies detected", detail: "All transactions are within expected ranges for their categories.", severity: "low" as const })
+    insights.push({ title: "No anomalies detected", detail: "All transactions are within expected ranges for their categories.", severity: "medium" as const })
   }
 
   return {

@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 
-export async function POST() {
+export async function POST(request: Request) {
+  const headersList = await headers()
+  const origin = headersList.get('origin')
+  const requestUrl = new URL(request.url)
+
+  if (origin && origin !== requestUrl.origin) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   const cookieStore = await cookies()
   const response = NextResponse.json({ success: true })
 
