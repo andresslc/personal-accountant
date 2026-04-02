@@ -126,9 +126,10 @@ class OpenAIProvider implements AIProvider {
   }
 
   async transcribeAudio(audioBuffer: Buffer, mimeType: string): Promise<string> {
-    const ext = mimeType.split("/")[1]?.replace("mpeg", "mp3").replace("webm", "webm") || "webm"
+    const baseMime = mimeType.split(";")[0]
+    const ext = baseMime.split("/")[1]?.replace("mpeg", "mp3") || "webm"
     const uint8 = new Uint8Array(audioBuffer)
-    const file = new File([uint8], `audio.${ext}`, { type: mimeType })
+    const file = new File([uint8], `audio.${ext}`, { type: baseMime })
 
     const transcription = await this.client.audio.transcriptions.create({
       model: "whisper-1",
@@ -298,10 +299,11 @@ class GeminiProvider implements AIProvider {
 
   async transcribeAudio(audioBuffer: Buffer, mimeType: string): Promise<string> {
     const model = this.client.getGenerativeModel({ model: this.modelName })
+    const baseMime = mimeType.split(";")[0]
 
     const result = await model.generateContent([
       "Transcribe this audio exactly. Return only the transcription text, no formatting or extra text.",
-      { inlineData: { mimeType, data: audioBuffer.toString("base64") } },
+      { inlineData: { mimeType: baseMime, data: audioBuffer.toString("base64") } },
     ])
 
     return result.response.text()

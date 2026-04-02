@@ -82,8 +82,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, ...result })
   } catch (error) {
     console.error("parse-multimodal error:", error)
+    const message = error instanceof Error ? error.message : ""
+    const userMessage = message.includes("transcription")
+      ? "Audio transcription failed. Please try again or speak more clearly."
+      : message.includes("classification")
+        ? "Could not understand the input. Please try rephrasing."
+        : message.includes("API key") || message.includes("401") || message.includes("403")
+          ? "AI service is not configured. Please contact support."
+          : "Failed to parse input. Please try again."
     return NextResponse.json(
-      { success: false, error: "Failed to parse input. Please try again." },
+      { success: false, error: userMessage },
       { status: 500 }
     )
   }
