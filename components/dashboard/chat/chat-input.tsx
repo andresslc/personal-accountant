@@ -49,7 +49,23 @@ export function ChatInput({
     e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`
   }
 
+  const [micError, setMicError] = useState<string | null>(null)
+
   const startRecording = async () => {
+    setMicError(null)
+
+    if (navigator.permissions) {
+      try {
+        const status = await navigator.permissions.query({ name: "microphone" as PermissionName })
+        if (status.state === "denied") {
+          setMicError("Microphone is blocked. Enable it in your browser's site settings and reload.")
+          return
+        }
+      } catch {
+        // Permissions API not supported for microphone in some browsers
+      }
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mimeType = MediaRecorder.isTypeSupported("audio/webm")
@@ -80,7 +96,7 @@ export function ChatInput({
         setRecordingTime((t) => t + 1)
       }, 1000)
     } catch {
-      console.error("Microphone access denied")
+      setMicError("Microphone access denied. Allow it in your browser's site settings and reload.")
     }
   }
 
@@ -111,6 +127,9 @@ export function ChatInput({
 
   return (
     <div className="border-t border-border bg-card p-4">
+      {micError && (
+        <p className="text-xs text-destructive text-center mb-2 max-w-3xl mx-auto">{micError}</p>
+      )}
       <div className="flex items-end gap-2 max-w-3xl mx-auto">
         <input
           ref={fileInputRef}

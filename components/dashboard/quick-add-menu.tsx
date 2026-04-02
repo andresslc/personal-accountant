@@ -195,6 +195,19 @@ export function QuickAddMenu({
 
   const startRecording = async () => {
     setMicError(null)
+
+    if (navigator.permissions) {
+      try {
+        const status = await navigator.permissions.query({ name: "microphone" as PermissionName })
+        if (status.state === "denied") {
+          setMicError("Microphone is blocked. Please enable it in your browser's site settings and reload the page.")
+          return
+        }
+      } catch {
+        // Permissions API not supported for microphone in some browsers — continue
+      }
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
@@ -237,9 +250,9 @@ export function QuickAddMenu({
       timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000)
     } catch (err) {
       if (err instanceof DOMException && err.name === "NotAllowedError") {
-        setMicError("Microphone access denied. Please allow microphone in your browser settings.")
+        setMicError("Microphone access denied. Please allow microphone in your browser's site settings and reload the page.")
       } else {
-        setMicError("Could not access microphone.")
+        setMicError("Could not access microphone. Please check your device settings.")
       }
     }
   }
