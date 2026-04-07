@@ -4,6 +4,55 @@ import type { ZodTypeAny } from "zod"
 import { ParsedTransactionSchema, type ParsedTransaction } from "./types"
 import { buildSystemPrompt } from "./prompt"
 
+const WHISPER_TRANSCRIPTION_PROMPT =
+  "Personal finance assistant. User speaks Spanish or English about transactions, budgets, debts, expenses, income, COP, pesos, tarjeta de crédito, gastos, ingresos, presupuesto."
+
+const GEMINI_TRANSCRIPTION_PROMPT =
+  "Return ONLY the verbatim transcription of the speech in this audio. Do not guess, do not paraphrase, do not add punctuation beyond what is clearly spoken. If the audio contains no speech or is silent or is noise only, return the exact string 'NO_SPEECH' and nothing else."
+
+const HALLUCINATION_PHRASES: Set<string> = new Set([
+  "thanks for watching",
+  "thank you for watching",
+  "please subscribe",
+  "subscribe to the channel",
+  "you",
+  "",
+  "...",
+  "-",
+  "bye",
+  "gracias por ver el video",
+  "gracias por ver",
+  "suscribete",
+  "suscribanse",
+  "subtitulos realizados por la comunidad de amara.org",
+  "subtítulos realizados por la comunidad de amara.org",
+  "amara.org",
+  "thanks",
+  "thank you",
+  "music",
+  "[music]",
+  "[música]",
+  "applause",
+  "[applause]",
+  "no_speech",
+])
+
+function normalizeForHallucinationCheck(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/^[\s.,!?¡¿"'()\-–—…]+|[\s.,!?¡¿"'()\-–—…]+$/g, "")
+}
+
+export function filterWhisperHallucinations(text: string): string {
+  if (!text) return ""
+  const trimmed = text.trim()
+  if (trimmed.length < 2) return ""
+  const normalized = normalizeForHallucinationCheck(trimmed)
+  if (HALLUCINATION_PHRASES.has(normalized)) return ""
+  return trimmed
+}
+
 type StructuredPromptInput<TSchema extends ZodTypeAny> = {
   systemPrompt: string
   userPrompt: string
@@ -134,9 +183,11 @@ class OpenAIProvider implements AIProvider {
     const transcription = await this.client.audio.transcriptions.create({
       model: "whisper-1",
       file,
+      temperature: 0,
+      prompt: WHISPER_TRANSCRIPTION_PROMPT,
     })
 
-    return transcription.text
+    return filterWhisperHallucinations(transcription.text)
   }
 
   async *_streamChatWithTools(
@@ -302,11 +353,14 @@ class GeminiProvider implements AIProvider {
     const baseMime = mimeType.split(";")[0]
 
     const result = await model.generateContent([
-      "Transcribe this audio exactly. Return only the transcription text, no formatting or extra text.",
+      GEMINI_TRANSCRIPTION_PROMPT,
       { inlineData: { mimeType: baseMime, data: audioBuffer.toString("base64") } },
     ])
 
-    return result.response.text()
+    const raw = result.response.text().trim()
+    const normalized = raw.toLowerCase().replace(/^[\s.,!?¡¿"'()\-–—…]+|[\s.,!?¡¿"'()\-–—…]+$/g, "")
+    if (normalized === "no_speech") return ""
+    return filterWhisperHallucinations(raw)
   }
 
   async *_streamChatWithTools(

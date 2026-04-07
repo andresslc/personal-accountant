@@ -94,16 +94,27 @@ export async function POST(request: Request) {
       const arrayBuffer = await audioFile.arrayBuffer()
       const buffer = Buffer.from(arrayBuffer)
       const transcription = await provider.transcribeAudio(buffer, audioFile.type)
+      const cleanTranscription = transcription.trim()
 
-      messages.push({ role: "user", content: transcription })
+      if (!cleanTranscription) {
+        return new Response(
+          JSON.stringify({
+            error:
+              "We couldn't hear anything clearly. Try recording again, speak a bit closer to your microphone, and make sure it's not muted.",
+          }),
+          { status: 422, headers: { "Content-Type": "application/json" } }
+        )
+      }
+
+      messages.push({ role: "user", content: cleanTranscription })
 
       await saveChatMessage(supabase, userId, {
         role: "user",
-        content: transcription,
-        transcription,
+        content: cleanTranscription,
+        transcription: cleanTranscription,
       })
 
-      return streamOrchestrator(supabase, userId, messages, transcription)
+      return streamOrchestrator(supabase, userId, messages, cleanTranscription)
     }
 
     let lastUserContent: string | null = null
