@@ -118,6 +118,14 @@ export async function POST(request: Request) {
     } else if (textContent) {
       messages.push({ role: "user", content: textContent })
       lastUserContent = textContent
+    } else {
+      // Fallback: the client sent the full history via `messages` with no
+      // separate `text` field. Persist the most recent user message so the
+      // stored history matches what the UI shows.
+      const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
+      if (lastUserMsg) {
+        lastUserContent = lastUserMsg.content
+      }
     }
 
     if (messages.length === 0) {
@@ -168,6 +176,7 @@ function streamOrchestrator(
         const orchestratorStream = runOrchestrator({
           messages,
           userId,
+          supabase,
         })
 
         for await (const event of orchestratorStream) {

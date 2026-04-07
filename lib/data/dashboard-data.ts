@@ -14,9 +14,13 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { USE_MOCK_DATA } from "@/lib/config/data-source"
 import { formatCurrency, type SupportedCurrency } from "@/lib/utils/currency"
 import { createClient } from "@/lib/supabase/client"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>
 import {
   allTransactions,
   budgetData,
@@ -440,14 +444,15 @@ export type TransactionUpdate = Partial<Omit<TransactionInsert, "liability_id">>
 
 export const createTransaction = async (
   data: TransactionInsert,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<{ id: number } | null> => {
   if (USE_MOCK_DATA) {
     const fakeId = Math.floor(Math.random() * 100000) + 1000
     console.log("[mock] createTransaction:", { ...data, id: fakeId, userId })
     return { id: fakeId }
   }
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return null
 
   const { data: row, error } = await supabase
@@ -456,20 +461,25 @@ export const createTransaction = async (
     .select("id")
     .single()
 
-  if (error || !row) return null
+  if (error) {
+    console.error("[createTransaction] Supabase error:", error.message, error.details)
+    return null
+  }
+  if (!row) return null
   return { id: row.id }
 }
 
 export const createBudgetItem = async (
   data: BudgetInsert,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<{ id: number } | null> => {
   if (USE_MOCK_DATA) {
     const fakeId = Math.floor(Math.random() * 100000) + 1000
     console.log("[mock] createBudgetItem:", { ...data, id: fakeId, userId })
     return { id: fakeId }
   }
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return null
 
   const { data: row, error } = await supabase
@@ -478,20 +488,25 @@ export const createBudgetItem = async (
     .select("id")
     .single()
 
-  if (error || !row) return null
+  if (error) {
+    console.error("[createBudgetItem] Supabase error:", error.message, error.details)
+    return null
+  }
+  if (!row) return null
   return { id: row.id }
 }
 
 export const createDebt = async (
   data: LiabilityInsert,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<{ id: number } | null> => {
   if (USE_MOCK_DATA) {
     const fakeId = Math.floor(Math.random() * 100000) + 1000
     console.log("[mock] createDebt:", { ...data, id: fakeId, userId })
     return { id: fakeId }
   }
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) {
     console.error("[createDebt] Supabase client not available")
     return null
@@ -513,13 +528,14 @@ export const createDebt = async (
 
 export const deleteTransaction = async (
   id: number,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<boolean> => {
   if (USE_MOCK_DATA) {
     console.log("[mock] deleteTransaction:", { id, userId })
     return true
   }
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return false
 
   const { error } = await supabase
@@ -534,13 +550,14 @@ export const deleteTransaction = async (
 export const updateTransaction = async (
   id: number,
   userId: string,
-  updates: TransactionUpdate
+  updates: TransactionUpdate,
+  client?: AnySupabaseClient
 ): Promise<boolean> => {
   if (USE_MOCK_DATA) {
     console.log("[mock] updateTransaction:", { id, userId, updates })
     return true
   }
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return false
 
   const { error } = await supabase

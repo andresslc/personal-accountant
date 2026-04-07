@@ -1,4 +1,5 @@
 import { z } from "zod"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { ChatToolDef } from "@/lib/ai/provider"
 import {
   createTransaction,
@@ -13,6 +14,9 @@ import {
 } from "@/lib/data/dashboard-data"
 import { categories } from "@/lib/mocks/categories"
 import type { ActionEvent } from "./types"
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>
 
 const CreateTransactionParams = z.object({
   description: z.string(),
@@ -236,7 +240,8 @@ export type ToolResult = {
 export async function executeTool(
   name: string,
   args: Record<string, unknown>,
-  userId: string
+  userId: string,
+  client?: AnySupabaseClient
 ): Promise<ToolResult> {
   switch (name) {
     case "create_transaction": {
@@ -258,7 +263,8 @@ export async function executeTool(
           method: params.method,
           liability_id: params.liability_id ?? null,
         },
-        userId
+        userId,
+        client
       )
       if (!result) return { content: "Failed to create transaction. There may be a database connection issue. Please try again." }
       return {
@@ -289,7 +295,8 @@ export async function executeTool(
           month_year: params.month_year,
           recurring: params.recurring,
         },
-        userId
+        userId,
+        client
       )
       if (!result) return { content: "Failed to create budget. There may be a database connection issue. Please try again." }
       return {
@@ -323,7 +330,8 @@ export async function executeTool(
           apr: params.apr,
           due_day: params.due_day ?? null,
         },
-        userId
+        userId,
+        client
       )
       if (!result) return { content: "Failed to create debt. There may be a database connection issue. Please try again." }
       return {
@@ -390,7 +398,7 @@ export async function executeTool(
 
     case "delete_transaction": {
       const params = DeleteTransactionParams.parse(args)
-      const success = await deleteTransaction(params.id, userId)
+      const success = await deleteTransaction(params.id, userId, client)
       if (!success) return { content: `Failed to delete transaction ${params.id}.` }
       return {
         content: `Transaction ${params.id} deleted successfully.`,
@@ -407,7 +415,7 @@ export async function executeTool(
     case "update_transaction": {
       const params = UpdateTransactionParams.parse(args)
       const { id, ...updates } = params
-      const success = await updateTransaction(id, userId, updates)
+      const success = await updateTransaction(id, userId, updates, client)
       if (!success) return { content: `Failed to update transaction ${id}.` }
       return {
         content: `Transaction ${id} updated successfully.`,

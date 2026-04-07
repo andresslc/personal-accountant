@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js"
 import { getAIProvider } from "@/lib/ai/provider"
 import type { ChatMessageInput } from "@/lib/ai/provider"
 import { buildOrchestratorPrompt } from "./prompts"
@@ -9,10 +10,14 @@ import { runPredictionAgent } from "./agents/prediction-agent"
 import { applyOutputGuardrails } from "@/lib/ai/guardrails"
 import type { StreamEvent, FinancialContext } from "./types"
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnySupabaseClient = SupabaseClient<any, any, any>
+
 interface OrchestratorInput {
   messages: Array<{ role: "user" | "assistant"; content: string }>
   userId: string
   recentSummaries?: string[]
+  supabase?: AnySupabaseClient
 }
 
 export async function* runOrchestrator(
@@ -108,7 +113,7 @@ export async function* runOrchestrator(
         })
       } else {
         try {
-          const result = await executeTool(tc.name, args, input.userId)
+          const result = await executeTool(tc.name, args, input.userId, input.supabase)
 
           if (result.action) {
             yield result.action
