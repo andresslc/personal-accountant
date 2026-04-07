@@ -440,6 +440,8 @@ export type LiabilityInsert = {
   due_day: number | null
 }
 
+export type LiabilityUpdate = Partial<LiabilityInsert>
+
 export type TransactionUpdate = Partial<Omit<TransactionInsert, "liability_id">>
 
 export const createTransaction = async (
@@ -567,6 +569,57 @@ export const updateTransaction = async (
     .eq("user_id", userId)
 
   return !error
+}
+
+export const deleteDebt = async (
+  id: number,
+  userId: string,
+  client?: AnySupabaseClient
+): Promise<boolean> => {
+  if (USE_MOCK_DATA) {
+    console.log("[mock] deleteDebt:", { id, userId })
+    return true
+  }
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return false
+
+  const { error } = await supabase
+    .from("liabilities")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+
+  if (error) {
+    console.error("[deleteDebt] Supabase error:", error.message, error.details)
+    return false
+  }
+  return true
+}
+
+export const updateDebt = async (
+  id: number,
+  userId: string,
+  updates: LiabilityUpdate,
+  client?: AnySupabaseClient
+): Promise<boolean> => {
+  if (USE_MOCK_DATA) {
+    console.log("[mock] updateDebt:", { id, userId, updates })
+    return true
+  }
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return false
+
+  const { error } = await supabase
+    .from("liabilities")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", userId)
+
+  if (error) {
+    console.error("[updateDebt] Supabase error:", error.message, error.details)
+    return false
+  }
+  return true
 }
 
 // Re-export types so components never import from lib/mocks directly

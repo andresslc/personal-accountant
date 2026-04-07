@@ -86,6 +86,36 @@ lib/
     types.ts                            # ParsedTransaction Zod schema
 ```
 
+## Agent Delegation (MANDATORY)
+
+**Before implementing any task, ALWAYS review the list of available subagents
+and delegate the work if any of them match the task description.** Do not start
+writing code directly when a purpose-built agent exists for the job.
+
+Workflow for every non-trivial task:
+
+1. Read the task intent (feature, bug fix, refactor, UI change, data change, AI change, DB change, security review).
+2. Scan the available subagents (see the `Agent` tool description) and pick the best match by comparing the task to each agent's `description` / examples.
+3. If a suitable agent exists, launch it via the `Agent` tool with a clear prompt — do not duplicate its work yourself.
+4. Only fall back to implementing directly when no agent fits, or when the task is trivially small (1–2 line tweak, rename, typo fix, reading a file to answer a question).
+
+Current relevant agents for FinFlow work:
+
+| Task type | Agent to use |
+|-----------|--------------|
+| Business logic, API routes, server actions, data fetching, routing | `nextjs-logic-engineer` or `nextjs-developer` |
+| UI components, styling, layout, responsive design, visual changes | `ui-ux-engineer` |
+| AI parser, prompts, AI providers, data analysis, ML/statistics | `ai-workflow-engineer` |
+| Database schema, SQL migrations, Supabase tables/views, RLS policies | `database-manager` |
+| Project-wide FinFlow changes that must follow FinFlow conventions | `finflow-dev` |
+| Codebase exploration / answering "how does X work" questions | `Explore` |
+| Multi-step implementation planning | `Plan` |
+
+When in doubt, prefer the more specialized agent. It is NOT acceptable to
+implement a UI change without `ui-ux-engineer`, a DB migration without
+`database-manager`, or an AI/prompt change without `ai-workflow-engineer`
+unless the change is a true one-liner.
+
 ## Architecture Rules
 
 ### Data Access

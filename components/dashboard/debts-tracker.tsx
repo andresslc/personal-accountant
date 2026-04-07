@@ -12,9 +12,21 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import { DebtQuickCreateDialog } from "@/components/dashboard/debt-quick-create-dialog"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
-import { getDebts } from "@/lib/data/dashboard-data"
+import { getDebts, deleteDebt } from "@/lib/data/dashboard-data"
+import { useAuth } from "@/components/auth-provider"
 import {
   AreaChart,
   Area,
@@ -24,7 +36,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts"
-import { CreditCard, Percent, Calendar, Eye, Plus } from "lucide-react"
+import { CreditCard, Percent, Calendar, Eye, Plus, Trash2 } from "lucide-react"
 import { useCurrency } from "@/components/currency-provider"
 import {
   type LiabilityUI as Liability,
@@ -38,9 +50,23 @@ import {
 export function DebtsTracker() {
   const searchParams = useSearchParams()
   const { format, compact } = useCurrency()
+  const { user } = useAuth()
   const [payoffStrategy, setPayoffStrategy] = useState("avalanche")
   const [liabilities, setLiabilities] = useState<Liability[]>([])
   const [isDebtDialogOpen, setIsDebtDialogOpen] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  const handleDeleteDebt = async (liability: Liability) => {
+    if (!user) return
+    setDeletingId(liability.id)
+    const success = await deleteDebt(liability.id, user.id)
+    if (success) {
+      setLiabilities((current) => current.filter((item) => item.id !== liability.id))
+    } else {
+      console.error("Failed to delete debt", liability.id)
+    }
+    setDeletingId(null)
+  }
 
   useEffect(() => {
     const loadDebts = async () => {
@@ -180,13 +206,13 @@ export function DebtsTracker() {
             return (
               <Card key={liability.id} className="flex flex-col">
                 <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 shrink-0 rounded-lg bg-muted flex items-center justify-center">
                         <Icon className="w-5 h-5 text-foreground" />
                       </div>
-                      <div>
-                        <CardTitle className="text-base">
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate">
                           {liability.name}
                         </CardTitle>
                         <p className="text-xs text-muted-foreground">
@@ -194,6 +220,36 @@ export function DebtsTracker() {
                         </p>
                       </div>
                     </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Delete debt"
+                          disabled={!user || deletingId === liability.id}
+                          className="h-8 w-8 shrink-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete this debt?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently remove {liability.name} from your debts. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDeleteDebt(liability)}
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardHeader>
 

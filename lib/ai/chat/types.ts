@@ -19,7 +19,14 @@ export interface TextEvent {
 export interface ActionEvent {
   type: "action"
   action: {
-    kind: "transaction_created" | "budget_created" | "debt_created" | "transaction_deleted" | "transaction_updated"
+    kind:
+      | "transaction_created"
+      | "budget_created"
+      | "debt_created"
+      | "transaction_deleted"
+      | "transaction_updated"
+      | "debt_deleted"
+      | "debt_updated"
     data: Record<string, unknown>
   }
 }

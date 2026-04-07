@@ -7,10 +7,13 @@ import {
   createDebt,
   deleteTransaction,
   updateTransaction,
+  deleteDebt,
+  updateDebt,
   getTransactions,
   getBudgets,
   getDebts,
   getSummaryCards,
+  type LiabilityUpdate,
 } from "@/lib/data/dashboard-data"
 import { categories } from "@/lib/mocks/categories"
 import type { ActionEvent } from "./types"
@@ -62,6 +65,21 @@ const UpdateTransactionParams = z.object({
   type: z.enum(["income", "expense", "debt-payment"]).optional(),
   category_id: z.string().optional(),
   date: z.string().optional(),
+})
+
+const DeleteDebtParams = z.object({
+  id: z.number(),
+})
+
+const UpdateDebtParams = z.object({
+  id: z.number(),
+  name: z.string().optional(),
+  type: z.enum(["credit-card", "car", "student", "personal", "mortgage"]).optional(),
+  current_balance: z.number().positive().optional(),
+  original_balance: z.number().positive().optional(),
+  min_payment: z.number().positive().optional(),
+  apr: z.number().min(0).max(100).optional(),
+  due_day: z.number().min(1).max(31).nullable().optional(),
 })
 
 const RouteToSubAgentParams = z.object({
@@ -203,6 +221,41 @@ export const toolDefinitions: ChatToolDef[] = [
           type: { type: "string", enum: ["income", "expense", "debt-payment"] },
           category_id: { type: "string" },
           date: { type: "string" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_debt",
+      description: "Delete a debt/liability by its ID. Use this when the user says a previously created debt was wrong, a mistake, or should be removed — do NOT create a new debt to replace it without first deleting the wrong one. The most recent debt_created action event in this conversation contains the ID you need.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Liability ID to delete" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_debt",
+      description: "Update fields on an existing debt/liability. Use this when the user corrects a previously created debt (e.g. 'no, the APR was 24%', 'el saldo era 2 millones, no 3', 'I made a mistake on the minimum payment') instead of creating a new debt. Only include the fields the user wants changed. The most recent debt_created action event in this conversation contains the ID you need.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Liability ID to update" },
+          name: { type: "string" },
+          type: { type: "string", enum: ["credit-card", "car", "student", "personal", "mortgage"] },
+          current_balance: { type: "number", description: "Current balance owed in COP" },
+          original_balance: { type: "number", description: "Original balance in COP" },
+          min_payment: { type: "number", description: "Minimum monthly payment in COP" },
+          apr: { type: "number", description: "Annual percentage rate (0-100)" },
+          due_day: { type: "number", description: "Day of month payment is due (1-31)", nullable: true },
         },
         required: ["id"],
       },
@@ -423,6 +476,52 @@ export async function executeTool(
           type: "action",
           action: {
             kind: "transaction_updated",
+            data: { id, ...updates },
+          },
+        },
+      }
+    }
+
+    case "delete_debt": {
+      const parsed = DeleteDebtParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid delete_debt parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const success = await deleteDebt(parsed.data.id, userId, client)
+      if (!success) return { content: `Failed to delete debt ${parsed.data.id}. There may be a database connection issue or the debt may not exist.` }
+      return {
+        content: `Debt ${parsed.data.id} deleted successfully.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "debt_deleted",
+            data: { id: parsed.data.id },
+          },
+        },
+      }
+    }
+
+    case "update_debt": {
+      const parsed = UpdateDebtParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid update_debt parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const { id, ...rest } = parsed.data
+      const updates: LiabilityUpdate = rest
+      const success = await updateDebt(id, userId, updates, client)
+      if (!success) return { content: `Failed to update debt ${id}. There may be a database connection issue or the debt may not exist.` }
+      return {
+        content: `Debt ${id} updated successfully.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "debt_updated",
             data: { id, ...updates },
           },
         },
