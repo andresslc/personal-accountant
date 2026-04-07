@@ -27,6 +27,23 @@ function rowToMessage(row: ChatMessageRow): PersistedChatMessage {
   }
 }
 
+async function getClearedAt(
+  client: AnyClient,
+  userId: string
+): Promise<string | null> {
+  const { data, error } = await client
+    .from("chat_state")
+    .select("cleared_at")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (error) {
+    console.error("[getClearedAt] Supabase error:", error.message)
+    return null
+  }
+  return (data?.cleared_at as string | undefined) ?? null
+}
+
 export async function getChatHistory(
   supabase: SupabaseClient<Database>,
   userId: string,
@@ -35,12 +52,20 @@ export async function getChatHistory(
   if (USE_MOCK_DATA) return []
 
   const client = supabase as unknown as AnyClient
-  const { data, error } = await client
+  const clearedAt = await getClearedAt(client, userId)
+
+  let query = client
     .from("chat_messages")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(limit)
+
+  if (clearedAt) {
+    query = query.gt("created_at", clearedAt)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     console.error("[getChatHistory] Supabase error:", error.message)
@@ -85,9 +110,11 @@ export async function clearChatHistory(
 
   const client = supabase as unknown as AnyClient
   const { error } = await client
-    .from("chat_messages")
-    .delete()
-    .eq("user_id", userId)
+    .from("chat_state")
+    .upsert(
+      { user_id: userId, cleared_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    )
 
   if (error) {
     console.error("[clearChatHistory] Supabase error:", error.message)

@@ -140,6 +140,30 @@ create policy "Users can delete their own chat messages"
   on public.chat_messages for delete using (auth.uid() = user_id);
 ```
 
+### chat_state
+
+Tracks the "new chat" divider per user. Messages older than `cleared_at` are
+hidden from the UI but remain in `chat_messages` for future analysis.
+
+```sql
+create table public.chat_state (
+  user_id    uuid primary key references auth.users(id) on delete cascade,
+  cleared_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.chat_state enable row level security;
+
+create policy "Users read their own chat state"
+  on public.chat_state for select using (auth.uid() = user_id);
+
+create policy "Users insert their own chat state"
+  on public.chat_state for insert with check (auth.uid() = user_id);
+
+create policy "Users update their own chat state"
+  on public.chat_state for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+```
+
 ---
 
 ## 3. Automatic `updated_at` Trigger
@@ -171,6 +195,10 @@ create trigger trg_subscriptions_updated_at
 
 create trigger trg_user_financial_memory_updated_at
   before update on public.user_financial_memory
+  for each row execute function public.handle_updated_at();
+
+create trigger trg_chat_state_updated_at
+  before update on public.chat_state
   for each row execute function public.handle_updated_at();
 ```
 

@@ -104,6 +104,12 @@ export interface ChatMessageRow {
   created_at: string
 }
 
+export interface ChatStateRow {
+  user_id: string
+  cleared_at: string
+  updated_at: string
+}
+
 export interface UserPreferences {
   id: string
   user_id: string
@@ -162,6 +168,12 @@ export interface Database {
         Row: ChatMessageRow
         Insert: Omit<ChatMessageRow, 'id' | 'created_at'>
         Update: Partial<Omit<ChatMessageRow, 'id' | 'user_id' | 'created_at'>>
+        Relationships: []
+      }
+      chat_state: {
+        Row: ChatStateRow
+        Insert: Omit<ChatStateRow, 'updated_at'> & { cleared_at?: string }
+        Update: Partial<Omit<ChatStateRow, 'user_id' | 'updated_at'>>
         Relationships: []
       }
       user_preferences: {
