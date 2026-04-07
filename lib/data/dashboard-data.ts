@@ -492,7 +492,10 @@ export const createDebt = async (
     return { id: fakeId }
   }
   const supabase = getSupabaseClient()
-  if (!supabase) return null
+  if (!supabase) {
+    console.error("[createDebt] Supabase client not available")
+    return null
+  }
 
   const { data: row, error } = await supabase
     .from("liabilities")
@@ -500,7 +503,11 @@ export const createDebt = async (
     .select("id")
     .single()
 
-  if (error || !row) return null
+  if (error) {
+    console.error("[createDebt] Supabase error:", error.message, error.details)
+    return null
+  }
+  if (!row) return null
   return { id: row.id }
 }
 

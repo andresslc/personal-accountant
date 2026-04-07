@@ -1,16 +1,52 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback, useRef, useEffect } from "react"
 import { MessageList } from "./message-list"
 import { ChatInput } from "./chat-input"
 import { ChatWelcome } from "./chat-welcome"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
 import type { ChatMessage, StreamEvent, ActionEvent } from "@/lib/ai/chat/types"
 
 export function ChatView() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingContent, setStreamingContent] = useState("")
   const abortRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch("/api/chat/history")
+        if (!res.ok) return
+        const data = (await res.json()) as { messages: ChatMessage[] }
+        if (!cancelled && Array.isArray(data.messages)) {
+          setMessages(data.messages)
+        }
+      } catch {
+        // network/auth errors — start with an empty chat
+      } finally {
+        if (!cancelled) setIsLoadingHistory(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const handleNewChat = useCallback(async () => {
+    abortRef.current?.abort()
+    setMessages([])
+    setStreamingContent("")
+    setIsStreaming(false)
+    try {
+      await fetch("/api/chat/history", { method: "DELETE" })
+    } catch {
+      // ignore
+    }
+  }, [])
 
   const processSSEStream = useCallback(
     async (
@@ -206,18 +242,39 @@ export function ChatView() {
     [handleSendText]
   )
 
-  const isEmpty = messages.length === 0 && !isStreaming
+  const isEmpty = messages.length === 0 && !isStreaming && !isLoadingHistory
 
   return (
     <div className="flex flex-col h-full">
-      {isEmpty ? (
-        <ChatWelcome onSelectPrompt={handleSelectPrompt} />
-      ) : (
-        <MessageList
-          messages={messages}
-          isStreaming={isStreaming}
-          streamingContent={streamingContent}
-        />
+      {isLoadingHistory && (
+        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
+          Loading conversation…
+        </div>
+      )}
+      {!isEmpty && !isLoadingHistory && (
+        <div className="flex justify-end px-4 pt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleNewChat}
+            disabled={isStreaming}
+            className="gap-1.5"
+          >
+            <Plus className="h-4 w-4" />
+            New chat
+          </Button>
+        </div>
+      )}
+      {!isLoadingHistory && (
+        isEmpty ? (
+          <ChatWelcome onSelectPrompt={handleSelectPrompt} />
+        ) : (
+          <MessageList
+            messages={messages}
+            isStreaming={isStreaming}
+            streamingContent={streamingContent}
+          />
+        )
       )}
 
       <ChatInput

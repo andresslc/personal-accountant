@@ -10,7 +10,15 @@
       "Bash(grep -n \"get.*Dialog\\\\|Dialog.*\\\\|Card.*\\\\|createDialog\" /c/Users/andres/documents/github/personal-accountant/components/dashboard/*.tsx)",
       "Bash(xargs grep:*)",
       "Bash(grep -n \"export const\\\\|export function\" /c/Users/andres/documents/github/personal-accountant/lib/mocks/*.ts)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx --no-install next lint)",
+      "Bash(supabase --version)",
+      "Bash(ls:*)",
+      "Read(//Users/andresleyva/**)",
+      "Bash(brew list:*)",
+      "mcp__plugin_supabase_supabase__list_tables"
     ]
   }
 }

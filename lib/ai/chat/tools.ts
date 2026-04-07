@@ -240,7 +240,14 @@ export async function executeTool(
 ): Promise<ToolResult> {
   switch (name) {
     case "create_transaction": {
-      const params = CreateTransactionParams.parse(args)
+      const parsed = CreateTransactionParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid transaction parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const params = parsed.data
       const result = await createTransaction(
         {
           description: params.description,
@@ -253,7 +260,7 @@ export async function executeTool(
         },
         userId
       )
-      if (!result) return { content: "Failed to create transaction." }
+      if (!result) return { content: "Failed to create transaction. There may be a database connection issue. Please try again." }
       return {
         content: `Transaction created successfully (ID: ${result.id}). ${params.type}: ${params.description} - $${params.amount.toLocaleString()} COP on ${params.date}.`,
         action: {
@@ -267,7 +274,14 @@ export async function executeTool(
     }
 
     case "create_budget": {
-      const params = CreateBudgetParams.parse(args)
+      const parsed = CreateBudgetParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid budget parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const params = parsed.data
       const result = await createBudgetItem(
         {
           category_id: params.category_id,
@@ -277,7 +291,7 @@ export async function executeTool(
         },
         userId
       )
-      if (!result) return { content: "Failed to create budget." }
+      if (!result) return { content: "Failed to create budget. There may be a database connection issue. Please try again." }
       return {
         content: `Budget created (ID: ${result.id}). Category: ${params.category_id}, Limit: $${params.budget_limit.toLocaleString()} COP, Month: ${params.month_year}.`,
         action: {
@@ -291,7 +305,14 @@ export async function executeTool(
     }
 
     case "create_debt": {
-      const params = CreateDebtParams.parse(args)
+      const parsed = CreateDebtParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid debt parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const params = parsed.data
       const result = await createDebt(
         {
           name: params.name,
@@ -304,7 +325,7 @@ export async function executeTool(
         },
         userId
       )
-      if (!result) return { content: "Failed to create debt." }
+      if (!result) return { content: "Failed to create debt. There may be a database connection issue. Please try again." }
       return {
         content: `Debt added (ID: ${result.id}). ${params.name}: $${params.current_balance.toLocaleString()} COP at ${params.apr}% APR.`,
         action: {

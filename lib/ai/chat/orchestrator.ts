@@ -107,17 +107,27 @@ export async function* runOrchestrator(
           tool_call_id: callId,
         })
       } else {
-        const result = await executeTool(tc.name, args, input.userId)
+        try {
+          const result = await executeTool(tc.name, args, input.userId)
 
-        if (result.action) {
-          yield result.action
+          if (result.action) {
+            yield result.action
+          }
+
+          apiMessages.push({
+            role: "tool",
+            content: result.content,
+            tool_call_id: callId,
+          })
+        } catch (toolError) {
+          const errorMsg =
+            toolError instanceof Error ? toolError.message : "Tool execution failed"
+          apiMessages.push({
+            role: "tool",
+            content: `Error executing ${tc.name}: ${errorMsg}`,
+            tool_call_id: callId,
+          })
         }
-
-        apiMessages.push({
-          role: "tool",
-          content: result.content,
-          tool_call_id: callId,
-        })
       }
     }
   }

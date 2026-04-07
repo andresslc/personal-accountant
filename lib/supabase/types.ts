@@ -94,6 +94,16 @@ export interface ChatSummary {
   created_at: string
 }
 
+export interface ChatMessageRow {
+  id: number
+  user_id: string
+  role: 'user' | 'assistant'
+  content: string
+  action: Record<string, unknown> | null
+  transcription: string | null
+  created_at: string
+}
+
 export interface UserPreferences {
   id: string
   user_id: string
@@ -146,6 +156,12 @@ export interface Database {
         Row: ChatSummary
         Insert: Omit<ChatSummary, 'id' | 'created_at'>
         Update: Partial<Omit<ChatSummary, 'id' | 'user_id' | 'created_at'>>
+        Relationships: []
+      }
+      chat_messages: {
+        Row: ChatMessageRow
+        Insert: Omit<ChatMessageRow, 'id' | 'created_at'>
+        Update: Partial<Omit<ChatMessageRow, 'id' | 'user_id' | 'created_at'>>
         Relationships: []
       }
       user_preferences: {

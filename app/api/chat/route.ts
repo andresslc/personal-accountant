@@ -3,7 +3,10 @@ import { runOrchestrator } from "@/lib/ai/chat/orchestrator"
 import { getAIProvider } from "@/lib/ai/provider"
 import { buildSummaryPrompt } from "@/lib/ai/chat/prompts"
 import { applyConversationGuardrails, applyInputGuardrails } from "@/lib/ai/guardrails"
-import type { StreamEvent } from "@/lib/ai/chat/types"
+import { saveChatMessage } from "@/lib/data/chat-history"
+import type { StreamEvent, ActionEvent } from "@/lib/ai/chat/types"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import type { Database } from "@/lib/supabase/types"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -94,49 +97,16 @@ export async function POST(request: Request) {
 
       messages.push({ role: "user", content: transcription })
 
-      const encoder = new TextEncoder()
-      const stream = new ReadableStream({
-        async start(controller) {
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ type: "transcription", text: transcription })}\n\n`
-            )
-          )
-
-          try {
-            const orchestratorStream = runOrchestrator({
-              messages,
-              userId,
-            })
-
-            for await (const event of orchestratorStream) {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
-              )
-            }
-          } catch (error) {
-            const errorEvent: StreamEvent = {
-              type: "error",
-              message: error instanceof Error ? error.message : "Orchestrator error",
-            }
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`)
-            )
-          }
-
-          controller.close()
-        },
+      await saveChatMessage(supabase, userId, {
+        role: "user",
+        content: transcription,
+        transcription,
       })
 
-      return new Response(stream, {
-        headers: {
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache",
-          Connection: "keep-alive",
-        },
-      })
+      return streamOrchestrator(supabase, userId, messages, transcription)
     }
 
+    let lastUserContent: string | null = null
     if (imageFile) {
       const arrayBuffer = await imageFile.arrayBuffer()
       const base64 = Buffer.from(arrayBuffer).toString("base64")
@@ -144,8 +114,10 @@ export async function POST(request: Request) {
       const imageMsg = `[Image attached: ${imageFile.type}]\n${caption}\n[base64:${base64.slice(0, 100)}...]`
 
       messages.push({ role: "user", content: imageMsg })
+      lastUserContent = caption
     } else if (textContent) {
       messages.push({ role: "user", content: textContent })
+      lastUserContent = textContent
     }
 
     if (messages.length === 0) {
@@ -155,44 +127,14 @@ export async function POST(request: Request) {
       })
     }
 
-    const encoder = new TextEncoder()
-    const stream = new ReadableStream({
-      async start(controller) {
-        try {
-          const orchestratorStream = runOrchestrator({
-            messages,
-            userId,
-          })
+    if (lastUserContent) {
+      await saveChatMessage(supabase, userId, {
+        role: "user",
+        content: lastUserContent,
+      })
+    }
 
-          for await (const event of orchestratorStream) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
-            )
-          }
-        } catch (error) {
-          const errorEvent: StreamEvent = {
-            type: "error",
-            message: error instanceof Error ? error.message : "Orchestrator error",
-          }
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`)
-          )
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
-          )
-        }
-
-        controller.close()
-      },
-    })
-
-    return new Response(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-      },
-    })
+    return streamOrchestrator(supabase, userId, messages)
   } catch (error) {
     console.error("Chat API error:", error)
     return new Response(
@@ -200,6 +142,82 @@ export async function POST(request: Request) {
       { status: 500, headers: { "Content-Type": "application/json" } }
     )
   }
+}
+
+function streamOrchestrator(
+  supabase: SupabaseClient<Database>,
+  userId: string,
+  messages: Array<{ role: "user" | "assistant"; content: string }>,
+  transcription?: string
+) {
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream({
+    async start(controller) {
+      let assistantText = ""
+      let lastAction: ActionEvent | undefined
+
+      if (transcription) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ type: "transcription", text: transcription })}\n\n`
+          )
+        )
+      }
+
+      try {
+        const orchestratorStream = runOrchestrator({
+          messages,
+          userId,
+        })
+
+        for await (const event of orchestratorStream) {
+          if (event.type === "text") {
+            assistantText += event.content
+          } else if (event.type === "action") {
+            lastAction = event
+          }
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
+          )
+        }
+      } catch (error) {
+        const errorEvent: StreamEvent = {
+          type: "error",
+          message: error instanceof Error ? error.message : "Orchestrator error",
+        }
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify(errorEvent)}\n\n`)
+        )
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`)
+        )
+      }
+
+      if (assistantText) {
+        try {
+          await saveChatMessage(supabase, userId, {
+            role: "assistant",
+            content: assistantText,
+            action: lastAction
+              ? (lastAction as unknown as Record<string, unknown>)
+              : null,
+          })
+        } catch (err) {
+          console.error("Failed to persist assistant message:", err)
+        }
+      }
+
+      controller.close()
+    },
+  })
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    },
+  })
 }
 
 async function handleSummarize(
