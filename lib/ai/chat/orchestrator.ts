@@ -53,7 +53,7 @@ export async function* runOrchestrator(
         yield { type: "text", content: chunk.content }
       } else if (chunk.type === "tool_call") {
         hasToolCalls = true
-        toolCalls.set(chunk.id, { name: chunk.name, arguments: "" })
+        toolCalls.set(chunk.id, { name: chunk.name, arguments: chunk.arguments ?? "" })
       } else if (chunk.type === "tool_call_delta") {
         const existing = toolCalls.get(chunk.id)
         if (existing) {
