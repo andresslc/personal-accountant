@@ -7,6 +7,13 @@ export default async function TransactionsPage() {
   const supabase = USE_MOCK_DATA ? undefined : await createClient()
   const { transactions, categoryOptions } = await getTransactionsPageData(supabase)
 
+  // Strip non-serializable Lucide icon components before crossing the
+  // server/client boundary.
+  const serializableTransactions = transactions.map(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ({ icon, ...rest }) => rest
+  )
+
   return (
     <>
       <div className="mb-4 md:mb-8">
@@ -14,7 +21,7 @@ export default async function TransactionsPage() {
         <p className="text-foreground/70 mt-2">Manage and analyze all your transactions</p>
       </div>
       <TransactionsManager
-        initialTransactions={transactions}
+        initialTransactions={serializableTransactions}
         initialCategoryOptions={categoryOptions}
       />
     </>

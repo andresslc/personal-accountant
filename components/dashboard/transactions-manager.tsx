@@ -7,11 +7,16 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, Grid, List } from "lucide-react"
-import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
+import type { TransactionUI } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 import { useCurrency } from "@/components/currency-provider"
 
 const PAGE_SIZE = 8
+
+// The `icon` field on TransactionUI is a Lucide React component and
+// cannot cross the server/client boundary, so the Server Component
+// strips it before passing the rows in as props.
+type Transaction = Omit<TransactionUI, "icon">
 
 type TransactionsManagerProps = {
   initialTransactions: Transaction[]
