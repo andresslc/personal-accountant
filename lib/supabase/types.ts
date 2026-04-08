@@ -99,7 +99,7 @@ export interface ChatMessageRow {
   user_id: string
   role: 'user' | 'assistant'
   content: string
-  action: Record<string, unknown> | null
+  action: Record<string, unknown> | Record<string, unknown>[] | null
   transcription: string | null
   created_at: string
 }

@@ -10,11 +10,19 @@ export interface PersistedChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: number
-  action?: Record<string, unknown>
+  actions?: Record<string, unknown>[]
   transcription?: string
 }
 
 const MAX_HISTORY = 100
+
+function normalizeActions(
+  raw: Record<string, unknown> | Record<string, unknown>[] | null
+): Record<string, unknown>[] | undefined {
+  if (!raw) return undefined
+  if (Array.isArray(raw)) return raw.length > 0 ? raw : undefined
+  return [raw]
+}
 
 function rowToMessage(row: ChatMessageRow): PersistedChatMessage {
   return {
@@ -22,7 +30,7 @@ function rowToMessage(row: ChatMessageRow): PersistedChatMessage {
     role: row.role,
     content: row.content,
     timestamp: new Date(row.created_at).getTime(),
-    action: row.action ?? undefined,
+    actions: normalizeActions(row.action),
     transcription: row.transcription ?? undefined,
   }
 }
@@ -82,7 +90,7 @@ export async function saveChatMessage(
   message: {
     role: "user" | "assistant"
     content: string
-    action?: Record<string, unknown> | null
+    actions?: Record<string, unknown>[] | null
     transcription?: string | null
   }
 ): Promise<void> {
@@ -93,7 +101,7 @@ export async function saveChatMessage(
     user_id: userId,
     role: message.role,
     content: message.content,
-    action: message.action ?? null,
+    action: message.actions && message.actions.length > 0 ? message.actions : null,
     transcription: message.transcription ?? null,
   })
 

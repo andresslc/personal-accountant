@@ -10,6 +10,8 @@ type ActionKind =
   | "debt_created"
   | "transaction_deleted"
   | "transaction_updated"
+  | "debt_deleted"
+  | "debt_updated"
 
 interface ActionCardProps {
   kind: ActionKind
@@ -123,6 +125,32 @@ export function ActionCard({ kind, data }: ActionCardProps) {
               <Pencil className="w-4 h-4" />
             </div>
             <span className="text-sm font-medium">Transaction #{data.id as number} Updated</span>
+            <Check className="w-4 h-4 text-green-500 ml-auto" />
+          </div>
+        </div>
+      )
+
+    case "debt_deleted":
+      return (
+        <div className="border rounded-lg p-3 bg-card mt-2 max-w-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-red-500/10 text-red-600">
+              <Trash2 className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-medium">Debt #{data.id as number} Deleted</span>
+            <Check className="w-4 h-4 text-green-500 ml-auto" />
+          </div>
+        </div>
+      )
+
+    case "debt_updated":
+      return (
+        <div className="border rounded-lg p-3 bg-card mt-2 max-w-sm">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-md bg-blue-500/10 text-blue-600">
+              <Pencil className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-medium">Debt #{data.id as number} Updated</span>
             <Check className="w-4 h-4 text-green-500 ml-auto" />
           </div>
         </div>

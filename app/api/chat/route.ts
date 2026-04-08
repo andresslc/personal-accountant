@@ -173,7 +173,7 @@ function streamOrchestrator(
   const stream = new ReadableStream({
     async start(controller) {
       let assistantText = ""
-      let lastAction: ActionEvent | undefined
+      const actions: ActionEvent[] = []
 
       if (transcription) {
         controller.enqueue(
@@ -194,7 +194,7 @@ function streamOrchestrator(
           if (event.type === "text") {
             assistantText += event.content
           } else if (event.type === "action") {
-            lastAction = event
+            actions.push(event)
           }
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
@@ -218,9 +218,10 @@ function streamOrchestrator(
           await saveChatMessage(supabase, userId, {
             role: "assistant",
             content: assistantText,
-            action: lastAction
-              ? (lastAction as unknown as Record<string, unknown>)
-              : null,
+            actions:
+              actions.length > 0
+                ? (actions as unknown as Record<string, unknown>[])
+                : null,
           })
         } catch (err) {
           console.error("Failed to persist assistant message:", err)

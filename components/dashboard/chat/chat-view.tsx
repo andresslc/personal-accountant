@@ -13,6 +13,7 @@ export function ChatView() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamingContent, setStreamingContent] = useState("")
+  const [streamingActions, setStreamingActions] = useState<ActionEvent[]>([])
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function ChatView() {
     abortRef.current?.abort()
     setMessages([])
     setStreamingContent("")
+    setStreamingActions([])
     setIsStreaming(false)
     try {
       await fetch("/api/chat/history", { method: "DELETE" })
@@ -60,7 +62,7 @@ export function ChatView() {
       const decoder = new TextDecoder()
       let buffer = ""
       let fullContent = ""
-      let lastAction: ActionEvent | undefined
+      const actions: ActionEvent[] = []
 
       try {
         while (true) {
@@ -89,7 +91,8 @@ export function ChatView() {
                 setStreamingContent(fullContent)
                 break
               case "action":
-                lastAction = event as ActionEvent
+                actions.push(event as ActionEvent)
+                setStreamingActions([...actions])
                 break
               case "transcription":
                 setMessages((prev) =>
@@ -119,12 +122,13 @@ export function ChatView() {
           role: "assistant",
           content: fullContent,
           timestamp: Date.now(),
-          action: lastAction,
+          actions: actions.length > 0 ? actions : undefined,
         }
         setMessages((prev) => [...prev, assistantMsg])
       }
 
       setStreamingContent("")
+      setStreamingActions([])
       setIsStreaming(false)
     },
     []
@@ -139,6 +143,7 @@ export function ChatView() {
       setMessages((prev) => [...prev, userMsg])
       setIsStreaming(true)
       setStreamingContent("")
+      setStreamingActions([])
 
       abortRef.current = new AbortController()
 
@@ -167,6 +172,7 @@ export function ChatView() {
         }
         setIsStreaming(false)
         setStreamingContent("")
+        setStreamingActions([])
       }
     },
     [processSSEStream]
@@ -273,6 +279,7 @@ export function ChatView() {
             messages={messages}
             isStreaming={isStreaming}
             streamingContent={streamingContent}
+            streamingActions={streamingActions}
           />
         )
       )}

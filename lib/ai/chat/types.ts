@@ -5,7 +5,7 @@ export interface ChatMessage {
   role: "user" | "assistant"
   content: string
   timestamp: number
-  action?: ActionEvent
+  actions?: ActionEvent[]
   transcription?: string
 }
 

@@ -49,11 +49,16 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
           )}
         </div>
 
-        {message.action && (
-          <ActionCard
-            kind={message.action.action.kind}
-            data={message.action.action.data}
-          />
+        {message.actions && message.actions.length > 0 && (
+          <div className="space-y-2">
+            {message.actions.map((a, i) => (
+              <ActionCard
+                key={`${a.action.kind}-${i}`}
+                kind={a.action.kind}
+                data={a.action.data}
+              />
+            ))}
+          </div>
         )}
       </div>
 
