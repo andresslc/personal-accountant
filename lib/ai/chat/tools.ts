@@ -27,7 +27,10 @@ const CreateTransactionParams = z.object({
   type: z.enum(["income", "expense", "debt-payment"]),
   category_id: z.string(),
   date: z.string(),
-  method: z.string().optional().default("other"),
+  method: z
+    .enum(["Credit Card", "Bank Transfer", "Cash", "Debit Card"])
+    .nullable()
+    .optional(),
   liability_id: z.number().nullable().optional().default(null),
 })
 
@@ -99,9 +102,13 @@ export const toolDefinitions: ChatToolDef[] = [
           description: { type: "string", description: "Description of the transaction" },
           amount: { type: "number", description: "Positive amount in COP" },
           type: { type: "string", enum: ["income", "expense", "debt-payment"] },
-          category_id: { type: "string", description: "Category ID (e.g. groceries, rent, salary, utilities, entertainment, shopping, healthcare, transport, freelance, other)" },
+          category_id: { type: "string", description: "Category ID (e.g. groceries, rent, salary, utilities, entertainment, shopping, healthcare, transportation, freelance, other)" },
           date: { type: "string", description: "Date in YYYY-MM-DD format" },
-          method: { type: "string", description: "Payment method", default: "other" },
+          method: {
+            type: "string",
+            enum: ["Credit Card", "Bank Transfer", "Cash", "Debit Card"],
+            description: "Payment method. Must be one of the enum values. Omit if unknown.",
+          },
           liability_id: { type: "number", description: "Liability ID for debt payments", nullable: true },
         },
         required: ["description", "amount", "type", "category_id", "date"],
@@ -313,7 +320,7 @@ export async function executeTool(
           type: params.type,
           category_id: params.category_id,
           date: params.date,
-          method: params.method,
+          method: params.method ?? null,
           liability_id: params.liability_id ?? null,
         },
         userId,

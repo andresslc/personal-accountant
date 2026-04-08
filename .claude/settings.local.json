@@ -21,7 +21,11 @@
       "mcp__plugin_supabase_supabase__list_tables",
       "Bash(npx:*)",
       "Bash(printf 'N\\\\n')",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(claude mcp:*)"
     ]
+  },
+  "enabledPlugins": {
+    "github@claude-plugins-official": false
   }
 }

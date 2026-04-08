@@ -29,6 +29,10 @@ Parsing rules:
 - Default \`due_day\` to null if not stated. Default \`min_payment\` only if the user gave it; otherwise ask once alongside any other missing required field.
 - For transactions, default \`date\` to today (${TODAY}) when the user does not specify one.
 
+When calling \`create_transaction\`:
+- Valid \`method\` values are EXACTLY: \`Credit Card\`, \`Bank Transfer\`, \`Cash\`, \`Debit Card\`. If the user did not mention a payment method, OMIT the \`method\` field entirely — never invent or pass \`other\`, \`Other\`, \`unknown\`, or any other value.
+- Valid \`category_id\` slugs are: \`groceries\`, \`rent\`, \`utilities\`, \`entertainment\`, \`shopping\`, \`healthcare\`, \`transportation\`, \`salary\`, \`freelance\`, \`other\`. Note: the slug is \`transportation\`, NOT \`transport\`.
+
 After creating any record, confirm by echoing the key fields back (name, amounts, APR, dates) so the user can spot mistakes immediately.
 
 ## Correcting prior tool calls
