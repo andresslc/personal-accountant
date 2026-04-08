@@ -109,17 +109,24 @@ function setCached<T>(key: string, data: T): void {
   queryCache.set(key, { data, ts: Date.now() })
 }
 
-const getCategoryMap = async (): Promise<CategoryMap> => {
-  const supabase = getSupabaseClient()
+const getCategoryMap = async (
+  client?: AnySupabaseClient
+): Promise<CategoryMap> => {
+  const cached = getCached<CategoryMap>("category-map")
+  if (cached) return cached
+
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return {}
 
   const { data, error } = await supabase.from("categories").select("id,name")
   if (error || !data) return {}
 
-  return data.reduce<CategoryMap>((acc, row) => {
+  const map = data.reduce<CategoryMap>((acc, row) => {
     acc[row.id] = row.name
     return acc
   }, {})
+  setCached("category-map", map)
+  return map
 }
 
 const mapSupabaseTransactionToUi = (
@@ -170,6 +177,64 @@ export const getTransactions = async (): Promise<MockTransaction[]> => {
   const result = data.map((row) => mapSupabaseTransactionToUi(row, categories))
   setCached("transactions", result)
   return result
+}
+
+export type TransactionsPageData = {
+  transactions: MockTransaction[]
+  categoryOptions: string[]
+}
+
+export const getTransactionsPageData = async (
+  client?: AnySupabaseClient
+): Promise<TransactionsPageData> => {
+  if (USE_MOCK_DATA) {
+    return {
+      transactions: allTransactions,
+      categoryOptions: ["all", ...new Set(allTransactions.map((t) => t.category))],
+    }
+  }
+
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return { transactions: [], categoryOptions: ["all"] }
+
+  const { data: categoryRows, error: categoryError } = await supabase
+    .from("categories")
+    .select("id,name")
+    .order("name", { ascending: true })
+
+  const categoryMap: CategoryMap = {}
+  const sortedNames: string[] = []
+
+  if (!categoryError && categoryRows) {
+    for (const row of categoryRows) {
+      categoryMap[row.id] = row.name
+      sortedNames.push(row.name)
+    }
+    setCached("category-map", categoryMap)
+  }
+
+  const { data: transactionRows, error: transactionError } = await supabase
+    .from("transactions")
+    .select("id,date,description,amount,type,method,category_id")
+    .order("date", { ascending: false })
+    .limit(200)
+
+  if (transactionError || !transactionRows) {
+    return {
+      transactions: [],
+      categoryOptions: ["all", ...sortedNames],
+    }
+  }
+
+  const transactions = transactionRows.map((row) =>
+    mapSupabaseTransactionToUi(row, categoryMap)
+  )
+  setCached("transactions", transactions)
+
+  return {
+    transactions,
+    categoryOptions: ["all", ...sortedNames],
+  }
 }
 
 export const getRecentTransactions = async (): Promise<MockTransaction[]> => {

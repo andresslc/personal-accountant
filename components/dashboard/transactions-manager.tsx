@@ -7,33 +7,30 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Download, Grid, List } from "lucide-react"
-import { getTransactionCategories, getTransactions } from "@/lib/data/dashboard-data"
 import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 import { useCurrency } from "@/components/currency-provider"
 
 const PAGE_SIZE = 8
 
-export function TransactionsManager() {
+type TransactionsManagerProps = {
+  initialTransactions: Transaction[]
+  initialCategoryOptions: string[]
+}
+
+export function TransactionsManager({
+  initialTransactions,
+  initialCategoryOptions,
+}: TransactionsManagerProps) {
   const { format } = useCurrency()
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [categoryOptions, setCategoryOptions] = useState<string[]>(["all"])
+  const [transactions] = useState<Transaction[]>(initialTransactions)
+  const [categoryOptions] = useState<string[]>(initialCategoryOptions)
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [type, setType] = useState("all")
   const [month, setMonth] = useState("all")
   const [view, setView] = useState("table")
   const [page, setPage] = useState(1)
-
-  useEffect(() => {
-    const loadTransactions = async () => {
-      const [transactionsData, categoriesData] = await Promise.all([getTransactions(), getTransactionCategories()])
-      setTransactions(transactionsData)
-      setCategoryOptions(categoriesData)
-    }
-
-    void loadTransactions()
-  }, [])
 
   const filteredTransactions = useMemo(
     () =>
