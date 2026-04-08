@@ -19,11 +19,20 @@ App name in UI: **FinFlow**. Repo: https://github.com/andresslc/personal-account
 - `npm run lint` — ESLint check
 
 ## GitHub Workflow
-- After completing any feature, fix, or meaningful change, always commit and push.
-- Default branch: `main`
-- Use conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`
-- Always run `npm run build` before pushing to verify no errors.
-- When creating PRs, target `main` as the base branch.
+
+**After EVERY task — whether Claude did it directly or a subagent did it — follow this sequence:**
+
+1. **Verify it works.** Run `npm run build` (and `npm run lint` when the change is risky) and confirm zero errors. If the task touched UI/behavior that the build can't catch, describe the manual check needed. Do NOT proceed to commit if the build fails — fix the underlying issue first.
+2. **Commit and push via the GitHub MCP.** Use `mcp__github__push_files` against `andresslc/personal-accountant` on branch `main` with the full, final contents of every file the task changed. Do NOT use `git push` — the local HTTPS credentials for this repo are wrong (they resolve to a different user) and will 403. The MCP protocol is the only working push path from this environment.
+3. **Sync the local checkout afterward.** After the MCP push, run `git fetch origin main && git reset origin/main` so the local branch matches the new remote commit. This drops any local placeholder commit you may have made with `git commit` and preserves unrelated working-tree changes (e.g. `.claude/settings.local.json`).
+4. **Report the commit SHA and URL** back to the user so they can inspect the change on GitHub.
+
+Additional rules:
+- Default branch: `main`.
+- Use conventional commit messages: `feat:`, `fix:`, `chore:`, `refactor:`, `docs:`. Keep the subject under 72 chars; put reasoning in the body.
+- Never commit `.env*`, credentials, or `.claude/settings.local.json`. When pushing via the MCP, send ONLY the files the task actually changed — do not include unrelated working-tree modifications.
+- When a subagent completes a coding task, the main Claude is responsible for the verify → push → sync → report sequence. Do not instruct subagents to commit/push themselves.
+- When creating PRs (rare — direct pushes to `main` are the default), target `main` as the base branch.
 
 ## Environment Variables
 | Variable | Purpose |
