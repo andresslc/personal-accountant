@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DebtQuickCreateDialog } from "@/components/dashboard/debt-quick-create-dialog"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
-import { getDebts, deleteDebt } from "@/lib/data/dashboard-data"
+import { deleteDebt } from "@/lib/data/dashboard-data"
 import { useAuth } from "@/components/auth-provider"
 import {
   AreaChart,
@@ -39,20 +39,27 @@ import {
 import { CreditCard, Percent, Calendar, Eye, Plus, Trash2 } from "lucide-react"
 import { useCurrency } from "@/components/currency-provider"
 import {
-  type LiabilityUI as Liability,
+  type LiabilityUI,
   payoffTimelineData,
   getTotalDebt,
   getWeightedAverageApr,
   getProgressPercent,
   estimatedDebtFreeDate,
 } from "@/lib/data/dashboard-data"
+import { getLiabilityIcon } from "@/lib/ui/category-icons"
 
-export function DebtsTracker() {
+type Liability = Omit<LiabilityUI, "icon">
+
+type DebtsTrackerProps = {
+  initialLiabilities: Liability[]
+}
+
+export function DebtsTracker({ initialLiabilities }: DebtsTrackerProps) {
   const searchParams = useSearchParams()
   const { format, compact } = useCurrency()
   const { user } = useAuth()
   const [payoffStrategy, setPayoffStrategy] = useState("avalanche")
-  const [liabilities, setLiabilities] = useState<Liability[]>([])
+  const [liabilities, setLiabilities] = useState<Liability[]>(initialLiabilities)
   const [isDebtDialogOpen, setIsDebtDialogOpen] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
@@ -67,15 +74,6 @@ export function DebtsTracker() {
     }
     setDeletingId(null)
   }
-
-  useEffect(() => {
-    const loadDebts = async () => {
-      const data = await getDebts()
-      setLiabilities(data)
-    }
-
-    void loadDebts()
-  }, [])
 
   useEffect(() => {
     if (searchParams.get("create") === "true") {
@@ -121,7 +119,11 @@ export function DebtsTracker() {
           <DebtQuickCreateDialog
             open={isDebtDialogOpen}
             onOpenChange={setIsDebtDialogOpen}
-            onDebtCreated={(newDebt) => setLiabilities((current) => [newDebt, ...current])}
+            onDebtCreated={(newDebt) => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { icon: _icon, ...rest } = newDebt
+              setLiabilities((current) => [rest, ...current])
+            }}
             trigger={
               <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
                 <Plus className="w-4 h-4" />
@@ -197,7 +199,7 @@ export function DebtsTracker() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {liabilities.map((liability) => {
-            const Icon = liability.icon
+            const Icon = getLiabilityIcon(liability.type)
             const progressPercent = getProgressPercent(
               liability.currentBalance,
               liability.originalBalance

@@ -29,16 +29,19 @@ export const budgetCategoryOptions = [
   { value: "healthcare", label: "Healthcare" },
 ]
 
-// Helper functions
-export const getTotalBudget = (budgets: BudgetItem[] = budgetData): number => {
+// Helper functions — accept any object that has the numeric fields so
+// callers can pass stripped (icon-less) shapes across the server/client boundary.
+export const getTotalBudget = (budgets: Pick<BudgetItem, "limit">[] = budgetData): number => {
   return budgets.reduce((sum, b) => sum + b.limit, 0)
 }
 
-export const getTotalSpent = (budgets: BudgetItem[] = budgetData): number => {
+export const getTotalSpent = (budgets: Pick<BudgetItem, "spent">[] = budgetData): number => {
   return budgets.reduce((sum, b) => sum + b.spent, 0)
 }
 
-export const getRemainingBudget = (budgets: BudgetItem[] = budgetData): number => {
+export const getRemainingBudget = (
+  budgets: Pick<BudgetItem, "limit" | "spent">[] = budgetData
+): number => {
   return getTotalBudget(budgets) - getTotalSpent(budgets)
 }
 

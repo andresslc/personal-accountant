@@ -80,12 +80,17 @@ export const payoffTimelineData: PayoffTimelinePoint[] = [
   { month: "Dec", balance: 28500 },
 ]
 
-// Helper functions
-export const getTotalDebt = (liabilities: Liability[] = liabilitiesData): number => {
+// Helper functions — accept any object that has the numeric fields so
+// callers can pass stripped (icon-less) shapes across the server/client boundary.
+export const getTotalDebt = (
+  liabilities: Pick<Liability, "currentBalance">[] = liabilitiesData
+): number => {
   return liabilities.reduce((sum, liability) => sum + liability.currentBalance, 0)
 }
 
-export const getWeightedAverageApr = (liabilities: Liability[] = liabilitiesData): string => {
+export const getWeightedAverageApr = (
+  liabilities: Pick<Liability, "currentBalance" | "apr">[] = liabilitiesData
+): string => {
   const totalDebt = getTotalDebt(liabilities)
   if (totalDebt === 0) return "0.00"
   const weightedSum = liabilities.reduce((sum, liability) => sum + liability.apr * liability.currentBalance, 0)

@@ -1,23 +1,14 @@
-import {
-  Briefcase,
-  Car,
-  CreditCard,
-  DollarSign,
-  Film,
-  Home,
-  Pill,
-  ShoppingCart,
-  TrendingDown,
-  TrendingUp,
-  Utensils,
-  Wallet,
-  Zap,
-  type LucideIcon,
-} from "lucide-react"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { USE_MOCK_DATA } from "@/lib/config/data-source"
 import { formatCurrency, type SupportedCurrency } from "@/lib/utils/currency"
 import { createClient } from "@/lib/supabase/client"
+import {
+  getCategoryIcon,
+  getLiabilityIcon,
+  getSummaryIcon,
+  type LiabilityType,
+  type SummaryIconKey,
+} from "@/lib/ui/category-icons"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>
@@ -57,32 +48,8 @@ const getSupabaseClient = () => {
   return createClient()
 }
 
-const categoryIconMap: Record<string, LucideIcon> = {
-  groceries: Utensils,
-  rent: Home,
-  utilities: Zap,
-  shopping: ShoppingCart,
-  healthcare: Pill,
-  entertainment: Film,
-  salary: Briefcase,
-  freelance: Briefcase,
-}
-
-const typeIconMap: Record<MockLiability["type"], LucideIcon> = {
-  "credit-card": CreditCard,
-  car: Car,
-  student: CreditCard,
-  personal: DollarSign,
-  mortgage: Home,
-}
-
 const toMonthLabel = (dateString: string) =>
   new Date(dateString).toLocaleString("en-US", { month: "short" })
-
-const getCategoryIcon = (category: string): LucideIcon => {
-  const normalized = category.trim().toLowerCase()
-  return categoryIconMap[normalized] ?? CreditCard
-}
 
 // --- Request-scoped cache for deduplicating underlying queries ---
 // Each cache entry stores its creation timestamp. Entries older than
@@ -156,16 +123,18 @@ const mapSupabaseTransactionToUi = (
   }
 }
 
-export const getTransactions = async (): Promise<MockTransaction[]> => {
+export const getTransactions = async (
+  client?: AnySupabaseClient
+): Promise<MockTransaction[]> => {
   if (USE_MOCK_DATA) return allTransactions
 
   const cached = getCached<MockTransaction[]>("transactions")
   if (cached) return cached
 
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
-  const categories = await getCategoryMap()
+  const categories = await getCategoryMap(supabase)
   const { data, error } = await supabase
     .from("transactions")
     .select("id,date,description,amount,type,method,category_id")
@@ -237,13 +206,15 @@ export const getTransactionsPageData = async (
   }
 }
 
-export const getRecentTransactions = async (): Promise<MockTransaction[]> => {
+export const getRecentTransactions = async (
+  client?: AnySupabaseClient
+): Promise<MockTransaction[]> => {
   if (USE_MOCK_DATA) return recentTransactions
 
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
-  const categories = await getCategoryMap()
+  const categories = await getCategoryMap(supabase)
   const { data, error } = await supabase
     .from("transactions")
     .select("id,date,description,amount,type,method,category_id")
@@ -273,12 +244,56 @@ export const getTransactionCategories = async (): Promise<string[]> => {
   return ["all", ...data.map((row) => row.name)]
 }
 
-export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
-  if (USE_MOCK_DATA) return summaryCardsData
+export type SerializableSummaryCard = {
+  title: string
+  amount: number
+  change: string
+  positive: boolean
+  color: string
+  iconKey: SummaryIconKey
+}
 
-  const fmt = (v: number) => formatCurrency(v, currency)
+const buildSummaryCardsFromValues = (
+  totals: { income: number; expenses: number; savings: number; totalBalance: number }
+): SerializableSummaryCard[] => [
+  {
+    title: "Total Balance",
+    amount: totals.totalBalance,
+    change: "Live",
+    positive: totals.totalBalance >= 0,
+    color: "bg-blue-500/10 text-blue-600",
+    iconKey: "balance",
+  },
+  {
+    title: "Income",
+    amount: totals.income,
+    change: "Live",
+    positive: true,
+    color: "bg-green-500/10 text-green-600",
+    iconKey: "income",
+  },
+  {
+    title: "Expenses",
+    amount: totals.expenses,
+    change: "Live",
+    positive: false,
+    color: "bg-red-500/10 text-red-600",
+    iconKey: "expenses",
+  },
+  {
+    title: "Savings",
+    amount: totals.savings,
+    change: "Live",
+    positive: totals.savings >= 0,
+    color: "bg-purple-500/10 text-purple-600",
+    iconKey: "savings",
+  },
+]
 
-  const transactions = await getTransactions()
+const computeSummaryTotals = (
+  transactions: MockTransaction[],
+  debts: MockLiability[]
+) => {
   const income = transactions
     .filter((transaction) => transaction.amount > 0)
     .reduce((sum, transaction) => sum + transaction.amount, 0)
@@ -288,54 +303,38 @@ export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
       .reduce((sum, transaction) => sum + transaction.amount, 0)
   )
   const savings = income - expenses
-
-  const debts = await getDebts()
   const totalDebt = debts.reduce((sum, debt) => sum + debt.currentBalance, 0)
   const totalBalance = savings - totalDebt
-
-  return [
-    {
-      title: "Total Balance",
-      value: fmt(totalBalance),
-      change: "Live",
-      positive: totalBalance >= 0,
-      icon: DollarSign,
-      color: "bg-blue-500/10 text-blue-600",
-    },
-    {
-      title: "Income",
-      value: fmt(income),
-      change: "Live",
-      positive: true,
-      icon: TrendingUp,
-      color: "bg-green-500/10 text-green-600",
-    },
-    {
-      title: "Expenses",
-      value: fmt(expenses),
-      change: "Live",
-      positive: false,
-      icon: TrendingDown,
-      color: "bg-red-500/10 text-red-600",
-    },
-    {
-      title: "Savings",
-      value: fmt(savings),
-      change: "Live",
-      positive: savings >= 0,
-      icon: Wallet,
-      color: "bg-purple-500/10 text-purple-600",
-    },
-  ]
+  return { income, expenses, savings, totalBalance }
 }
 
-export const getIncomeVsExpenses = async () => {
+export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
+  if (USE_MOCK_DATA) return summaryCardsData
+
+  const fmt = (v: number) => formatCurrency(v, currency)
+  const transactions = await getTransactions()
+  const debts = await getDebts()
+  const totals = computeSummaryTotals(transactions, debts)
+
+  return buildSummaryCardsFromValues(totals).map((card) => ({
+    title: card.title,
+    value: fmt(card.amount),
+    change: card.change,
+    positive: card.positive,
+    icon: getSummaryIcon(card.iconKey),
+    color: card.color,
+  }))
+}
+
+export const getIncomeVsExpenses = async (
+  client?: AnySupabaseClient
+) => {
   if (USE_MOCK_DATA) return incomeVsExpensesData
 
   const cached = getCached<{ month: string; income: number; expenses: number }[]>("incomeVsExpenses")
   if (cached) return cached
 
-  const transactions = await getTransactions()
+  const transactions = await getTransactions(client)
   const monthMap = new Map<string, { month: string; income: number; expenses: number }>()
 
   for (const transaction of transactions) {
@@ -354,13 +353,15 @@ export const getIncomeVsExpenses = async () => {
   return result
 }
 
-export const getExpensesByCategory = async () => {
+export const getExpensesByCategory = async (
+  client?: AnySupabaseClient
+) => {
   if (USE_MOCK_DATA) return expensesByCategoryData
 
   const cached = getCached<{ name: string; value: number }[]>("expensesByCategory")
   if (cached) return cached
 
-  const transactions = await getTransactions()
+  const transactions = await getTransactions(client)
   const categoryTotals = new Map<string, number>()
 
   for (const transaction of transactions) {
@@ -379,9 +380,11 @@ export const getExpensesByCategory = async () => {
 export const getChartColors = () => CHART_COLORS
 export const getDateRangeOptions = () => dateRangeOptions
 
-export const getBudgets = async (): Promise<MockBudgetItem[]> => {
+export const getBudgets = async (
+  client?: AnySupabaseClient
+): Promise<MockBudgetItem[]> => {
   if (USE_MOCK_DATA) return budgetData
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
   const { data, error } = await supabase
@@ -401,9 +404,11 @@ export const getBudgets = async (): Promise<MockBudgetItem[]> => {
   }))
 }
 
-export const getDebts = async (): Promise<MockLiability[]> => {
+export const getDebts = async (
+  client?: AnySupabaseClient
+): Promise<MockLiability[]> => {
   if (USE_MOCK_DATA) return liabilitiesData
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
   const { data, error } = await supabase
@@ -422,24 +427,30 @@ export const getDebts = async (): Promise<MockLiability[]> => {
     minPayment: row.min_payment,
     apr: row.apr,
     dueDay: row.due_day ?? 1,
-    icon: typeIconMap[row.type],
+    icon: getLiabilityIcon(row.type as LiabilityType),
   }))
 }
 
-export const getCashFlowData = async (): Promise<MonthlyData[]> => {
+export const getCashFlowData = async (
+  client?: AnySupabaseClient
+): Promise<MonthlyData[]> => {
   if (USE_MOCK_DATA) return cashFlowData
-  return getIncomeVsExpenses()
+  return getIncomeVsExpenses(client)
 }
 
-export const getExpenseBreakdown = async (): Promise<CategoryExpense[]> => {
+export const getExpenseBreakdown = async (
+  client?: AnySupabaseClient
+): Promise<CategoryExpense[]> => {
   if (USE_MOCK_DATA) return expenseBreakdown
-  return getExpensesByCategory()
+  return getExpensesByCategory(client)
 }
 
-export const getTopSpendingCategories = async (): Promise<SpendingRank[]> => {
+export const getTopSpendingCategories = async (
+  client?: AnySupabaseClient
+): Promise<SpendingRank[]> => {
   if (USE_MOCK_DATA) return topSpendingCategories
 
-  const expenses = await getExpensesByCategory()
+  const expenses = await getExpensesByCategory(client)
   return expenses
     .sort((a, b) => b.value - a.value)
     .slice(0, 3)
@@ -450,9 +461,11 @@ export const getTopSpendingCategories = async (): Promise<SpendingRank[]> => {
     }))
 }
 
-export const getSubscriptions = async (): Promise<Subscription[]> => {
+export const getSubscriptions = async (
+  client?: AnySupabaseClient
+): Promise<Subscription[]> => {
   if (USE_MOCK_DATA) return subscriptions
-  const supabase = getSupabaseClient()
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
   const { data, error } = await supabase
@@ -465,15 +478,128 @@ export const getSubscriptions = async (): Promise<Subscription[]> => {
   return data
 }
 
-export const getNetWorth = async (): Promise<NetWorthPoint[]> => {
+export const getNetWorth = async (
+  client?: AnySupabaseClient
+): Promise<NetWorthPoint[]> => {
   if (USE_MOCK_DATA) return netWorthData
 
-  const chartData = await getIncomeVsExpenses()
+  const chartData = await getIncomeVsExpenses(client)
   let runningValue = 0
   return chartData.map((item) => {
     runningValue += item.income - item.expenses
     return { month: item.month, value: runningValue }
   })
+}
+
+// --- Page-level fetchers for Server Components ---
+
+export type DashboardPageData = {
+  summaryCards: SerializableSummaryCard[]
+  incomeVsExpenses: MonthlyData[]
+  expensesByCategory: CategoryExpense[]
+  recentTransactions: Omit<MockTransaction, "icon">[]
+}
+
+const stripIcon = <T extends { icon?: unknown }>(item: T): Omit<T, "icon"> => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { icon: _icon, ...rest } = item
+  return rest
+}
+
+export const getDashboardPageData = async (
+  client?: AnySupabaseClient
+): Promise<DashboardPageData> => {
+  if (USE_MOCK_DATA) {
+    const totals = computeSummaryTotals(allTransactions, liabilitiesData)
+    return {
+      summaryCards: buildSummaryCardsFromValues(totals),
+      incomeVsExpenses: incomeVsExpensesData,
+      expensesByCategory: expensesByCategoryData,
+      recentTransactions: recentTransactions.map(stripIcon),
+    }
+  }
+
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) {
+    return {
+      summaryCards: buildSummaryCardsFromValues({
+        income: 0,
+        expenses: 0,
+        savings: 0,
+        totalBalance: 0,
+      }),
+      incomeVsExpenses: [],
+      expensesByCategory: [],
+      recentTransactions: [],
+    }
+  }
+
+  const [transactions, debts] = await Promise.all([
+    getTransactions(supabase),
+    getDebts(supabase),
+  ])
+
+  const totals = computeSummaryTotals(transactions, debts)
+  const incomeVsExpenses = await getIncomeVsExpenses(supabase)
+  const expensesByCategory = await getExpensesByCategory(supabase)
+  const recent = transactions.slice(0, 5).map(stripIcon)
+
+  return {
+    summaryCards: buildSummaryCardsFromValues(totals),
+    incomeVsExpenses,
+    expensesByCategory,
+    recentTransactions: recent,
+  }
+}
+
+export type BudgetPageData = {
+  budgets: Omit<MockBudgetItem, "icon">[]
+}
+
+export const getBudgetPageData = async (
+  client?: AnySupabaseClient
+): Promise<BudgetPageData> => {
+  const budgets = await getBudgets(client)
+  return { budgets: budgets.map(stripIcon) }
+}
+
+export type DebtsPageData = {
+  liabilities: Omit<MockLiability, "icon">[]
+}
+
+export const getDebtsPageData = async (
+  client?: AnySupabaseClient
+): Promise<DebtsPageData> => {
+  const liabilities = await getDebts(client)
+  return { liabilities: liabilities.map(stripIcon) }
+}
+
+export type ReportsPageData = {
+  cashFlow: MonthlyData[]
+  expenseBreakdown: CategoryExpense[]
+  topSpendingCategories: SpendingRank[]
+  subscriptions: Subscription[]
+  netWorth: NetWorthPoint[]
+}
+
+export const getReportsPageData = async (
+  client?: AnySupabaseClient
+): Promise<ReportsPageData> => {
+  const [cashFlow, breakdown, topCategories, subs, netWorth] = await Promise.all([
+    getCashFlowData(client),
+    getExpenseBreakdown(client),
+    getTopSpendingCategories(client),
+    getSubscriptions(client),
+    getNetWorth(client),
+  ])
+
+  return {
+    cashFlow,
+    expenseBreakdown: breakdown,
+    topSpendingCategories: topCategories,
+    subscriptions: subs,
+    netWorth,
+  }
 }
 
 // --- Write functions ---

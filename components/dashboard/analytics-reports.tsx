@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -20,52 +19,38 @@ import {
   Cell,
 } from "recharts"
 import { Download, Calendar } from "lucide-react"
-import {
-  getCashFlowData,
-  getExpenseBreakdown,
-  getTopSpendingCategories,
-  getSubscriptions,
-  getNetWorth,
-  getChartColors,
-  getDateRangeOptions,
+import { getChartColors, getDateRangeOptions } from "@/lib/data/dashboard-data"
+import type {
+  MonthlyData,
+  CategoryExpense,
+  SpendingRank,
+  Subscription,
+  NetWorthPoint,
 } from "@/lib/data/dashboard-data"
-import type { MonthlyData, CategoryExpense, SpendingRank, Subscription, NetWorthPoint } from "@/lib/data/dashboard-data"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 import { useCurrency } from "@/components/currency-provider"
 
-export function AnalyticsReports() {
+type AnalyticsReportsProps = {
+  initialCashFlow: MonthlyData[]
+  initialExpenseBreakdown: CategoryExpense[]
+  initialTopSpendingCategories: SpendingRank[]
+  initialSubscriptions: Subscription[]
+  initialNetWorth: NetWorthPoint[]
+}
+
+export function AnalyticsReports({
+  initialCashFlow,
+  initialExpenseBreakdown,
+  initialTopSpendingCategories,
+  initialSubscriptions,
+  initialNetWorth,
+}: AnalyticsReportsProps) {
   const { format } = useCurrency()
-  const [cashFlow, setCashFlow] = useState<MonthlyData[]>([])
-  const [breakdown, setBreakdown] = useState<CategoryExpense[]>([])
-  const [spendingCategories, setSpendingCategories] = useState<SpendingRank[]>([])
-  const [recurringSubscriptions, setRecurringSubscriptions] = useState<Subscription[]>([])
-  const [netWorth, setNetWorth] = useState<NetWorthPoint[]>([])
   const chartColors = getChartColors()
   const dateRangeOptions = getDateRangeOptions()
 
-  useEffect(() => {
-    const loadData = async () => {
-      const [cashFlowData, expenseBreakdown, topCategories, subscriptions, netWorthData] = await Promise.all([
-        getCashFlowData(),
-        getExpenseBreakdown(),
-        getTopSpendingCategories(),
-        getSubscriptions(),
-        getNetWorth(),
-      ])
-
-      setCashFlow(cashFlowData)
-      setBreakdown(expenseBreakdown)
-      setSpendingCategories(topCategories)
-      setRecurringSubscriptions(subscriptions)
-      setNetWorth(netWorthData)
-    }
-
-    void loadData()
-  }, [])
-
   return (
     <div className="space-y-6">
-      {/* Control Panel */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex gap-3">
           <Select defaultValue="30days">
@@ -101,13 +86,11 @@ export function AnalyticsReports() {
         </div>
       </div>
 
-      {/* Top Row - Two Large Charts */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Cash Flow Trend */}
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Cash Flow Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={cashFlow}>
+            <LineChart data={initialCashFlow}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="month" stroke="var(--muted-foreground)" />
               <YAxis stroke="var(--muted-foreground)" />
@@ -126,15 +109,14 @@ export function AnalyticsReports() {
           </ResponsiveContainer>
         </Card>
 
-        {/* Expense Breakdown */}
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Expense Breakdown</h3>
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="w-full sm:w-1/2">
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
-                  <Pie data={breakdown} cx="50%" cy="50%" outerRadius="75%" fill="#8884d8" dataKey="value">
-                    {breakdown.map((entry, index) => (
+                  <Pie data={initialExpenseBreakdown} cx="50%" cy="50%" outerRadius="75%" fill="#8884d8" dataKey="value">
+                    {initialExpenseBreakdown.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={chartColors[index % chartColors.length]} />
                     ))}
                   </Pie>
@@ -142,7 +124,7 @@ export function AnalyticsReports() {
               </ResponsiveContainer>
             </div>
             <div className="flex flex-col justify-center">
-              {breakdown.map((item, index) => (
+              {initialExpenseBreakdown.map((item, index) => (
                 <div key={item.name} className="flex items-center gap-2 mb-3">
                   <div
                     className="w-3 h-3 rounded-full shrink-0"
@@ -157,13 +139,11 @@ export function AnalyticsReports() {
         </Card>
       </div>
 
-      {/* Middle Row */}
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Top Spending Categories */}
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Top Spending Categories</h3>
           <div className="space-y-4">
-            {spendingCategories.map((item) => (
+            {initialTopSpendingCategories.map((item) => (
               <div key={item.rank} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-foreground/50">{item.rank}</span>
@@ -175,11 +155,10 @@ export function AnalyticsReports() {
           </div>
         </Card>
 
-        {/* Recurring Subscriptions */}
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Recurring Subscriptions</h3>
           <div className="space-y-4">
-            {recurringSubscriptions.map((sub) => (
+            {initialSubscriptions.map((sub) => (
               <div
                 key={sub.name}
                 className="flex items-center justify-between pb-4 border-b border-border last:border-b-0"
@@ -195,11 +174,10 @@ export function AnalyticsReports() {
         </Card>
       </div>
 
-      {/* Bottom Row - Net Worth Growth */}
       <Card className="p-6 border border-border">
         <h3 className="text-lg font-bold text-foreground mb-6">Net Worth Growth</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={netWorth}>
+          <AreaChart data={initialNetWorth}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="month" stroke="var(--muted-foreground)" />
             <YAxis stroke="var(--muted-foreground)" />

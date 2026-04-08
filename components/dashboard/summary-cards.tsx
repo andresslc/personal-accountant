@@ -1,28 +1,21 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
-import { getSummaryCards } from "@/lib/data/dashboard-data"
-import type { SummaryCard } from "@/lib/data/dashboard-data"
+import type { SerializableSummaryCard } from "@/lib/data/dashboard-data"
+import { getSummaryIcon } from "@/lib/ui/category-icons"
 import { useCurrency } from "@/components/currency-provider"
 
-export function SummaryCards() {
-  const { currency } = useCurrency()
-  const [cards, setCards] = useState<SummaryCard[]>([])
+type SummaryCardsProps = {
+  initialCards: SerializableSummaryCard[]
+}
 
-  useEffect(() => {
-    const loadCards = async () => {
-      const data = await getSummaryCards(currency)
-      setCards(data)
-    }
-
-    void loadCards()
-  }, [currency])
+export function SummaryCards({ initialCards }: SummaryCardsProps) {
+  const { format } = useCurrency()
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {cards.map((card) => {
-        const Icon = card.icon
+      {initialCards.map((card) => {
+        const Icon = getSummaryIcon(card.iconKey)
         return (
           <Card key={card.title} className="p-6 border border-border">
             <div className="flex items-start justify-between mb-4">
@@ -34,7 +27,7 @@ export function SummaryCards() {
               </div>
             </div>
             <p className="text-foreground/70 text-sm mb-2">{card.title}</p>
-            <p className="text-2xl font-bold text-foreground">{card.value}</p>
+            <p className="text-2xl font-bold text-foreground">{format(card.amount)}</p>
           </Card>
         )
       })}

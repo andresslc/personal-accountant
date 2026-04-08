@@ -1,24 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { getRecentTransactions } from "@/lib/data/dashboard-data"
-import type { TransactionUI as Transaction } from "@/lib/data/dashboard-data"
+import type { TransactionUI } from "@/lib/data/dashboard-data"
+import { getCategoryIcon } from "@/lib/ui/category-icons"
 import { useCurrency } from "@/components/currency-provider"
 
-export function TransactionsTable() {
+type RecentTransaction = Omit<TransactionUI, "icon">
+
+type TransactionsTableProps = {
+  initialTransactions: RecentTransaction[]
+}
+
+export function TransactionsTable({ initialTransactions }: TransactionsTableProps) {
   const { format } = useCurrency()
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-
-  useEffect(() => {
-    const loadTransactions = async () => {
-      const data = await getRecentTransactions()
-      setTransactions(data)
-    }
-
-    void loadTransactions()
-  }, [])
 
   return (
     <Card className="border border-border">
@@ -36,8 +31,8 @@ export function TransactionsTable() {
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction, index) => {
-              const Icon = transaction.icon
+            {initialTransactions.map((transaction, index) => {
+              const Icon = getCategoryIcon(transaction.category)
               const isIncome = transaction.amount > 0
               return (
                 <tr
@@ -47,11 +42,9 @@ export function TransactionsTable() {
                   <td className="px-3 py-3 md:px-6 md:py-4 text-sm text-foreground/70">{transaction.date}</td>
                   <td className="px-3 py-3 md:px-6 md:py-4">
                     <div className="flex items-center gap-2">
-                      {Icon && (
-                        <div className="hidden sm:flex w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
-                          <Icon className="w-4 h-4 text-primary" />
-                        </div>
-                      )}
+                      <div className="hidden sm:flex w-8 h-8 rounded-lg bg-primary/10 items-center justify-center">
+                        <Icon className="w-4 h-4 text-primary" />
+                      </div>
                       <Badge variant="secondary">{transaction.category}</Badge>
                     </div>
                   </td>

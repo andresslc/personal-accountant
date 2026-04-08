@@ -9,28 +9,25 @@ import { Plus, Edit2 } from "lucide-react"
 import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
 import { AIRecommendationsDialog } from "@/components/dashboard/ai-insights-dialog"
 import {
-  getBudgets,
   getTotalBudget,
   getTotalSpent,
   getRemainingBudget,
-  type BudgetItemUI as BudgetItem,
+  type BudgetItemUI,
 } from "@/lib/data/dashboard-data"
+import { getCategoryIcon } from "@/lib/ui/category-icons"
 import { useCurrency } from "@/components/currency-provider"
 
-export function BudgetPlanning() {
+type BudgetItem = Omit<BudgetItemUI, "icon">
+
+type BudgetPlanningProps = {
+  initialBudgets: BudgetItem[]
+}
+
+export function BudgetPlanning({ initialBudgets }: BudgetPlanningProps) {
   const searchParams = useSearchParams()
   const { format } = useCurrency()
-  const [budgets, setBudgets] = useState<BudgetItem[]>([])
+  const [budgets, setBudgets] = useState<BudgetItem[]>(initialBudgets)
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false)
-
-  useEffect(() => {
-    const loadBudgets = async () => {
-      const data = await getBudgets()
-      setBudgets(data)
-    }
-
-    void loadBudgets()
-  }, [])
 
   useEffect(() => {
     if (searchParams.get("create") === "true") {
@@ -52,7 +49,6 @@ export function BudgetPlanning() {
 
   return (
     <div className="space-y-6">
-      {/* Overview Header */}
       <div className="grid md:grid-cols-3 gap-6">
         <Card className="p-6 border border-border">
           <p className="text-foreground/70 text-sm mb-2">Total Budget</p>
@@ -71,12 +67,15 @@ export function BudgetPlanning() {
         </Card>
       </div>
 
-      {/* Create Budget Button */}
       <div className="flex items-center gap-3">
         <BudgetQuickCreateDialog
           open={isBudgetDialogOpen}
           onOpenChange={setIsBudgetDialogOpen}
-          onBudgetCreated={(newBudget) => setBudgets((current) => [newBudget, ...current])}
+          onBudgetCreated={(newBudget) => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { icon: _icon, ...rest } = newBudget
+            setBudgets((current) => [rest, ...current])
+          }}
           trigger={
             <Button className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="w-4 h-4" />
@@ -94,16 +93,14 @@ export function BudgetPlanning() {
         />
       </div>
 
-      {/* Budget Cards Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {budgets.map((budget) => {
-          const Icon = budget.icon
+          const Icon = getCategoryIcon(budget.category)
           const percentage = (budget.spent / budget.limit) * 100
           const isOverBudget = budget.spent > budget.limit
 
           return (
             <Card key={budget.id} className="p-6 border border-border">
-              {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -119,12 +116,10 @@ export function BudgetPlanning() {
                 </button>
               </div>
 
-              {/* Progress Bar */}
               <div className="mb-4">
                 <Progress value={Math.min(percentage, 100)} className="h-3" />
               </div>
 
-              {/* Spent Info */}
               <div className="mb-4">
                 <p className={`text-sm font-semibold ${isOverBudget ? "text-red-600" : "text-foreground"}`}>
                   {format(budget.spent)} of {format(budget.limit)}
@@ -132,7 +127,6 @@ export function BudgetPlanning() {
                 <p className="text-xs text-foreground/70 mt-1">{daysLeft !== null ? `${daysLeft} days left in month` : "\u00A0"}</p>
               </div>
 
-              {/* Warning if over budget */}
               {isOverBudget && (
                 <p className="text-xs text-red-600 font-medium">
                   Over budget by {format(budget.spent - budget.limit)}
