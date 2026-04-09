@@ -29,7 +29,9 @@
       "Bash(gh auth:*)",
       "mcp__github__push_files",
       "Bash(git fetch:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git stash:*)",
+      "Bash(node:*)"
     ]
   },
   "enabledPlugins": {
