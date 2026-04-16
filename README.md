@@ -1,346 +1,484 @@
 # FinFlow — AI-Powered Personal Finance Dashboard
 
-A comprehensive personal finance management application that combines intelligent AI assistants with intuitive dashboards to help users track transactions, plan budgets, manage debts, and gain financial insights — all through natural language, voice, or image input.
+> **Note for AI assistants reading this file:** This README is optimized as a context
+> primer. Skim "Hints for AI Assistants" near the end for conventions, gotchas, and
+> the fastest way to answer common questions without re-exploring the repo.
+
+A personal finance application that merges dashboards, charts, and multi-agent AI
+into a single tool. Users track transactions, plan budgets, manage debts, view
+reports, and talk to a financial chat assistant that can call tools, run
+forecasts, and read their data live.
+
+- **Repo:** https://github.com/andresslc/personal-accountant
+- **UI name:** FinFlow
+- **Package name (historical):** `my-v0-project`
+- **Default currency:** COP (Colombian Pesos)
+- **Languages the AI understands:** English and Spanish
+
+---
 
 ## The Problem
 
-Managing personal finances is overwhelming. People juggle bank accounts, credit cards, loans, and subscriptions across multiple platforms — losing visibility into where their money goes, how fast they're paying down debt, and whether they're actually saving. Spreadsheets are tedious, and most budgeting apps are either too simple or too complex.
+Managing personal finances is fragmented — bank accounts, credit cards, loans, and
+subscriptions all live in different tools. Spreadsheets are tedious; most budgeting
+apps are either too shallow or too complex. FinFlow consolidates everything into
+one place and layers AI on top for interpretation and advice.
 
-## The Solution
+## What It Answers
 
-FinFlow consolidates all personal financial data into a single, intuitive dashboard enhanced by AI. It answers the questions that matter:
+- Where is my money going? — Categorized transactions with visual breakdowns.
+- Am I staying within budget? — Real-time monitoring with over-spend warnings.
+- When will I be debt-free? — Avalanche/snowball strategies with projections.
+- What should I do next? — Chat agents, insights, and anomaly detection.
 
-- **Where is my money going?** — Categorized transaction tracking with visual breakdowns
-- **Am I staying within budget?** — Real-time budget monitoring with over-spending alerts
-- **When will I be debt-free?** — Smart payoff projections with optimized strategies
-- **What should I do next?** — AI-powered insights, anomaly detection, and personalized advice through a conversational chat interface
+---
 
 ## Core Features
 
-### 1. AI Financial Chat Assistant
+### 1. AI Financial Chat (`/dashboard/chat`)
 
-A full conversational AI interface at `/dashboard/chat` that acts as a personal financial advisor.
-
-- **Multi-turn conversations** with streaming responses (server-sent events)
-- **Multimodal input** — type text, record voice messages, or attach images (receipts, statements)
-- **Tool-augmented LLM** — the AI can query your financial data, create transactions, analyze spending, and suggest strategies in real time
-- **Specialized sub-agents** for focused analysis:
-  - **Debt Agent** — payoff strategies and debt optimization
-  - **Advisory Agent** — personalized financial recommendations
-  - **Prediction Agent** — spending forecasts based on historical patterns
-- **Financial memory** — the system builds a profile of your goals, obstacles, and focus areas across conversations for increasingly personalized advice
+- Multi-turn conversations with streaming (SSE) responses.
+- Multimodal input: text, voice recording, image attachments.
+- Tool-augmented LLM that queries the user's live financial data.
+- Sub-agents in `lib/ai/chat/agents/`:
+  - `debt-agent.ts` — payoff strategies.
+  - `advisory-agent.ts` — personalized recommendations.
+  - `prediction-agent.ts` — forecasts using `lib/predictions/*`.
+- Financial memory — the system extracts and updates a user profile
+  (`/api/ai/memory-update`) so advice improves over time.
+- Guardrails: input and output rails in `lib/ai/guardrails/` (configurable).
 
 ### 2. Smart Transaction Management
 
-Record every financial movement with flexible input methods:
+Entry methods:
 
-- **AI-Powered Entry** — Type natural language like *"Spent $45 at Whole Foods yesterday"* and the system auto-categorizes and structures the transaction (supports Spanish and English)
-- **Voice Input** — Record audio and the AI transcribes and parses it into a structured transaction
-- **Image Input** — Snap a photo of a receipt and the AI extracts the transaction details via vision
-- **Manual Form** — Traditional entry with category selection, payment method, and optional debt linkage
-- **CSV Import** — Bulk upload transactions from bank exports
+- **AI text** — natural language (Spanish/English). Endpoint: `/api/parse-transaction`.
+- **Voice** — audio → transcription → structured parse.
+- **Image** — receipt photo → vision extraction.
+- **Manual form** — traditional entry with category, method, optional debt link.
+- **CSV import** — bank-export bulk upload.
 
-All multimodal inputs route through a LangGraph state machine that classifies intent (transaction, budget, or debt) and extracts structured data with confidence scores. A confirmation card lets you review and edit before saving.
+Multimodal input (voice/image/text) flows through a LangGraph state machine in
+`lib/ai/multimodal-graph.ts` that classifies intent (transaction / budget / debt)
+and emits validated output with confidence scores. A confirmation card
+(`components/dashboard/multimodal-confirmation.tsx`) lets the user review before
+saving.
 
-Transactions are classified into three types:
+Transaction types:
 
-| Type | Description | Example |
-|------|-------------|---------|
-| **Income** | Money received | Salary, freelance payments, bonuses |
-| **Expense** | Money spent | Groceries, utilities, entertainment |
-| **Debt Payment** | Payments toward liabilities | Credit card payment, loan installment |
+| Type | Direction | Example |
+|---|---|---|
+| `income` | + | Salary, freelance |
+| `expense` | − | Groceries, utilities |
+| `debt_payment` | − (applies to liability) | Credit card payment |
 
-All amounts are stored as positive values — the transaction type determines the financial direction. Default currency: COP (Colombian Pesos).
+All amounts are stored as **positive numbers**; the `type` column determines the
+financial direction.
 
 ### 3. AI Insights Engine
 
-A dialog accessible from any dashboard page that provides deep AI-driven financial analysis.
+Dialog-based analyses available from any dashboard page. A single unified endpoint
+routes by `type`:
 
-| Analysis Type | What It Does |
-|---------------|--------------|
-| **Overview** | High-level financial health assessment |
-| **Spending Diagnosis** | Identifies spending patterns and anomalies |
-| **Budget Recommendations** | Suggests optimal budget allocations |
-| **Debt Strategy** | Compares payoff approaches with projected timelines |
-| **Report Summary** | Narrative summary of your financial reports |
-| **Anomaly Detection** | Flags unusual transactions or spending spikes |
+- Endpoint: `POST /api/ai/insights/[type]` (dynamic route)
+- Types served: `overview`, `spending`, `budget`, `debts`, `reports`, `anomaly`
+- Streams results; supports date-range + custom-context filters.
 
-Each analysis streams results in real time and can be filtered by date range or custom context.
+### 4. Budget Planning (`/dashboard/budget`)
 
-### 4. Budget Planning
+Monthly spending limits per category. Recurring or one-time. Visual progress bars
+and color-coded over-spend warnings. Dashboard cards show Total Budget / Spent /
+Remaining + days left in month.
 
-Set monthly spending limits per category and track progress in real time.
+### 5. Debt Payoff Tracker (`/dashboard/debts`)
 
-- Create **recurring budgets** that automatically renew each month, or **one-time budgets** for specific months
-- Visual progress bars show how much of each budget has been consumed
-- Color-coded warnings highlight categories approaching or exceeding their limit
-- Dashboard cards display **Total Budget**, **Total Spent**, and **Remaining** (with days left in the month for context)
+Tracks balance, APR, minimum payment, due date. Strategies:
 
-### 5. Debt Payoff Tracker
+| Strategy | Logic | Best for |
+|---|---|---|
+| Avalanche | Highest APR first | Minimum total interest |
+| Snowball | Lowest balance first | Psychological momentum |
 
-Manage all liabilities in one place — credit cards, auto loans, student loans, personal loans, and mortgages.
+12-month payoff projection, weighted-average APR, estimated debt-free date.
+Calculations live in `lib/predictions/debt-payoff.ts`.
 
-Each liability tracks:
-- Current balance vs. original balance (with progress percentage)
-- Annual Percentage Rate (APR)
-- Minimum monthly payment and due date
+### 6. Analytics & Reports (`/dashboard/reports`)
 
-**Payoff Strategies:**
+- Cash-flow trend (line).
+- Expense breakdown by category (pie).
+- Top spending categories (ranked).
+- Net worth growth (area).
+- Recurring subscriptions inventory.
+- Savings rate.
 
-| Strategy | Logic | Best For |
-|----------|-------|----------|
-| **Avalanche** | Pay highest interest rate first | Minimizing total interest paid |
-| **Snowball** | Pay lowest balance first | Building momentum with quick wins |
+Filters: 7d / 30d / YTD / custom. PDF export supported.
 
-The system projects a **12-month payoff timeline** showing how balances decrease over time, calculates a **weighted average APR** across all debts, and estimates a **debt-free date**.
+### 7. Dashboard Overview (`/dashboard`)
 
-### 6. Analytics & Reports
-
-Comprehensive financial intelligence through interactive charts and exportable reports.
-
-**Financial Statements & Metrics:**
-
-- **Cash Flow Analysis** — Monthly income vs. expenses trend (line chart)
-- **Expense Breakdown** — Pie chart showing spending distribution across categories
-- **Top Spending Categories** — Ranked list of where the most money goes
-- **Net Worth Growth** — Area chart tracking total wealth accumulation over time
-- **Recurring Subscriptions** — Inventory of all active subscriptions with amounts and billing frequency
-- **Savings Rate** — The gap between income and expenses
-
-**Report Controls:**
-- Filter by date range: Last 7 days, 30 days, Year-to-Date, or custom range
-- Export reports as PDF for record-keeping or sharing with a financial advisor
-
-### 7. Dashboard Overview
-
-The main dashboard provides an at-a-glance financial snapshot with four KPI cards:
-
-| Card | What It Shows |
-|------|---------------|
-| **Total Balance** | Current account balance across all sources |
-| **Monthly Income** | Total income received this month |
-| **Monthly Expenses** | Total spending this month |
-| **Savings** | Net difference (income - expenses) |
-
-Each card includes a percentage trend indicator compared to the previous period. Below the cards, interactive charts show **Income vs. Expenses** (bar chart) and **Expenses by Category** (pie chart), plus a **Recent Transactions** widget.
+KPI cards: Total Balance, Monthly Income, Monthly Expenses, Savings. Each with
+period-over-period trend. Below: Income-vs-Expenses bar chart, Expenses-by-Category
+pie, Recent Transactions widget.
 
 ### 8. Quick Add Menu
 
-A global floating action button available on every dashboard page for rapid data entry:
+Global floating action button on every dashboard page:
+`components/dashboard/quick-add-menu.tsx`. Opens multimodal transaction entry,
+budget-create, or debt-create dialogs.
 
-- **Multimodal Transaction** — text, voice recording with real-time audio visualization, or camera capture (with image compression)
-- **Budget Creation** — quick budget modal
-- **Debt Creation** — quick debt modal
+### 9. Settings (`/dashboard/settings`)
 
-Parsed results display in a confirmation card with confidence scores before saving.
+User preferences (currency, theme, profile basics).
+
+### 10. Predictions Engine (`lib/predictions/`)
+
+Pure-TypeScript forecasting and diagnostic modules consumed by chat agents and the
+`/api/predictions` route:
+
+- `anomaly-detection.ts` — flags unusual transactions.
+- `budget-adherence.ts` — how closely the user stays on budget.
+- `debt-payoff.ts` — amortization schedules, strategy comparison.
+- `savings-projection.ts` — savings run-rate extrapolation.
+- `spending-diagnosis.ts` — pattern identification.
+- `spending-forecast.ts` — category-level forecasts.
+- `data-pipeline.ts` — shared data shaping helpers.
+
+---
 
 ## Authentication
 
-FinFlow uses Supabase Auth with the following flow:
+- Supabase Auth with OAuth (Google) + email/password.
+- `/login`, `/signup` pages.
+- `/auth/callback` — OAuth code exchange.
+- `/auth/signout` — session teardown.
+- Next.js `middleware.ts` refreshes sessions and protects `/dashboard/*`.
+- Row-Level Security on every table.
+- Client-side: `components/auth-provider.tsx` exposes `useAuth()`.
+- Server-side guard: `lib/auth-guard.ts`.
 
-- **Login** (`/login`) and **Sign Up** (`/signup`) pages with Supabase OAuth
-- **Middleware** protects all `/dashboard/*` routes — unauthenticated users are redirected to `/login`
-- **Auth callback** (`/auth/callback`) handles OAuth code exchange
-- **Session refresh** on every request via Next.js middleware
-- **Auth context** (`useAuth()` hook) provides user state to client components
-- Row-Level Security on all database tables ensures users can only access their own data
+---
 
 ## API Routes
 
 | Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/api/parse-transaction` | POST | AI-powered natural language transaction parsing |
-| `/api/parse-multimodal` | POST | Multimodal input processing (text, audio, image) via LangGraph |
-| `/api/chat` | POST | Streaming chat with tool use, audio transcription, and image analysis |
-| `/api/ai/finance-insights` | POST | Overall financial health analysis |
-| `/api/ai/transactions-insights` | POST | Spending diagnosis |
-| `/api/ai/budget-insights` | POST | Budget recommendations |
-| `/api/ai/debts-insights` | POST | Debt payoff strategies |
-| `/api/ai/reports-insights` | POST | Report summary analysis |
-| `/api/ai/memory-update` | POST | Extract and merge user financial intent profile |
+|---|---|---|
+| `/api/parse-transaction` | POST | Natural-language → structured transaction |
+| `/api/parse-multimodal` | POST | Multimodal pipeline (text/audio/image) via LangGraph |
+| `/api/chat` | POST | Streaming chat with tool use + multimodal input |
+| `/api/ai/insights/[type]` | POST | Unified insights endpoint (overview/spending/budget/debts/reports/anomaly) |
+| `/api/ai/memory-update` | POST | Extract & merge the user's financial-intent profile |
+| `/api/predictions` | POST | Forecasts from `lib/predictions/*` |
 | `/auth/callback` | GET | Supabase OAuth callback |
-| `/auth/signout` | POST | Clear auth session |
+| `/auth/signout` | POST | Clear session |
 
-## Database Architecture
+Shared helpers for the AI routes live in `app/api/ai/_shared.ts`.
 
-The application uses a PostgreSQL database (via Supabase) with Row-Level Security ensuring each user can only access their own financial data.
+---
 
-### Tables
+## Database (Supabase / PostgreSQL)
+
+Every table has Row-Level Security so users can only access their own rows.
+
+**Tables**
 
 | Table | Purpose |
-|-------|---------|
-| `categories` | Income/expense categories (system defaults + user-created) |
-| `transactions` | All financial movements with amount, type, category, and method |
-| `liabilities` | Debts and credit obligations with balances and interest rates |
+|---|---|
+| `categories` | System + user income/expense categories |
+| `transactions` | All financial movements |
+| `liabilities` | Debts (credit cards, loans, mortgages) |
 | `budget_items` | Monthly spending limits per category |
-| `subscriptions` | Recurring charges with frequency and next due date |
+| `subscriptions` | Recurring charges with frequency/next-due |
 
-### Views
+**Views**
 
 | View | Purpose |
-|------|---------|
-| `monthly_summary` | Aggregated income, expenses, and savings per month |
-| `budget_with_spending` | Budget limits joined with actual spending for variance analysis |
+|---|---|
+| `monthly_summary` | Aggregated income/expenses/savings per month |
+| `budget_with_spending` | Budget limits joined with actual spend |
+
+Setup SQL is in `SUPABASE_SETUP.md`. Training-user seed: `npm run db:seed`.
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router) |
-| UI Library | React 19 |
+|---|---|
+| Framework | Next.js **16.0.7** (App Router) |
+| UI library | React **19.2** |
 | Language | TypeScript 5 |
-| Styling | Tailwind CSS v4 + shadcn/ui (Radix UI) |
+| Styling | Tailwind CSS v4 + shadcn/ui (new-york) + Radix primitives |
 | Charts | Recharts |
-| Forms | React Hook Form + Zod validation |
-| Database | Supabase (PostgreSQL with RLS) |
-| Auth | Supabase Auth (OAuth + SSR session management) |
-| AI Orchestration | LangChain + LangGraph |
-| AI Providers | OpenAI (gpt-4o-mini) or Google Gemini (gemini-2.5-flash) |
-| Audio Transcription | OpenAI Whisper / Gemini native |
+| Forms | React Hook Form + Zod |
+| Database | Supabase (PostgreSQL + RLS) |
+| Auth | Supabase Auth (`@supabase/ssr`) |
+| AI orchestration | LangChain + LangGraph (`@langchain/langgraph`) |
+| AI providers | OpenAI (`gpt-4o-mini`) or Google Gemini (`gemini-2.5-flash`) |
+| Audio transcription | OpenAI Whisper / Gemini native |
 | Icons | Lucide React |
 | Deployment | Vercel |
-| Analytics | Vercel Analytics |
-| Package Manager | npm |
+| Analytics | Vercel Analytics + Speed Insights |
+| Evals | Vitest (unit) + Promptfoo (LLM) |
+| Package manager | **npm** (ignore stale `pnpm-lock.yaml`) |
 
-## Project Structure
+---
+
+## Project Structure (verified)
 
 ```
 app/
-  page.tsx                              # Landing page
-  layout.tsx                            # Root layout (Geist font, theme, analytics)
-  middleware.ts                         # Auth session refresh + route protection
-  login/                                # Login page + form
-  signup/                               # Signup page + form
+  page.tsx                          # Landing
+  layout.tsx                        # Root layout (Geist, theme, analytics, speed insights)
+  middleware.ts                     # Auth session refresh + route protection
+  login/                            # Login page + form
+  signup/                           # Signup page + form
   auth/
-    callback/route.ts                   # OAuth code exchange
-    signout/route.ts                    # Session cleanup
+    callback/route.ts               # OAuth code exchange
+    signout/route.ts                # Session cleanup
   api/
-    parse-transaction/route.ts          # AI transaction parser
-    parse-multimodal/route.ts           # Multimodal input pipeline (LangGraph)
-    chat/route.ts                       # Streaming chat with tool use
+    parse-transaction/route.ts
+    parse-multimodal/route.ts
+    chat/route.ts
+    predictions/route.ts
     ai/
-      finance-insights/route.ts         # Financial health analysis
-      transactions-insights/route.ts    # Spending diagnosis
-      budget-insights/route.ts          # Budget recommendations
-      debts-insights/route.ts           # Debt strategy analysis
-      reports-insights/route.ts         # Report summaries
-      memory-update/route.ts            # User financial memory extraction
+      _shared.ts                    # Shared helpers for AI routes
+      insights/[type]/route.ts      # Unified insights (dynamic type param)
+      memory-update/route.ts
   dashboard/
-    layout.tsx                          # Sidebar + header layout (auth-gated)
-    page.tsx                            # Dashboard overview
-    transactions/page.tsx               # Transaction management
-    budget/page.tsx                     # Budget planning
-    debts/page.tsx                      # Debt payoff tracker
-    reports/page.tsx                    # Analytics & reports
-    chat/page.tsx                       # AI financial chat
+    layout.tsx                      # Sidebar + header (auth-gated)
+    loading.tsx
+    page.tsx                        # Overview
+    transactions/page.tsx
+    budget/page.tsx
+    debts/page.tsx
+    reports/page.tsx
+    chat/page.tsx
+    settings/page.tsx
 
 components/
-  ui/                                   # shadcn/ui base components
-  auth-provider.tsx                     # Auth context with useAuth() hook
-  theme-provider.tsx                    # Dark/light mode support
+  ui/                               # shadcn/ui primitives (DO NOT edit manually)
+  auth-provider.tsx                 # Auth context + useAuth()
+  theme-provider.tsx                # next-themes wrapper
+  currency-provider.tsx             # Currency formatting context
+  auth-card.tsx                     # Shared auth layout
   dashboard/
-    sidebar.tsx                         # Side navigation
-    header.tsx                          # Top navigation bar
-    summary-cards.tsx                   # KPI overview cards
-    income-vs-expenses-chart.tsx        # Bar chart comparison
-    expenses-by-category-chart.tsx      # Pie chart breakdown
-    transactions-table.tsx              # Recent transactions widget
-    transactions-manager.tsx            # Full transaction list with filters
-    smart-transaction-hub.tsx           # AI / Manual / CSV entry tabs
-    budget-planning.tsx                 # Budget cards and creation
-    budget-quick-create-dialog.tsx      # Reusable budget creation modal
-    debts-tracker.tsx                   # Liability management
-    debt-quick-create-dialog.tsx        # Reusable debt creation modal
-    analytics-reports.tsx               # Charts and report generation
-    quick-add-menu.tsx                  # Global floating action menu
-    ai-insights-dialog.tsx              # AI analysis modal
-    multimodal-confirmation.tsx         # Parsed result confirmation cards
-    transaction-confirmation-card.tsx   # AI parse result confirmation
+    sidebar.tsx
+    header.tsx
+    dashboard-view.tsx              # Dashboard overview composition
+    summary-cards.tsx
+    income-vs-expenses-chart.tsx
+    expenses-by-category-chart.tsx
+    transactions-table.tsx
+    transactions-manager.tsx
+    smart-transaction-hub.tsx       # Manual + CSV tabs
+    budget-planning.tsx
+    budget-quick-create-dialog.tsx
+    debts-tracker.tsx
+    debt-quick-create-dialog.tsx
+    analytics-reports.tsx
+    quick-add-menu.tsx              # Global FAB
+    ai-insights-dialog.tsx
+    multimodal-confirmation.tsx
+    transaction-confirmation-card.tsx
     chat/
-      chat-view.tsx                     # Chat container + state management
-      chat-input.tsx                    # Text / audio / image input
-      message-list.tsx                  # Message thread renderer
-      message-bubble.tsx                # Individual message display
-      action-card.tsx                   # Action suggestion cards
-      chat-welcome.tsx                  # Onboarding with suggested prompts
-      typing-indicator.tsx              # Streaming indicator
+      chat-view.tsx                 # Container + state
+      chat-input.tsx                # Text/audio/image input
+      message-list.tsx
+      message-bubble.tsx
+      chat-markdown.tsx             # Markdown renderer for messages
+      action-card.tsx               # Suggested-action cards
+      chat-welcome.tsx              # Onboarding prompts
+      typing-indicator.tsx
 
 lib/
-  config/data-source.ts                 # USE_MOCK_DATA flag
-  data/dashboard-data.ts               # Centralized data layer (mocks OR Supabase)
-  mocks/                                # Development mock data
-    index.ts                            # Re-exports
-    transactions.ts, budget.ts, debts.ts, analytics.ts, summary.ts, categories.ts
+  auth-guard.ts                     # Server-side auth guard helpers
+  date-utils.ts
+  utils.ts
+  utils/                            # Misc helpers
+  ui/                               # UI helpers
+  config/data-source.ts             # USE_MOCK_DATA flag
+  data/
+    dashboard-data.ts               # Centralized data layer (mocks OR Supabase)
+    chat-history.ts                 # Chat persistence
+  mocks/                            # Dev mock data
+    index.ts
+    transactions.ts  budget.ts  debts.ts  analytics.ts  summary.ts  categories.ts
   supabase/
-    client.ts                           # Browser client (lazy-loaded)
-    server.ts                           # Server client (SSR with cookies)
-    middleware.ts                       # Auth middleware logic
-    types.ts                            # Database TypeScript interfaces
+    client.ts                       # Browser client (lazy)
+    server.ts                       # Server client (cookies/SSR)
+    middleware.ts                   # Auth middleware logic
+    types.ts
   ai/
-    provider.ts                         # AI provider factory (OpenAI / Gemini)
-    prompt.ts                           # System prompt for transaction parsing
-    types.ts                            # ParsedTransaction Zod schema
-    multimodal-graph.ts                 # LangGraph state machine for multimodal input
-    finance-service.ts                  # High-level AI insights service
-    finance-types.ts                    # Financial memory types
+    provider.ts                     # Provider factory (OpenAI / Gemini)
+    prompt.ts                       # Transaction parsing prompt
+    types.ts                        # ParsedTransaction Zod schema
+    multimodal-graph.ts             # LangGraph state machine (multimodal)
+    multimodal-prompt.ts
+    multimodal-types.ts
+    finance-service.ts              # High-level insights service
+    finance-types.ts                # Financial memory types
+    guardrails/
+      config.ts  index.ts  input-rails.ts  output-rails.ts  types.ts
     chat/
-      orchestrator.ts                   # Multi-turn chat with tool use
-      tools.ts                          # Tool definitions for the LLM
-      prompts.ts                        # Chat system prompts
-      context-builder.ts               # Financial context assembly
-      types.ts                          # Chat message types
+      orchestrator.ts               # Multi-turn chat + tool use
+      tools.ts                      # Tool definitions exposed to the LLM
+      prompts.ts                    # Chat system prompts
+      context-builder.ts            # Financial context assembly
+      types.ts
+      agents/
+        advisory-agent.ts
+        debt-agent.ts
+        prediction-agent.ts
+  predictions/
+    index.ts
+    anomaly-detection.ts
+    budget-adherence.ts
+    data-pipeline.ts
+    debt-payoff.ts
+    savings-projection.ts
+    spending-diagnosis.ts
+    spending-forecast.ts
+    types.ts
+
+evals/
+  vitest.config.ts
+  setup.ts
+  unit/                             # Vitest unit tests
+  llm/                              # Promptfoo LLM evals (transactions/insights/chat)
+  fixtures/
+
+supabase/
+  seed-training-user.sql            # npm run db:seed
 ```
+
+---
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Dev server at `http://localhost:3000` |
+| `npm run build` | Production build (**run this before every push**) |
+| `npm run lint` | ESLint |
+| `npm run eval:unit` | Vitest unit evals |
+| `npm run eval:llm:transactions` | Promptfoo: transaction parsing |
+| `npm run eval:llm:insights` | Promptfoo: insights |
+| `npm run eval:llm:chat` | Promptfoo: chat |
+| `npm run eval:llm` | All LLM evals |
+| `npm run eval` | Unit + LLM evals |
+| `npm run db:seed` | Seed training user into Supabase |
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_USE_MOCK_DATA` | No | `true` → local mocks (default), `false` → Supabase |
+| `NEXT_PUBLIC_SUPABASE_URL` | If not mocked | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | If not mocked | Supabase anon key |
+| `AI_PROVIDER` | No | `openai` (default) or `gemini` |
+| `OPENAI_API_KEY` | If using OpenAI | OpenAI key |
+| `GEMINI_API_KEY` | If using Gemini | Google Gemini key |
+
+Never commit `.env*`, `.cursor/mcp.json`, or `.claude/settings.local.json`.
+
+---
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 18+
-- A [Supabase](https://supabase.com) project (free tier works)
-- An API key for [OpenAI](https://platform.openai.com) or [Google Gemini](https://ai.google.dev)
-
-### Installation
-
 ```bash
-# Clone the repository
 git clone https://github.com/andresslc/personal-accountant.git
 cd personal-accountant
-
-# Install dependencies
 npm install
-
-# Set up environment variables
-cp .env.local.example .env.local
-# Edit .env.local with your keys (see table below)
-
-# Set up the database
-# Follow the SQL instructions in SUPABASE_SETUP.md
-
-# Start the development server
+cp .env.local.example .env.local   # then fill keys
 npm run dev
 ```
 
-The app will be available at `http://localhost:3000`.
+With `NEXT_PUBLIC_USE_MOCK_DATA=true` (the default) the app works without a
+Supabase project.
 
-### Environment Variables
+---
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Your Supabase anonymous/public key |
-| `NEXT_PUBLIC_USE_MOCK_DATA` | No | `true` uses local mocks (default), `false` reads from Supabase |
-| `AI_PROVIDER` | No | `openai` or `gemini` (default: `openai`) |
-| `OPENAI_API_KEY` | If using OpenAI | OpenAI API key |
-| `GEMINI_API_KEY` | If using Gemini | Google Gemini API key |
+## Hints for AI Assistants
 
-## How It Helps Users
+This section is written for another AI that will give the user coding hints. Use
+it before spelunking through the repo.
 
-**For people living paycheck to paycheck** — Understand exactly where money goes each month and identify categories to reduce spending.
+### Architecture rules
 
-**For debt holders** — Visualize a clear path to becoming debt-free with optimized payoff strategies that minimize interest or maximize psychological motivation.
+1. **Data access is centralized.** Components MUST import from
+   `lib/data/dashboard-data.ts`, never directly from `lib/mocks/` or
+   `lib/supabase/*`. That module reads `USE_MOCK_DATA` and returns mocks or live
+   Supabase rows.
+2. **Supabase client is lazy-loaded.** Do NOT import `lib/supabase/client.ts` at
+   the top of any module — it crashes when env vars are missing. Only the data
+   layer may import it.
+3. **Pages are thin.** `app/dashboard/**/page.tsx` files should mostly compose
+   components from `components/dashboard/`.
+4. **shadcn/ui is generated.** Never hand-edit files in `components/ui/`. Use
+   `npx shadcn@latest add <component>`.
+5. **AI insights go through one endpoint.** There is no
+   `/api/ai/budget-insights` style route anymore — use
+   `/api/ai/insights/[type]` with `type` in
+   `{overview, spending, budget, debts, reports, anomaly}`.
+6. **Predictions are framework-free.** `lib/predictions/*` is pure TS with no
+   Next.js, Supabase, or AI dependencies — easy to unit-test and reuse.
+7. **Currency defaults to COP** — don't hard-code USD.
+8. **The multimodal pipeline is a LangGraph.** If the user wants to change how
+   text/voice/image input is classified or parsed, edit
+   `lib/ai/multimodal-graph.ts` + `lib/ai/multimodal-prompt.ts` +
+   `lib/ai/multimodal-types.ts` together.
+9. **Guardrails wrap AI calls.** Input/output rails live in
+   `lib/ai/guardrails/`. Changes to prompts should consider both rails.
+10. **Evals exist — use them.** When changing prompts or the multimodal schema,
+    run `npm run eval:unit` and the relevant `npm run eval:llm:*` suite.
 
-**For budget-conscious individuals** — Set guardrails on spending categories and get real-time feedback before overspending.
+### Common task recipes
 
-**For long-term planners** — Track net worth growth over time and ensure savings rate stays positive month after month.
+| Task | Where to look |
+|---|---|
+| Add a new dashboard widget | Create component in `components/dashboard/`, wire via `dashboard-data.ts`, mount in `app/dashboard/page.tsx` |
+| Add a new data source | Add mock in `lib/mocks/`, add fetcher in `lib/data/dashboard-data.ts`, export a getter |
+| Add a new AI tool the chat can call | `lib/ai/chat/tools.ts` (+ agent wiring in `lib/ai/chat/agents/*`) |
+| Change the transaction-parsing prompt | `lib/ai/prompt.ts` + re-run `npm run eval:llm:transactions` |
+| Change multimodal parsing | `lib/ai/multimodal-graph.ts` + `multimodal-prompt.ts` + `multimodal-types.ts` |
+| Add a new insights type | `app/api/ai/insights/[type]/route.ts` dispatches by type — extend there + UI in `ai-insights-dialog.tsx` |
+| Add a new DB table | Add SQL migration, update `lib/supabase/types.ts`, add queries in `dashboard-data.ts`, set up RLS |
+| Add a new shadcn component | `npx shadcn@latest add <name>` — never edit `components/ui/` manually |
 
-**For anyone overwhelmed by finances** — Replace the anxiety of not knowing with a clear, visual, data-driven picture of financial health — and have an AI assistant to talk it through with.
+### Known gotchas
+
+- **Do not use `git push` from the shell.** Local HTTPS creds resolve to a wrong
+  user and 403. Push via GitHub MCP (`mcp__github__push_files`) against
+  `andresslc/personal-accountant` on branch `main`.
+- **Ignore `pnpm-lock.yaml`** — the project uses npm.
+- **`.claude/settings.local.json` must stay out of commits.**
+- **Lucide icons are not serializable.** Strip them before passing transactions
+  from Server → Client components (see commit `597757b`).
+- **Dashboard pages are server-rendered with skeletons.** See commit `5ee7171`
+  and `app/dashboard/loading.tsx`. Don't accidentally convert a page back to a
+  client component.
+- **`AI_PROVIDER` is runtime-selectable.** Both providers must stay wired; don't
+  drop `@google/generative-ai` or OpenAI SDK calls.
+- **Transactions are always positive.** Sign comes from `type`, not the number.
+- **Date input can be Spanish or English.** Keep the prompt multilingual.
+
+### When the user asks "how does X work?"
+
+1. Check this README first.
+2. If X is a feature surface → `components/dashboard/<area>*.tsx`.
+3. If X is a data flow → `lib/data/dashboard-data.ts` + its mock or Supabase branch.
+4. If X is AI-related → start at `lib/ai/` and follow imports; chat specifically
+   lives under `lib/ai/chat/`.
+5. If X is a forecast/projection → `lib/predictions/`.
+
+---
+
+## Who It Helps
+
+- **Paycheck-to-paycheck users** — see where money goes each month.
+- **Debt holders** — clear path to payoff with strategy comparison.
+- **Budget-minded users** — real-time guardrails per category.
+- **Long-term planners** — net-worth tracking, savings rate trends.
+- **Anyone overwhelmed by finances** — a chat assistant that can actually read
+  the numbers and explain them.
