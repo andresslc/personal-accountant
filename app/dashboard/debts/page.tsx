@@ -5,7 +5,12 @@ import { USE_MOCK_DATA } from "@/lib/config/data-source"
 
 export default async function DebtsPage() {
   const supabase = USE_MOCK_DATA ? undefined : await createClient()
-  const { liabilities } = await getDebtsPageData(supabase)
+  const { liabilities, payoffTimeline } = await getDebtsPageData(supabase)
 
-  return <DebtsTracker initialLiabilities={liabilities} />
+  return (
+    <DebtsTracker
+      initialLiabilities={liabilities}
+      initialPayoffTimeline={payoffTimeline}
+    />
+  )
 }

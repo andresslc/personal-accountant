@@ -1,7 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false'
+
 export async function updateSession(request: NextRequest) {
+  // In mock mode the /login/demo flow is the source of truth — skip all
+  // Supabase session handling so the archetype cookie is honored without
+  // requiring a real auth session.
+  if (USE_MOCK_DATA) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(

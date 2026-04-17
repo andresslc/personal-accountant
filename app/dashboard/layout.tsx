@@ -1,17 +1,40 @@
 import { redirect } from 'next/navigation'
+import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { AuthProvider } from '@/components/auth-provider'
 import { CurrencyProvider } from '@/components/currency-provider'
 import { Sidebar, MobileSidebar, SidebarProvider } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
+import { USE_MOCK_DATA } from '@/lib/config/data-source'
+import { getActiveArchetype } from '@/lib/mocks/archetypes/active'
+import { setMockSourceResolver } from '@/lib/data/dashboard-data'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  let user: User | null = null
+
+  if (USE_MOCK_DATA) {
+    // In mock mode the archetype cookie stands in for a real auth session so
+    // the demo can be navigated without Supabase. We wire the resolver here so
+    // every downstream data-layer call sees the active archetype.
+    const archetype = await getActiveArchetype()
+    setMockSourceResolver(async () => archetype)
+    user = {
+      id: `demo-${archetype.id}`,
+      email: archetype.demoUsername,
+      app_metadata: {},
+      user_metadata: { demoArchetypeId: archetype.id, displayName: archetype.displayName },
+      aud: 'demo',
+      created_at: new Date().toISOString(),
+    } as User
+  } else {
+    const supabase = await createClient()
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  }
 
   if (!user) {
     redirect('/login')
