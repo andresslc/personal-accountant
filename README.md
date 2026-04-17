@@ -463,6 +463,53 @@ it before spelunking through the repo.
 - **Transactions are always positive.** Sign comes from `type`, not the number.
 - **Date input can be Spanish or English.** Keep the prompt multilingual.
 
+### Demo archetypes
+
+When `NEXT_PUBLIC_USE_MOCK_DATA=true`, FinFlow ships a catalog of six
+"client archetype" demo personas designed to showcase the product across
+Colombian financial segments — the disciplined saver, the chronic
+late-payer, the over-leveraged aspirational, the gig freelancer, the
+young professional, and the family provider. See
+`lib/mocks/archetypes/`.
+
+How it works:
+
+- Each archetype is a single `.ts` file under
+  `lib/mocks/archetypes/profiles/` exporting a `ClientArchetype` with a
+  12-month synthetic footprint (transactions, budgets, liabilities,
+  subscriptions, summary KPIs, charts). Amounts are Colombian pesos and
+  draw on the benchmark at `lib/benchmarks/colombia-household-8m.ts`.
+- `lib/mocks/archetypes/generators.ts` builds the deterministic
+  transaction stream from a seed + spend plan, so the data is stable
+  across SSR and reloads.
+- `/login/demo` renders `components/auth/demo-archetype-picker.tsx`,
+  which lets you pick an archetype or paste one of the plaintext demo
+  credentials. Submitting sets the `finflow_demo_archetype` cookie via
+  a server action in `app/login/demo-actions.ts`.
+- `app/dashboard/layout.tsx` reads the cookie on every request and
+  registers a resolver with the data layer. Every existing `getXYZ`
+  call in `lib/data/dashboard-data.ts` now returns the active
+  archetype's payload. Without a cookie the default archetype (the
+  disciplined saver) is used.
+- `/login` redirects to `/login/demo` when mock mode is on; when mock
+  mode is off the real Supabase `/login` form is shown. Middleware is
+  untouched.
+
+To add a new archetype:
+
+1. Create `lib/mocks/archetypes/profiles/<slug>.ts` using an existing
+   profile as a template.
+2. Export a `ClientArchetype` object with a unique `id`, credentials,
+   profile metadata, and the generated datasets (use
+   `generateTransactions` and the `compute*` helpers).
+3. Append the export to `archetypes` in
+   `lib/mocks/archetypes/index.ts`.
+4. Run `npm run build` to verify types.
+
+The demo credentials are plaintext by design and should never be
+shipped into Supabase Auth — the cookie-based flow only runs while
+`USE_MOCK_DATA === true`.
+
 ### When the user asks "how does X work?"
 
 1. Check this README first.

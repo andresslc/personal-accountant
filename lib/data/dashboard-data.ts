@@ -9,6 +9,8 @@ import {
   type LiabilityType,
   type SummaryIconKey,
 } from "@/lib/ui/category-icons"
+import type { ClientArchetype } from "@/lib/mocks/archetypes"
+import type { PayoffTimelinePoint } from "@/lib/mocks/debts"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>
@@ -36,6 +38,38 @@ import {
   type MonthlyData,
   type CategoryExpense,
 } from "@/lib/mocks"
+
+// The archetype is resolved inside server contexts by a tiny module that
+// DOES import `next/headers` (see `lib/mocks/archetypes/active.ts`). Servers
+// register the resolver at request time via `setMockSourceResolver` — see
+// `app/dashboard/layout.tsx`, which runs before any dashboard page fetch. The
+// indirection keeps this module free of any server-only imports so client
+// components that rely on its synchronous re-exports keep compiling.
+type MockSourceResolver = () => Promise<ClientArchetype | null>
+
+// We stash the resolver on globalThis so it survives across the module graph
+// without creating new imports. It's only set on the server.
+const RESOLVER_KEY = "__finflow_archetype_resolver__" as const
+
+export function setMockSourceResolver(resolver: MockSourceResolver): void {
+  if (typeof window !== "undefined") return
+  ;(globalThis as unknown as Record<string, MockSourceResolver>)[RESOLVER_KEY] =
+    resolver
+}
+
+async function getMockSource(): Promise<ClientArchetype | null> {
+  if (!USE_MOCK_DATA) return null
+  if (typeof window !== "undefined") return null
+  const resolver = (
+    globalThis as unknown as Record<string, MockSourceResolver | undefined>
+  )[RESOLVER_KEY]
+  if (!resolver) return null
+  try {
+    return await resolver()
+  } catch {
+    return null
+  }
+}
 
 type CategoryMap = Record<string, string>
 
@@ -126,7 +160,10 @@ const mapSupabaseTransactionToUi = (
 export const getTransactions = async (
   client?: AnySupabaseClient
 ): Promise<MockTransaction[]> => {
-  if (USE_MOCK_DATA) return allTransactions
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.transactions ?? allTransactions
+  }
 
   const cached = getCached<MockTransaction[]>("transactions")
   if (cached) return cached
@@ -157,9 +194,11 @@ export const getTransactionsPageData = async (
   client?: AnySupabaseClient
 ): Promise<TransactionsPageData> => {
   if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    const list = archetype?.transactions ?? allTransactions
     return {
-      transactions: allTransactions,
-      categoryOptions: ["all", ...new Set(allTransactions.map((t) => t.category))],
+      transactions: list,
+      categoryOptions: ["all", ...new Set(list.map((t) => t.category))],
     }
   }
 
@@ -209,7 +248,10 @@ export const getTransactionsPageData = async (
 export const getRecentTransactions = async (
   client?: AnySupabaseClient
 ): Promise<MockTransaction[]> => {
-  if (USE_MOCK_DATA) return recentTransactions
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return (archetype?.transactions ?? recentTransactions).slice(0, 5)
+  }
 
   const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
@@ -228,7 +270,9 @@ export const getRecentTransactions = async (
 
 export const getTransactionCategories = async (): Promise<string[]> => {
   if (USE_MOCK_DATA) {
-    return ["all", ...new Set(allTransactions.map((transaction) => transaction.category))]
+    const archetype = await getMockSource()
+    const source = archetype?.transactions ?? allTransactions
+    return ["all", ...new Set(source.map((transaction) => transaction.category))]
   }
 
   const supabase = getSupabaseClient()
@@ -309,7 +353,24 @@ const computeSummaryTotals = (
 }
 
 export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
-  if (USE_MOCK_DATA) return summaryCardsData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    if (archetype) {
+      return archetype.summaryCards.map((card) => ({
+        ...card,
+        icon: getSummaryIcon(
+          card.title === "Total Balance"
+            ? "balance"
+            : card.title === "Income"
+              ? "income"
+              : card.title === "Expenses"
+                ? "expenses"
+                : "savings"
+        ),
+      }))
+    }
+    return summaryCardsData
+  }
 
   const fmt = (v: number) => formatCurrency(v, currency)
   const transactions = await getTransactions()
@@ -329,7 +390,10 @@ export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
 export const getIncomeVsExpenses = async (
   client?: AnySupabaseClient
 ) => {
-  if (USE_MOCK_DATA) return incomeVsExpensesData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.monthlyFlow ?? incomeVsExpensesData
+  }
 
   const cached = getCached<{ month: string; income: number; expenses: number }[]>("incomeVsExpenses")
   if (cached) return cached
@@ -356,7 +420,10 @@ export const getIncomeVsExpenses = async (
 export const getExpensesByCategory = async (
   client?: AnySupabaseClient
 ) => {
-  if (USE_MOCK_DATA) return expensesByCategoryData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.expensesByCategory ?? expensesByCategoryData
+  }
 
   const cached = getCached<{ name: string; value: number }[]>("expensesByCategory")
   if (cached) return cached
@@ -383,7 +450,10 @@ export const getDateRangeOptions = () => dateRangeOptions
 export const getBudgets = async (
   client?: AnySupabaseClient
 ): Promise<MockBudgetItem[]> => {
-  if (USE_MOCK_DATA) return budgetData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.budgets ?? budgetData
+  }
   const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
@@ -407,7 +477,10 @@ export const getBudgets = async (
 export const getDebts = async (
   client?: AnySupabaseClient
 ): Promise<MockLiability[]> => {
-  if (USE_MOCK_DATA) return liabilitiesData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.liabilities ?? liabilitiesData
+  }
   const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
@@ -434,21 +507,30 @@ export const getDebts = async (
 export const getCashFlowData = async (
   client?: AnySupabaseClient
 ): Promise<MonthlyData[]> => {
-  if (USE_MOCK_DATA) return cashFlowData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.monthlyFlow ?? cashFlowData
+  }
   return getIncomeVsExpenses(client)
 }
 
 export const getExpenseBreakdown = async (
   client?: AnySupabaseClient
 ): Promise<CategoryExpense[]> => {
-  if (USE_MOCK_DATA) return expenseBreakdown
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.expensesByCategory ?? expenseBreakdown
+  }
   return getExpensesByCategory(client)
 }
 
 export const getTopSpendingCategories = async (
   client?: AnySupabaseClient
 ): Promise<SpendingRank[]> => {
-  if (USE_MOCK_DATA) return topSpendingCategories
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.topSpending ?? topSpendingCategories
+  }
 
   const expenses = await getExpensesByCategory(client)
   return expenses
@@ -464,7 +546,10 @@ export const getTopSpendingCategories = async (
 export const getSubscriptions = async (
   client?: AnySupabaseClient
 ): Promise<Subscription[]> => {
-  if (USE_MOCK_DATA) return subscriptions
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.subscriptions ?? subscriptions
+  }
   const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
   if (!supabase) return []
 
@@ -481,7 +566,10 @@ export const getSubscriptions = async (
 export const getNetWorth = async (
   client?: AnySupabaseClient
 ): Promise<NetWorthPoint[]> => {
-  if (USE_MOCK_DATA) return netWorthData
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    return archetype?.netWorth ?? netWorthData
+  }
 
   const chartData = await getIncomeVsExpenses(client)
   let runningValue = 0
@@ -510,6 +598,36 @@ export const getDashboardPageData = async (
   client?: AnySupabaseClient
 ): Promise<DashboardPageData> => {
   if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    if (archetype) {
+      return {
+        summaryCards: archetype.summaryCards.map((card) => ({
+          title: card.title,
+          amount:
+            card.title === "Total Balance"
+              ? archetype.summary.totalBalance
+              : card.title === "Income"
+                ? archetype.summary.income
+                : card.title === "Expenses"
+                  ? archetype.summary.expenses
+                  : archetype.summary.savings,
+          change: card.change,
+          positive: card.positive,
+          color: card.color,
+          iconKey:
+            card.title === "Total Balance"
+              ? "balance"
+              : card.title === "Income"
+                ? "income"
+                : card.title === "Expenses"
+                  ? "expenses"
+                  : "savings",
+        })),
+        incomeVsExpenses: archetype.monthlyFlow,
+        expensesByCategory: archetype.expensesByCategory,
+        recentTransactions: archetype.transactions.slice(0, 5).map(stripIcon),
+      }
+    }
     const totals = computeSummaryTotals(allTransactions, liabilitiesData)
     return {
       summaryCards: buildSummaryCardsFromValues(totals),
@@ -565,13 +683,32 @@ export const getBudgetPageData = async (
 
 export type DebtsPageData = {
   liabilities: Omit<MockLiability, "icon">[]
+  payoffTimeline: PayoffTimelinePoint[]
+}
+
+export const getPayoffTimeline = async (
+  client?: AnySupabaseClient
+): Promise<PayoffTimelinePoint[]> => {
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    if (archetype?.payoffTimeline?.length) return archetype.payoffTimeline
+  }
+  const { payoffTimelineData } = await import("@/lib/mocks/debts")
+  void client
+  return payoffTimelineData
 }
 
 export const getDebtsPageData = async (
   client?: AnySupabaseClient
 ): Promise<DebtsPageData> => {
-  const liabilities = await getDebts(client)
-  return { liabilities: liabilities.map(stripIcon) }
+  const [liabilities, payoffTimeline] = await Promise.all([
+    getDebts(client),
+    getPayoffTimeline(client),
+  ])
+  return {
+    liabilities: liabilities.map(stripIcon),
+    payoffTimeline,
+  }
 }
 
 export type ReportsPageData = {

@@ -40,6 +40,7 @@ import { CreditCard, Percent, Calendar, Eye, Plus, Trash2 } from "lucide-react"
 import { useCurrency } from "@/components/currency-provider"
 import {
   type LiabilityUI,
+  type PayoffTimelinePoint,
   payoffTimelineData,
   getTotalDebt,
   getWeightedAverageApr,
@@ -52,9 +53,14 @@ type Liability = Omit<LiabilityUI, "icon">
 
 type DebtsTrackerProps = {
   initialLiabilities: Liability[]
+  initialPayoffTimeline?: PayoffTimelinePoint[]
 }
 
-export function DebtsTracker({ initialLiabilities }: DebtsTrackerProps) {
+export function DebtsTracker({
+  initialLiabilities,
+  initialPayoffTimeline,
+}: DebtsTrackerProps) {
+  const payoffChartData = initialPayoffTimeline ?? payoffTimelineData
   const searchParams = useSearchParams()
   const { format, compact } = useCurrency()
   const { user } = useAuth()
@@ -318,7 +324,7 @@ export function DebtsTracker({ initialLiabilities }: DebtsTrackerProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={payoffTimelineData}>
+            <AreaChart data={payoffChartData}>
               <defs>
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
                   <stop
