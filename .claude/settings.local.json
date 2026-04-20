@@ -32,7 +32,11 @@
       "Bash(git reset:*)",
       "Bash(git stash:*)",
       "Bash(node:*)",
-      "Bash(gh --version)"
+      "Bash(gh --version)",
+      "Skill(update-config)",
+      "Read(//c/Users/andres/**)",
+      "Read(//c/Users/andres/.claude/**)",
+      "WebFetch(domain:github.com)"
     ]
   },
   "enabledPlugins": {

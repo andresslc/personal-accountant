@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest"
 import {
   MultimodalParseResultSchema,
+  MultimodalParseResultsSchema,
   ParsedBudgetSchema,
   ParsedDebtSchema,
 } from "@/lib/ai/multimodal-types"
@@ -197,6 +198,97 @@ describe("ParsedDebtSchema", () => {
       apr: 10,
       due_day: null,
       confidence: 0.85,
+    })
+    expect(result.success).toBe(false)
+  })
+})
+
+describe("MultimodalParseResultsSchema — Items Wrapper", () => {
+  it("accepts a single item in the array", () => {
+    const input = {
+      items: [
+        {
+          intent: "transaction",
+          data: {
+            description: "Ice cream",
+            amount: 5_000,
+            type: "expense",
+            category_id: "food",
+            date: "2026-04-01",
+            method: "cash",
+            liability_id: null,
+            confidence: 0.95,
+          },
+        },
+      ],
+    }
+    const result = MultimodalParseResultsSchema.safeParse(input)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.items).toHaveLength(1)
+    }
+  })
+
+  it("accepts multiple items with mixed intents", () => {
+    const input = {
+      items: [
+        {
+          intent: "transaction",
+          data: {
+            description: "Ice cream",
+            amount: 5_000,
+            type: "expense",
+            category_id: "food",
+            date: "2026-04-01",
+            method: "cash",
+            liability_id: null,
+            confidence: 0.9,
+          },
+        },
+        {
+          intent: "transaction",
+          data: {
+            description: "Electricity bill",
+            amount: 80_000,
+            type: "expense",
+            category_id: "utilities",
+            date: "2026-04-01",
+            method: "transfer",
+            liability_id: null,
+            confidence: 0.85,
+          },
+        },
+        {
+          intent: "budget",
+          data: {
+            category_id: "food",
+            budget_limit: 500_000,
+            month_year: "2026-04-01",
+            recurring: false,
+            confidence: 0.8,
+          },
+        },
+      ],
+    }
+    const result = MultimodalParseResultsSchema.safeParse(input)
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.items).toHaveLength(3)
+      expect(result.data.items[0].intent).toBe("transaction")
+      expect(result.data.items[1].intent).toBe("transaction")
+      expect(result.data.items[2].intent).toBe("budget")
+    }
+  })
+
+  it("rejects empty items array", () => {
+    const result = MultimodalParseResultsSchema.safeParse({ items: [] })
+    expect(result.success).toBe(false)
+  })
+
+  it("rejects missing items field", () => {
+    const result = MultimodalParseResultsSchema.safeParse({
+      intent: "transaction",
+      data: { description: "test", amount: 100 },
     })
     expect(result.success).toBe(false)
   })

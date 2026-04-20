@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       audioMimeType,
     })
 
-    return NextResponse.json({ success: true, ...result })
+    return NextResponse.json({ success: true, items: result.items })
   } catch (error) {
     console.error("parse-multimodal error:", error)
     const message = error instanceof Error ? error.message : ""

@@ -83,7 +83,7 @@ const transactions = generateTransactions({
     {
       category: 'Kids',
       share: 0.03,
-      merchants: ['Falabella — Niños', 'Panamericana — Útiles', 'Jugueterá', 'Baby Ganga'],
+      merchants: ['Falabella — Niños', 'Panamericana — Útiles', 'Juguetería', 'Baby Ganga'],
       frequency: 'monthly',
       paymentMethods: ['Credit Card'],
     },

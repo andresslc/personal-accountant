@@ -24,15 +24,25 @@ Available liabilities (debts):
 ${liabilityList}
 
 ## Intent Classification
-First determine what the user wants to do:
+For each distinct financial item the user mentions, determine its intent:
 - "transaction": Recording a purchase, payment, income, expense, or debt payment. This is the DEFAULT when unclear.
 - "budget": Setting a spending limit for a category (keywords: "budget", "limit", "allocate", "presupuesto", "límite").
 - "debt": Creating a new debt/liability (keywords: "new loan", "new credit card", "owe", "borrowed", "nuevo préstamo", "deuda nueva").
 
 ## Output Format
-Return a JSON object with two fields:
+Return a JSON object with a single field "items" containing an array.
+Each element in the array is an object with two fields:
 - "intent": one of "transaction", "budget", or "debt"
 - "data": structured object matching the intent (see schemas below)
+
+IMPORTANT RULES FOR MULTIPLE ITEMS:
+- Parse EVERY distinct financial item the user mentions into its own array element.
+- Each expense, income, budget, or debt should be its own item in the array.
+- Do NOT merge or summarize multiple items into one.
+- Example: "I bought ice cream for 5000 and paid electricity for 80000" must return TWO items, not one.
+- Even if only one item is mentioned, still return it inside the items array.
+- Example single item: { "items": [{ "intent": "transaction", "data": { ... } }] }
+- Example multiple items: { "items": [{ "intent": "transaction", "data": { ... } }, { "intent": "transaction", "data": { ... } }] }
 
 ### If intent is "transaction":
 {
@@ -78,15 +88,18 @@ Return a JSON object with two fields:
 
 ## Rules
 1. Respond ONLY with valid JSON. No markdown, no explanation.
-2. When the input is ambiguous, default to "transaction" intent.
-3. If the user mentions paying a liability, use "transaction" with type "debt-payment", NOT "debt".
-4. Lower confidence when you had to guess significantly.
-5. Accept input in Spanish or English.`
+2. Always return { "items": [...] } — even for a single item.
+3. When the input is ambiguous, default to "transaction" intent.
+4. If the user mentions paying a liability, use "transaction" with type "debt-payment", NOT "debt".
+5. Lower confidence when you had to guess significantly.
+6. Accept input in Spanish or English.
+7. If the user mentions multiple financial items (e.g. "compré helado y pagué la luz"), create a separate item for each one.`
 }
 
 export function buildImageIntentPrompt(): string {
   return `${buildMultimodalSystemPrompt()}
 
 Analyze the image and extract the financial data. Most images (receipts, screenshots) are transactions.
-Only classify as "budget" or "debt" if the image explicitly shows budget planning or debt/loan documents.`
+Only classify as "budget" or "debt" if the image explicitly shows budget planning or debt/loan documents.
+If the image contains multiple line items (e.g. a receipt with several purchases), create a separate item in the "items" array for each distinct line item.`
 }

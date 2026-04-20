@@ -22,6 +22,11 @@ export default async function zodValidator(
         schema = mod.MultimodalParseResultSchema
         break
       }
+      case "MultimodalParseResultsSchema": {
+        const mod = await import("@/lib/ai/multimodal-types")
+        schema = mod.MultimodalParseResultsSchema
+        break
+      }
       case "FinanceInsightsDataSchema": {
         const mod = await import("@/lib/ai/finance-types")
         schema = mod.FinanceInsightsDataSchema

@@ -69,7 +69,8 @@ export function QuickAddMenu({
   const [quickPrompt, setQuickPrompt] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingLabel, setProcessingLabel] = useState("")
-  const [parseResult, setParseResult] = useState<MultimodalParseResult | null>(null)
+  const [parseResults, setParseResults] = useState<MultimodalParseResult[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [parseError, setParseError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isRecording, setIsRecording] = useState(false)
@@ -87,7 +88,8 @@ export function QuickAddMenu({
     setQuickPrompt("")
     setIsProcessing(false)
     setProcessingLabel("")
-    setParseResult(null)
+    setParseResults([])
+    setCurrentIndex(0)
     setParseError(null)
     setPreviewUrl(null)
     setIsRecording(false)
@@ -124,7 +126,8 @@ export function QuickAddMenu({
   const sendToApi = async (formData: FormData) => {
     setIsProcessing(true)
     setParseError(null)
-    setParseResult(null)
+    setParseResults([])
+    setCurrentIndex(0)
 
     try {
       const res = await fetch("/api/parse-multimodal", {
@@ -138,7 +141,14 @@ export function QuickAddMenu({
         return
       }
 
-      setParseResult({ intent: data.intent, data: data.data } as MultimodalParseResult)
+      const items: MultimodalParseResult[] = data.items ?? []
+      if (items.length === 0) {
+        setParseError("No items could be parsed from your input.")
+        return
+      }
+
+      setParseResults(items)
+      setCurrentIndex(0)
     } catch {
       setParseError("Network error. Please try again.")
     } finally {
@@ -269,20 +279,45 @@ export function QuickAddMenu({
     return `${m}:${s.toString().padStart(2, "0")}`
   }
 
-  const handleConfirm = () => {
-    if (!parseResult) return
+  const currentResult = parseResults.length > 0 ? parseResults[currentIndex] : null
 
-    switch (parseResult.intent) {
+  const advanceToNext = () => {
+    if (currentIndex < parseResults.length - 1) {
+      setCurrentIndex((i) => i + 1)
+    } else {
+      setIsOpen(false)
+      resetState()
+    }
+  }
+
+  const handleConfirm = () => {
+    if (!currentResult) return
+
+    switch (currentResult.intent) {
       case "transaction":
-        handleAction(onAddTransaction)
+        onAddTransaction?.()
         break
       case "budget":
-        handleAction(onCreateBudget, budgetHref)
+        if (onCreateBudget) {
+          onCreateBudget()
+        } else if (budgetHref) {
+          router.push(budgetHref)
+        }
         break
       case "debt":
-        handleAction(onAddDebt, debtHref)
+        if (onAddDebt) {
+          onAddDebt()
+        } else if (debtHref) {
+          router.push(debtHref)
+        }
         break
     }
+
+    advanceToNext()
+  }
+
+  const handleSkip = () => {
+    advanceToNext()
   }
 
   const handleOpenChange = (nextOpen: boolean) => {
@@ -290,7 +325,7 @@ export function QuickAddMenu({
     if (!nextOpen) resetState()
   }
 
-  if (parseResult) {
+  if (currentResult) {
     return (
       <Dialog open={isOpen} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
@@ -305,12 +340,16 @@ export function QuickAddMenu({
             <DialogDescription>AI parsed your input. Please review before saving.</DialogDescription>
           </DialogHeader>
           <MultimodalConfirmation
-            result={parseResult}
+            result={currentResult}
             onConfirm={handleConfirm}
             onTryAgain={() => {
-              setParseResult(null)
+              setParseResults([])
+              setCurrentIndex(0)
               setPreviewUrl(null)
             }}
+            onSkip={handleSkip}
+            currentIndex={currentIndex}
+            totalItems={parseResults.length}
           />
         </DialogContent>
       </Dialog>

@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   Check,
   RotateCcw,
+  SkipForward,
   Calendar,
   CreditCard,
   DollarSign,
@@ -196,37 +197,68 @@ interface MultimodalConfirmationProps {
   result: MultimodalParseResult
   onConfirm: () => void
   onTryAgain: () => void
+  onSkip?: () => void
+  currentIndex?: number
+  totalItems?: number
 }
 
 export function MultimodalConfirmation({
   result,
   onConfirm,
   onTryAgain,
+  onSkip,
+  currentIndex,
+  totalItems,
 }: MultimodalConfirmationProps) {
+  const showProgress = totalItems !== undefined && totalItems > 1 && currentIndex !== undefined
+
+  const progressHeader = showProgress ? (
+    <div className="flex items-center justify-between mb-3">
+      <Badge variant="secondary" className="text-xs">
+        Item {currentIndex + 1} of {totalItems}
+      </Badge>
+      {onSkip && (
+        <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={onSkip}>
+          <SkipForward className="w-3.5 h-3.5" />
+          Skip
+        </Button>
+      )}
+    </div>
+  ) : null
+
   switch (result.intent) {
     case "transaction":
       return (
-        <TransactionConfirmationCard
-          transaction={result.data}
-          onConfirm={onConfirm}
-          onTryAgain={onTryAgain}
-        />
+        <div>
+          {progressHeader}
+          <TransactionConfirmationCard
+            transaction={result.data}
+            onConfirm={onConfirm}
+            onTryAgain={onTryAgain}
+          />
+        </div>
       )
     case "budget":
       return (
-        <BudgetConfirmationCard
-          budget={result.data}
-          onConfirm={onConfirm}
-          onTryAgain={onTryAgain}
-        />
+        <div>
+          {progressHeader}
+          <BudgetConfirmationCard
+            budget={result.data}
+            onConfirm={onConfirm}
+            onTryAgain={onTryAgain}
+          />
+        </div>
       )
     case "debt":
       return (
-        <DebtConfirmationCard
-          debt={result.data}
-          onConfirm={onConfirm}
-          onTryAgain={onTryAgain}
-        />
+        <div>
+          {progressHeader}
+          <DebtConfirmationCard
+            debt={result.data}
+            onConfirm={onConfirm}
+            onTryAgain={onTryAgain}
+          />
+        </div>
       )
   }
 }

@@ -28,7 +28,12 @@ export const MultimodalParseResultSchema = z.discriminatedUnion("intent", [
   z.object({ intent: z.literal("debt"), data: ParsedDebtSchema }),
 ])
 
+export const MultimodalParseResultsSchema = z.object({
+  items: z.array(MultimodalParseResultSchema).min(1),
+})
+
 export type IntentType = z.infer<typeof IntentTypeSchema>
 export type ParsedBudget = z.infer<typeof ParsedBudgetSchema>
 export type ParsedDebt = z.infer<typeof ParsedDebtSchema>
 export type MultimodalParseResult = z.infer<typeof MultimodalParseResultSchema>
+export type MultimodalParseResults = z.infer<typeof MultimodalParseResultsSchema>

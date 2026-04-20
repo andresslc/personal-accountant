@@ -88,7 +88,7 @@ const MERCHANTS = {
     'Sura Consulta',
     'Farmatodo',
     'Cruz Verde',
-    'Droguerías La Rebaja',
+    'Droguerías La Rebaja',
   ],
   entertainment: [
     'Cine Colombia',

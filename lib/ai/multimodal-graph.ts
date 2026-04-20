@@ -1,8 +1,8 @@
 import { Annotation, StateGraph, START, END } from "@langchain/langgraph"
 import { getAIProvider } from "./provider"
 import {
-  MultimodalParseResultSchema,
-  type MultimodalParseResult,
+  MultimodalParseResultsSchema,
+  type MultimodalParseResults,
 } from "./multimodal-types"
 import {
   buildMultimodalSystemPrompt,
@@ -17,7 +17,7 @@ const MultimodalState = Annotation.Root({
   audioBuffer: Annotation<Buffer | undefined>,
   audioMimeType: Annotation<string | undefined>,
   transcribedText: Annotation<string | undefined>,
-  result: Annotation<MultimodalParseResult | undefined>,
+  result: Annotation<MultimodalParseResults | undefined>,
   error: Annotation<string | undefined>,
 })
 
@@ -54,7 +54,7 @@ async function classifyAndExtractNode(
     const result = await provider.generateStructured({
       systemPrompt: buildMultimodalSystemPrompt(),
       userPrompt: text,
-      schema: MultimodalParseResultSchema,
+      schema: MultimodalParseResultsSchema,
     })
     return { result }
   } catch (err) {
@@ -74,10 +74,10 @@ async function extractFromImageNode(
   try {
     const result = await provider.generateStructuredWithImage({
       systemPrompt: buildImageIntentPrompt(),
-      userPrompt: "Analyze the image and extract the financial data. Return JSON with intent and data.",
+      userPrompt: "Analyze the image and extract the financial data. Return JSON with items array, each containing intent and data.",
       imageBase64: state.imageBase64,
       mimeType: state.imageMimeType,
-      schema: MultimodalParseResultSchema,
+      schema: MultimodalParseResultsSchema,
     })
     return { result }
   } catch (err) {
@@ -123,7 +123,7 @@ export type MultimodalInput = {
 
 export async function runMultimodalGraph(
   input: MultimodalInput
-): Promise<MultimodalParseResult> {
+): Promise<MultimodalParseResults> {
   const result = await compiledGraph.invoke({
     inputType: input.type,
     rawText: input.text,
