@@ -2,8 +2,10 @@ import { AnalyticsReports } from "@/components/dashboard/analytics-reports"
 import { getReportsPageData } from "@/lib/data/dashboard-data"
 import { createClient } from "@/lib/supabase/server"
 import { USE_MOCK_DATA } from "@/lib/config/data-source"
+import { ensureArchetypeResolver } from "@/lib/mocks/archetypes/register"
 
 export default async function ReportsPage() {
+  await ensureArchetypeResolver()
   const supabase = USE_MOCK_DATA ? undefined : await createClient()
   const {
     cashFlow,

@@ -18,8 +18,10 @@ export default async function DashboardLayout({
 
   if (USE_MOCK_DATA) {
     // In mock mode the archetype cookie stands in for a real auth session so
-    // the demo can be navigated without Supabase. We wire the resolver here so
-    // every downstream data-layer call sees the active archetype.
+    // the demo can be navigated without Supabase. We register the resolver
+    // here as a baseline; each dashboard page re-registers it right before
+    // fetching data to guard against RSC streaming races that let the page
+    // start fetching before the layout has finished awaiting.
     const archetype = await getActiveArchetype()
     setMockSourceResolver(async () => archetype)
     user = {

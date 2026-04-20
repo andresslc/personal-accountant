@@ -39,16 +39,14 @@ import {
   type CategoryExpense,
 } from "@/lib/mocks"
 
-// The archetype is resolved inside server contexts by a tiny module that
-// DOES import `next/headers` (see `lib/mocks/archetypes/active.ts`). Servers
-// register the resolver at request time via `setMockSourceResolver` — see
-// `app/dashboard/layout.tsx`, which runs before any dashboard page fetch. The
-// indirection keeps this module free of any server-only imports so client
-// components that rely on its synchronous re-exports keep compiling.
+// Server pages register the active archetype as a resolver before fetching
+// data — see `app/dashboard/*/page.tsx`. Doing it inline in each page
+// eliminates a subtle Next.js 16 / React 19 streaming race where the layout
+// and its child page can start fetching in parallel, which made
+// `setMockSourceResolver` (called only in the layout) sometimes fire AFTER
+// the page's first data call had already resolved to the legacy fallback.
 type MockSourceResolver = () => Promise<ClientArchetype | null>
 
-// We stash the resolver on globalThis so it survives across the module graph
-// without creating new imports. It's only set on the server.
 const RESOLVER_KEY = "__finflow_archetype_resolver__" as const
 
 export function setMockSourceResolver(resolver: MockSourceResolver): void {
