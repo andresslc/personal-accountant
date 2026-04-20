@@ -1,10 +1,19 @@
 import { createClient } from "@/lib/supabase/server"
 import { getChatHistory, clearChatHistory } from "@/lib/data/chat-history"
+import { USE_MOCK_DATA } from "@/lib/config/data-source"
 
 export const runtime = "nodejs"
 
 export async function GET() {
   try {
+    // Demo mode has no Supabase session; history helpers already no-op on
+    // USE_MOCK_DATA, so just return an empty list without the auth dance.
+    if (USE_MOCK_DATA) {
+      return new Response(JSON.stringify({ messages: [] }), {
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
     const supabase = await createClient()
     const {
       data: { user },
@@ -32,6 +41,12 @@ export async function GET() {
 
 export async function DELETE() {
   try {
+    if (USE_MOCK_DATA) {
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      })
+    }
+
     const supabase = await createClient()
     const {
       data: { user },

@@ -1,9 +1,12 @@
+import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { runOrchestrator } from "@/lib/ai/chat/orchestrator"
 import { getAIProvider } from "@/lib/ai/provider"
 import { buildSummaryPrompt } from "@/lib/ai/chat/prompts"
 import { applyConversationGuardrails, applyInputGuardrails } from "@/lib/ai/guardrails"
 import { saveChatMessage } from "@/lib/data/chat-history"
+import { USE_MOCK_DATA } from "@/lib/config/data-source"
+import { DEFAULT_ARCHETYPE_ID, DEMO_ARCHETYPE_COOKIE } from "@/lib/mocks/archetypes"
 import type { StreamEvent, ActionEvent } from "@/lib/ai/chat/types"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/supabase/types"
@@ -57,19 +60,33 @@ export async function POST(request: Request) {
       )
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    // In demo (mock) mode there's no Supabase auth session — the archetype
+    // cookie stands in for the user. Synthesize a stable userId from it so
+    // no-op persistence helpers still receive a deterministic key.
+    let supabase: SupabaseClient<Database>
+    let userId: string
+    if (USE_MOCK_DATA) {
+      const store = await cookies()
+      const archetypeId = store.get(DEMO_ARCHETYPE_COOKIE)?.value ?? DEFAULT_ARCHETYPE_ID
+      userId = `demo-${archetypeId}`
+      // createClient still works without a session; chat-history helpers
+      // short-circuit on USE_MOCK_DATA so the client is never actually hit.
+      supabase = await createClient()
+    } else {
+      supabase = await createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      )
+      if (!user) {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized" }),
+          { status: 401, headers: { "Content-Type": "application/json" } }
+        )
+      }
+
+      userId = user.id
     }
-
-    const userId = user.id
 
     if (action === "summarize") {
       return handleSummarize(messages, userId, supabase)
@@ -262,7 +279,7 @@ async function handleSummarize(
       }),
     })
 
-    if (supabase) {
+    if (supabase && !USE_MOCK_DATA) {
       await supabase.from("chat_summaries").insert({
         user_id: userId,
         summary: result.summary,
