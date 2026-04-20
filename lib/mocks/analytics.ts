@@ -110,11 +110,12 @@ export const CHART_COLORS = [
   "var(--chart-5)",
 ]
 
-// Date range options
+// Date range options — match the monthly granularity of the cash flow and
+// net-worth series so filtering has a meaningful effect on the charts.
 export const dateRangeOptions = [
-  { value: "7days", label: "Last 7 Days" },
-  { value: "30days", label: "Last 30 Days" },
-  { value: "ytd", label: "Year to Date" },
-  { value: "custom", label: "Custom Range" },
-]
+  { value: "3m", label: "Last 3 months" },
+  { value: "6m", label: "Last 6 months" },
+  { value: "12m", label: "Last 12 months" },
+] as const
 
+export type DateRangeOption = (typeof dateRangeOptions)[number]["value"]

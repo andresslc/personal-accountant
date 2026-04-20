@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo, useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -18,7 +19,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts"
-import { Download, Calendar } from "lucide-react"
+import { Download } from "lucide-react"
 import { getChartColors, getDateRangeOptions } from "@/lib/data/dashboard-data"
 import type {
   MonthlyData,
@@ -38,6 +39,14 @@ type AnalyticsReportsProps = {
   initialNetWorth: NetWorthPoint[]
 }
 
+type RangeValue = "3m" | "6m" | "12m"
+
+const rangeMonths: Record<RangeValue, number> = {
+  "3m": 3,
+  "6m": 6,
+  "12m": 12,
+}
+
 export function AnalyticsReports({
   initialCashFlow,
   initialExpenseBreakdown,
@@ -48,13 +57,23 @@ export function AnalyticsReports({
   const { format } = useCurrency()
   const chartColors = getChartColors()
   const dateRangeOptions = getDateRangeOptions()
+  const [range, setRange] = useState<RangeValue>("12m")
+
+  const cashFlow = useMemo(
+    () => initialCashFlow.slice(-rangeMonths[range]),
+    [initialCashFlow, range]
+  )
+  const netWorth = useMemo(
+    () => initialNetWorth.slice(-rangeMonths[range]),
+    [initialNetWorth, range]
+  )
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div className="flex gap-3">
-          <Select defaultValue="30days">
-            <SelectTrigger className="w-full sm:w-40">
+          <Select value={range} onValueChange={(v) => setRange(v as RangeValue)}>
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -65,10 +84,6 @@ export function AnalyticsReports({
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline" className="gap-2 bg-transparent">
-            <Calendar className="w-4 h-4" />
-            Pick Date
-          </Button>
         </div>
         <div className="flex items-center gap-2">
           <AIRecommendationsDialog
@@ -90,7 +105,7 @@ export function AnalyticsReports({
         <Card className="p-6 border border-border">
           <h3 className="text-lg font-bold text-foreground mb-6">Cash Flow Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={initialCashFlow}>
+            <LineChart data={cashFlow}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="month" stroke="var(--muted-foreground)" />
               <YAxis stroke="var(--muted-foreground)" />
@@ -177,7 +192,7 @@ export function AnalyticsReports({
       <Card className="p-6 border border-border">
         <h3 className="text-lg font-bold text-foreground mb-6">Net Worth Growth</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <AreaChart data={initialNetWorth}>
+          <AreaChart data={netWorth}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="month" stroke="var(--muted-foreground)" />
             <YAxis stroke="var(--muted-foreground)" />
