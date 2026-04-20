@@ -17,7 +17,7 @@ import {
 
 export type LiabilityType = "credit-card" | "car" | "student" | "personal" | "mortgage"
 
-export type SummaryIconKey = "balance" | "income" | "expenses" | "savings"
+export type SummaryIconKey = "debts" | "income" | "expenses" | "savings"
 
 const categoryIconMap: Record<string, LucideIcon> = {
   groceries: Utensils,
@@ -39,7 +39,7 @@ const liabilityIconMap: Record<LiabilityType, LucideIcon> = {
 }
 
 const summaryIconMap: Record<SummaryIconKey, LucideIcon> = {
-  balance: DollarSign,
+  debts: CreditCard,
   income: TrendingUp,
   expenses: TrendingDown,
   savings: Wallet,

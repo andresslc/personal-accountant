@@ -1,5 +1,5 @@
 // Mock summary/overview data
-import { TrendingUp, TrendingDown, DollarSign, Wallet, type LucideIcon } from "lucide-react"
+import { TrendingUp, TrendingDown, CreditCard, Wallet, type LucideIcon } from "lucide-react"
 import { formatCurrency as formatCurrencyUtil } from "@/lib/utils/currency"
 
 export interface SummaryCard {
@@ -13,12 +13,12 @@ export interface SummaryCard {
 
 export const summaryCardsData: SummaryCard[] = [
   {
-    title: "Total Balance",
-    value: formatCurrencyUtil(24582.50),
-    change: "+12.5%",
+    title: "Debts",
+    value: formatCurrencyUtil(28500000),
+    change: "-3.1%",
     positive: true,
-    icon: DollarSign,
-    color: "bg-blue-500/10 text-blue-500",
+    icon: CreditCard,
+    color: "bg-red-500/10 text-red-500",
   },
   {
     title: "Income",
@@ -48,11 +48,11 @@ export const summaryCardsData: SummaryCard[] = [
 
 // Raw values for calculations
 export const summaryValues = {
-  totalBalance: 24582.50,
+  totalDebt: 28500000,
   income: 8450.00,
   expenses: 3120.50,
   savings: 5330.50,
-  balanceChange: 12.5,
+  debtChange: -3.1,
   incomeChange: 5.2,
   expensesChange: -2.1,
   savingsChange: 18.3,

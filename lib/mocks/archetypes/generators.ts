@@ -88,7 +88,7 @@ const MERCHANTS = {
     'Sura Consulta',
     'Farmatodo',
     'Cruz Verde',
-    'Droguerías La Rebaja',
+    'Droguerías La Rebaja',
   ],
   entertainment: [
     'Cine Colombia',
@@ -472,7 +472,7 @@ export function computeSummary(
   liabilities: Liability[],
   changes: Pick<
     ArchetypeSummary,
-    'balanceChange' | 'incomeChange' | 'expensesChange' | 'savingsChange'
+    'debtChange' | 'incomeChange' | 'expensesChange' | 'savingsChange'
   >,
   startingNetWorth: number
 ): ArchetypeSummary {
@@ -495,19 +495,12 @@ export function computeSummary(
   const savings = income - expenses
 
   const monthsElapsed = WINDOW_MONTHS.length
-  const totalIncome = transactions
-    .filter((t) => t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0)
-  const totalExpenses = Math.abs(
-    transactions.filter((t) => t.amount < 0).reduce((sum, t) => sum + t.amount, 0)
-  )
-  const accumulatedNet = totalIncome - totalExpenses
   const totalDebt = liabilities.reduce((sum, l) => sum + l.currentBalance, 0)
-  const totalBalance = startingNetWorth + accumulatedNet - totalDebt
 
   void monthsElapsed
+  void startingNetWorth
   return {
-    totalBalance,
+    totalDebt,
     income,
     expenses,
     savings,
@@ -521,17 +514,17 @@ export function buildSummaryCards(
 ): SummaryCard[] {
   const base: Array<
     Pick<SummaryCard, 'title' | 'color'> & {
-      key: 'balance' | 'income' | 'expenses' | 'savings'
+      key: 'debts' | 'income' | 'expenses' | 'savings'
     }
   > = [
-    { title: 'Total Balance', color: 'bg-blue-500/10 text-blue-500', key: 'balance' },
+    { title: 'Debts', color: 'bg-red-500/10 text-red-500', key: 'debts' },
     { title: 'Income', color: 'bg-green-500/10 text-green-500', key: 'income' },
     { title: 'Expenses', color: 'bg-red-500/10 text-red-500', key: 'expenses' },
     { title: 'Savings', color: 'bg-purple-500/10 text-purple-500', key: 'savings' },
   ]
 
   const values: Record<typeof base[number]['key'], { amount: number; change: number }> = {
-    balance: { amount: summary.totalBalance, change: summary.balanceChange },
+    debts: { amount: summary.totalDebt, change: summary.debtChange },
     income: { amount: summary.income, change: summary.incomeChange },
     expenses: { amount: summary.expenses, change: summary.expensesChange },
     savings: { amount: summary.savings, change: summary.savingsChange },
@@ -545,7 +538,12 @@ export function buildSummaryCards(
       title: card.title,
       value: formatter(v.amount),
       change: signed(v.change),
-      positive: card.key === 'expenses' ? v.change < 0 : v.change >= 0,
+      positive:
+        card.key === 'expenses'
+          ? v.change < 0
+          : card.key === 'debts'
+            ? v.change <= 0
+            : v.change >= 0,
       // icon is filled in by the data layer via getSummaryIcon to avoid
       // serialization issues when archetype data crosses server→client.
       icon: undefined as unknown as SummaryCard['icon'],

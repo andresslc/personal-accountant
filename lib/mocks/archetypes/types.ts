@@ -40,11 +40,11 @@ export interface ArchetypeProfileMetadata {
 }
 
 export interface ArchetypeSummary {
-  totalBalance: number
+  totalDebt: number
   income: number
   expenses: number
   savings: number
-  balanceChange: number
+  debtChange: number
   incomeChange: number
   expensesChange: number
   savingsChange: number
@@ -89,6 +89,6 @@ export type ArchetypeSeed = {
   startingNetWorth: number
   summaryChanges: Pick<
     ArchetypeSummary,
-    'balanceChange' | 'incomeChange' | 'expensesChange' | 'savingsChange'
+    'debtChange' | 'incomeChange' | 'expensesChange' | 'savingsChange'
   >
 }

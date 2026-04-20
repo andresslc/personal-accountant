@@ -132,7 +132,7 @@ const summary = computeSummary(
   transactions,
   liabilities,
   {
-    balanceChange: -4.2,
+    debtChange: 3.8,
     incomeChange: 0.8,
     expensesChange: 5.3,
     savingsChange: -22.1,

@@ -83,7 +83,7 @@ const transactions = generateTransactions({
     {
       category: 'Kids',
       share: 0.03,
-      merchants: ['Falabella — Niños', 'Panamericana — Útiles', 'Juguetería', 'Baby Ganga'],
+      merchants: ['Falabella — Niños', 'Panamericana — Útiles', 'Jugueterá', 'Baby Ganga'],
       frequency: 'monthly',
       paymentMethods: ['Credit Card'],
     },
@@ -125,7 +125,7 @@ const summary = computeSummary(
   transactions,
   liabilities,
   {
-    balanceChange: 3.2,
+    debtChange: -1.6,
     incomeChange: 1.8,
     expensesChange: 2.1,
     savingsChange: -0.7,
