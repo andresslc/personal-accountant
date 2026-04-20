@@ -379,6 +379,20 @@ supabase/
 | `AI_PROVIDER` | No | `openai` (default) or `gemini` |
 | `OPENAI_API_KEY` | If using OpenAI | OpenAI key |
 | `GEMINI_API_KEY` | If using Gemini | Google Gemini key |
+| `LANGSMITH_TRACING` | No | `true` to ship every LangChain / LangGraph run to LangSmith. Leave unset to disable. |
+| `LANGSMITH_API_KEY` | If tracing on | LangSmith API key ([smith.langchain.com](https://smith.langchain.com) → Settings → API Keys) |
+| `LANGSMITH_PROJECT` | No | Project name runs are grouped under (default: `finflow`) |
+| `LANGSMITH_ENDPOINT` | No | API endpoint (default: `https://api.smith.langchain.com`) |
+
+### LangSmith tracing
+
+The project uses the LangChain ecosystem (`@langchain/core`, `@langchain/langgraph`,
+`@langchain/openai`, `@langchain/google-genai`) for the multimodal pipeline and
+the chat orchestrator / sub-agents. With the four `LANGSMITH_*` env vars set,
+the `langsmith` SDK auto-instruments every LLM call, tool call, and graph node
+with zero code changes — you'll see full traces in the LangSmith UI under the
+project name you specify. Leave `LANGSMITH_TRACING` unset in production or
+preview if you don't want runs shipped out.
 
 Never commit `.env*`, `.cursor/mcp.json`, or `.claude/settings.local.json`.
 
@@ -525,7 +539,7 @@ shipped into Supabase Auth — the cookie-based flow only runs while
 
 - **Paycheck-to-paycheck users** — see where money goes each month.
 - **Debt holders** — clear path to payoff with strategy comparison.
-- **Budget-minded users** — real-time guardrails per category.
+- **Budget-minded users** — net-worth tracking, savings rate trends.
 - **Long-term planners** — net-worth tracking, savings rate trends.
 - **Anyone overwhelmed by finances** — a chat assistant that can actually read
   the numbers and explain them.

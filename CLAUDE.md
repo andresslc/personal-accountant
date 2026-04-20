@@ -43,6 +43,10 @@ Additional rules:
 | `AI_PROVIDER` | `openai` or `gemini` (default: `openai`) |
 | `OPENAI_API_KEY` | OpenAI key (if using openai provider) |
 | `GEMINI_API_KEY` | Gemini key (if using gemini provider) |
+| `LANGSMITH_TRACING` | `true` to enable LangSmith run tracing. Unset = no tracing. |
+| `LANGSMITH_API_KEY` | LangSmith API key ([smith.langchain.com → Settings → API Keys](https://smith.langchain.com)). Required when tracing is on. |
+| `LANGSMITH_PROJECT` | Project name to send runs to (default: `finflow`). |
+| `LANGSMITH_ENDPOINT` | LangSmith API endpoint (default: `https://api.smith.langchain.com`). |
 
 ## Project Structure
 ```
