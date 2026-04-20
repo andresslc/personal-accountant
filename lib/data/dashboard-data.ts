@@ -298,15 +298,15 @@ export type SerializableSummaryCard = {
 }
 
 const buildSummaryCardsFromValues = (
-  totals: { income: number; expenses: number; savings: number; totalBalance: number }
+  totals: { income: number; expenses: number; savings: number; totalDebt: number }
 ): SerializableSummaryCard[] => [
   {
-    title: "Total Balance",
-    amount: totals.totalBalance,
+    title: "Debts",
+    amount: totals.totalDebt,
     change: "Live",
-    positive: totals.totalBalance >= 0,
-    color: "bg-blue-500/10 text-blue-600",
-    iconKey: "balance",
+    positive: totals.totalDebt === 0,
+    color: "bg-red-500/10 text-red-600",
+    iconKey: "debts",
   },
   {
     title: "Income",
@@ -348,8 +348,7 @@ const computeSummaryTotals = (
   )
   const savings = income - expenses
   const totalDebt = debts.reduce((sum, debt) => sum + debt.currentBalance, 0)
-  const totalBalance = savings - totalDebt
-  return { income, expenses, savings, totalBalance }
+  return { income, expenses, savings, totalDebt }
 }
 
 export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
@@ -359,8 +358,8 @@ export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
       return archetype.summaryCards.map((card) => ({
         ...card,
         icon: getSummaryIcon(
-          card.title === "Total Balance"
-            ? "balance"
+          card.title === "Debts"
+            ? "debts"
             : card.title === "Income"
               ? "income"
               : card.title === "Expenses"
@@ -604,8 +603,8 @@ export const getDashboardPageData = async (
         summaryCards: archetype.summaryCards.map((card) => ({
           title: card.title,
           amount:
-            card.title === "Total Balance"
-              ? archetype.summary.totalBalance
+            card.title === "Debts"
+              ? archetype.summary.totalDebt
               : card.title === "Income"
                 ? archetype.summary.income
                 : card.title === "Expenses"
@@ -615,8 +614,8 @@ export const getDashboardPageData = async (
           positive: card.positive,
           color: card.color,
           iconKey:
-            card.title === "Total Balance"
-              ? "balance"
+            card.title === "Debts"
+              ? "debts"
               : card.title === "Income"
                 ? "income"
                 : card.title === "Expenses"
@@ -644,7 +643,7 @@ export const getDashboardPageData = async (
         income: 0,
         expenses: 0,
         savings: 0,
-        totalBalance: 0,
+        totalDebt: 0,
       }),
       incomeVsExpenses: [],
       expensesByCategory: [],

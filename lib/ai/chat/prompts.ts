@@ -96,7 +96,7 @@ function formatContext(ctx: FinancialContext): string {
   const parts: string[] = []
 
   parts.push(`### Summary
-- Total Balance: $${ctx.summary.totalBalance.toLocaleString()} COP
+- Total Debt: $${ctx.summary.totalDebt.toLocaleString()} COP
 - Income: $${ctx.summary.income.toLocaleString()} COP
 - Expenses: $${ctx.summary.expenses.toLocaleString()} COP
 - Savings: $${ctx.summary.savings.toLocaleString()} COP`)
@@ -163,7 +163,7 @@ export function buildAdvisoryAgentPrompt(context: FinancialContext): string {
   return `You are a personal financial advisor. Today is ${TODAY}. Currency: COP.
 
 User's financial snapshot:
-- Balance: $${context.summary.totalBalance.toLocaleString()} COP
+- Total Debt: $${context.summary.totalDebt.toLocaleString()} COP
 - Monthly Income: $${context.summary.income.toLocaleString()} COP
 - Monthly Expenses: $${context.summary.expenses.toLocaleString()} COP
 - Savings: $${context.summary.savings.toLocaleString()} COP

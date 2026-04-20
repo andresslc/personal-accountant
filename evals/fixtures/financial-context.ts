@@ -2,7 +2,7 @@ import type { FinancialContext } from "@/lib/ai/chat/types"
 
 export const FROZEN_FINANCIAL_CONTEXT: FinancialContext = {
   summary: {
-    totalBalance: 4_250_000,
+    totalDebt: 29_700_000,
     income: 6_500_000,
     expenses: 3_800_000,
     savings: 2_700_000,
@@ -46,7 +46,7 @@ export const FROZEN_FINANCIAL_CONTEXT: FinancialContext = {
 }
 
 export const EMPTY_FINANCIAL_CONTEXT: FinancialContext = {
-  summary: { totalBalance: 0, income: 0, expenses: 0, savings: 0 },
+  summary: { totalDebt: 0, income: 0, expenses: 0, savings: 0 },
   recentTransactions: [],
   budgets: [],
   debts: [],

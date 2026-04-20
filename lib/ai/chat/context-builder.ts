@@ -25,7 +25,7 @@ export async function buildFinancialContext(
 
   return {
     summary: {
-      totalBalance: parseFloat(summaryMap["Total Balance"] || "0"),
+      totalDebt: parseFloat(summaryMap["Debts"] || "0"),
       income: parseFloat(summaryMap["Income"] || "0"),
       expenses: parseFloat(summaryMap["Expenses"] || "0"),
       savings: parseFloat(summaryMap["Savings"] || "0"),

@@ -64,7 +64,7 @@ export const RouteToSubAgentSchema = z.object({
 export type RouteToSubAgentParams = z.infer<typeof RouteToSubAgentSchema>
 
 export interface FinancialContext {
-  summary: { totalBalance: number; income: number; expenses: number; savings: number }
+  summary: { totalDebt: number; income: number; expenses: number; savings: number }
   recentTransactions: Array<{ date: string; description: string; amount: number; category: string; type: string }>
   budgets: Array<{ category: string; limit: number; spent: number; remaining: number }>
   debts: Array<{ name: string; type: string; currentBalance: number; minPayment: number; apr: number }>
