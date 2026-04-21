@@ -349,6 +349,32 @@ const computeSummaryTotals = (
   return { income, expenses, savings, totalDebt }
 }
 
+export type SummaryTotals = {
+  totalDebt: number
+  income: number
+  expenses: number
+  savings: number
+}
+
+// Raw numeric summary — used by AI context builders and anywhere a numeric
+// value is needed instead of a pre-formatted string.
+export const getSummaryTotals = async (): Promise<SummaryTotals> => {
+  if (USE_MOCK_DATA) {
+    const archetype = await getMockSource()
+    if (archetype) {
+      return {
+        totalDebt: archetype.summary.totalDebt,
+        income: archetype.summary.income,
+        expenses: archetype.summary.expenses,
+        savings: archetype.summary.savings,
+      }
+    }
+  }
+
+  const [transactions, debts] = await Promise.all([getTransactions(), getDebts()])
+  return computeSummaryTotals(transactions, debts)
+}
+
 export const getSummaryCards = async (currency: SupportedCurrency = "COP") => {
   if (USE_MOCK_DATA) {
     const archetype = await getMockSource()
