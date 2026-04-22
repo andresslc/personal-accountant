@@ -1,9 +1,10 @@
+import { traceable } from "langsmith/traceable"
 import { getAIProvider, hasAIProvider } from "@/lib/ai/provider"
 import { buildDebtAgentPrompt } from "../prompts"
 import type { FinancialContext, StreamEvent } from "../types"
 import { compareDebtStrategies } from "@/lib/predictions/debt-payoff"
 
-function buildDebtAnalysis(context: FinancialContext): string {
+function _buildDebtAnalysis(context: FinancialContext): string {
   const debts = context.debts
   if (debts.length === 0) return "No debts to analyze."
 
@@ -40,11 +41,18 @@ function buildDebtAnalysis(context: FinancialContext): string {
   return lines.join("\n")
 }
 
-export async function* runDebtAgent(
+// Surface the pure-TS debt math as its own LangSmith span so the trace tree
+// clearly separates the deterministic compute from the LLM narration.
+const buildDebtAnalysis = traceable(_buildDebtAnalysis, {
+  name: "debt_agent.compareDebtStrategies",
+  run_type: "chain",
+})
+
+async function* _runDebtAgent(
   taskDescription: string,
   context: FinancialContext
 ): AsyncGenerator<StreamEvent> {
-  const debtAnalysis = buildDebtAnalysis(context)
+  const debtAnalysis = await buildDebtAnalysis(context)
 
   if (!hasAIProvider()) {
     const output = `## Debt Strategy Analysis\n\n${debtAnalysis}`
@@ -78,3 +86,11 @@ ${debtAnalysis}`
 
   yield { type: "done" }
 }
+
+// Wrap the whole generator so the debt agent shows up as a named parent span
+// in LangSmith; the LLM stream call inside becomes a child span automatically
+// via the OpenAI / Gemini wrappers in lib/ai/provider.ts.
+export const runDebtAgent = traceable(_runDebtAgent, {
+  name: "debt_agent",
+  run_type: "chain",
+})

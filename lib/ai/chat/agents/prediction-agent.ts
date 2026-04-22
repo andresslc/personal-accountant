@@ -1,10 +1,18 @@
+import { traceable } from "langsmith/traceable"
 import { getAIProvider, hasAIProvider } from "@/lib/ai/provider"
 import { buildPredictionAgentPrompt } from "../prompts"
 import type { FinancialContext, StreamEvent } from "../types"
-import { generatePredictions } from "@/lib/predictions"
+import { generatePredictions as _generatePredictions } from "@/lib/predictions"
 import type { PredictionResponse } from "@/lib/predictions/types"
 
-function buildPredictionSummary(predictions: PredictionResponse): string {
+// Surface the pure-TS forecasting step as its own LangSmith span so the trace
+// tree separates the deterministic predictions from the LLM narration.
+const generatePredictions = traceable(_generatePredictions, {
+  name: "prediction_agent.generatePredictions",
+  run_type: "chain",
+})
+
+function _buildPredictionSummary(predictions: PredictionResponse): string {
   const parts: string[] = []
   const fmt = (n: number) => `$${Math.round(n).toLocaleString()}`
 
@@ -67,7 +75,12 @@ function buildPredictionSummary(predictions: PredictionResponse): string {
   return parts.join("\n")
 }
 
-export async function* runPredictionAgent(
+const buildPredictionSummary = traceable(_buildPredictionSummary, {
+  name: "prediction_agent.buildSummary",
+  run_type: "chain",
+})
+
+async function* _runPredictionAgent(
   taskDescription: string,
   context: FinancialContext
 ): AsyncGenerator<StreamEvent> {
@@ -92,8 +105,8 @@ export async function* runPredictionAgent(
     minPayment: d.minPayment,
   }))
 
-  const predictions = generatePredictions(txData, budgetData, debtData)
-  const predictionSummary = buildPredictionSummary(predictions)
+  const predictions = await generatePredictions(txData, budgetData, debtData)
+  const predictionSummary = await buildPredictionSummary(predictions)
 
   if (!hasAIProvider()) {
     for (const chunk of predictionSummary.match(/.{1,100}/g) ?? [predictionSummary]) {
@@ -127,3 +140,8 @@ ${predictionSummary}`
 
   yield { type: "done" }
 }
+
+export const runPredictionAgent = traceable(_runPredictionAgent, {
+  name: "prediction_agent",
+  run_type: "chain",
+})

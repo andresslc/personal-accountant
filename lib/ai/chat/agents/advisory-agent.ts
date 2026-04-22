@@ -1,8 +1,9 @@
+import { traceable } from "langsmith/traceable"
 import { getAIProvider } from "@/lib/ai/provider"
 import { buildAdvisoryAgentPrompt } from "../prompts"
 import type { FinancialContext, StreamEvent } from "../types"
 
-export async function* runAdvisoryAgent(
+async function* _runAdvisoryAgent(
   taskDescription: string,
   context: FinancialContext
 ): AsyncGenerator<StreamEvent> {
@@ -23,3 +24,8 @@ export async function* runAdvisoryAgent(
 
   yield { type: "done" }
 }
+
+export const runAdvisoryAgent = traceable(_runAdvisoryAgent, {
+  name: "advisory_agent",
+  run_type: "chain",
+})
