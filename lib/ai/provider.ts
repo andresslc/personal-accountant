@@ -1,8 +1,16 @@
 import OpenAI from "openai"
+import { wrapOpenAI } from "langsmith/wrappers"
+import { traceable } from "langsmith/traceable"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 import type { ZodTypeAny } from "zod"
 import { ParsedTransactionSchema, type ParsedTransaction } from "./types"
 import { buildSystemPrompt } from "./prompt"
+
+// When LANGSMITH_TRACING=true and LANGSMITH_API_KEY is set, wrapOpenAI routes
+// every OpenAI call through LangSmith so traces show up in the configured
+// project. Without those env vars it's a no-op — zero runtime cost.
+const LANGSMITH_ENABLED =
+  process.env.LANGSMITH_TRACING === "true" && Boolean(process.env.LANGSMITH_API_KEY)
 
 const WHISPER_TRANSCRIPTION_PROMPT =
   "Personal finance assistant. User speaks Spanish or English about transactions, budgets, debts, expenses, income, COP, pesos, tarjeta de crédito, gastos, ingresos, presupuesto."
@@ -112,7 +120,8 @@ class OpenAIProvider implements AIProvider {
   private modelName = "gpt-4o-mini"
 
   constructor() {
-    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const raw = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    this.client = LANGSMITH_ENABLED ? wrapOpenAI(raw) : raw
   }
 
   async generateStructured<TSchema extends ZodTypeAny>(
@@ -395,7 +404,16 @@ class GeminiProvider implements AIProvider {
       ...(systemMsg ? { systemInstruction: { role: "user" as const, parts: [{ text: systemMsg.content }] } } : {}),
     })
 
-    const result = await chat.sendMessageStream(lastMsg?.content ?? "")
+    // `sendMessageStream` doesn't go through LangChain, so wrap the call with
+    // `traceable` so LangSmith still captures the span when tracing is on.
+    const sendMessage = LANGSMITH_ENABLED
+      ? traceable(
+          (input: string) => chat.sendMessageStream(input),
+          { name: "gemini.chat.sendMessageStream", run_type: "llm" }
+        )
+      : (input: string) => chat.sendMessageStream(input)
+
+    const result = await sendMessage(lastMsg?.content ?? "")
 
     for await (const chunk of result.stream) {
       const text = chunk.text()
