@@ -3,7 +3,7 @@
 import { createContext, useContext, useState } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft, Settings, LogOut } from "lucide-react"
+import { LayoutDashboard, TrendingUp, Wallet, BarChart3, CreditCard, MessageSquare, PanelLeftClose, PanelLeft, Settings, LogOut, Repeat } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
   Sheet,
@@ -45,6 +45,7 @@ const navigationItems = [
   { href: "/dashboard/transactions", label: "Transactions", icon: TrendingUp },
   { href: "/dashboard/budget", label: "Budget", icon: Wallet },
   { href: "/dashboard/debts", label: "Debts", icon: CreditCard },
+  { href: "/dashboard/subscriptions", label: "Subscriptions", icon: Repeat },
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3 },
   { href: "/dashboard/chat", label: "AI Chat", icon: MessageSquare },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
