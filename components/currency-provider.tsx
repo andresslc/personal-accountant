@@ -1,6 +1,14 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import type { SupportedCurrency } from '@/lib/utils/currency'
 import { formatCurrency, formatCompact } from '@/lib/utils/currency'
 import { createClient } from '@/lib/supabase/client'
@@ -15,6 +23,11 @@ type CurrencyContextType = {
   loading: boolean
 }
 
+const STORAGE_KEY = 'finflow:display-currency'
+
+const isSupportedCurrency = (value: unknown): value is SupportedCurrency =>
+  value === 'COP' || value === 'USD'
+
 const CurrencyContext = createContext<CurrencyContextType>({
   currency: 'COP',
   setCurrency: async () => {},
@@ -27,6 +40,20 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [currency, setCurrencyState] = useState<SupportedCurrency>('COP')
   const [loading, setLoading] = useState(true)
+
+  // Hydrate from localStorage so the choice survives navigation/reload in
+  // every mode (mock + Supabase). This runs once on mount on the client.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY)
+      if (isSupportedCurrency(stored)) {
+        setCurrencyState(stored)
+      }
+    } catch {
+      // ignore storage failures (private mode, etc.)
+    }
+  }, [])
 
   useEffect(() => {
     if (!user || USE_MOCK_DATA) {
@@ -41,32 +68,53 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         .select('currency')
         .eq('user_id', user.id)
         .single<{ currency: string }>()
-      if (data?.currency) {
-        setCurrencyState(data.currency as SupportedCurrency)
+      if (isSupportedCurrency(data?.currency)) {
+        setCurrencyState(data.currency)
       }
       setLoading(false)
     }
     void loadPreferences()
   }, [user])
 
-  const setCurrency = useCallback(async (newCurrency: SupportedCurrency) => {
-    setCurrencyState(newCurrency)
+  const setCurrency = useCallback(
+    async (newCurrency: SupportedCurrency) => {
+      setCurrencyState(newCurrency)
 
-    if (!user || USE_MOCK_DATA) return
+      if (typeof window !== 'undefined') {
+        try {
+          window.localStorage.setItem(STORAGE_KEY, newCurrency)
+        } catch {
+          // ignore storage failures
+        }
+      }
 
-    const supabase = createClient()
-    await (supabase
-      .from('user_preferences') as ReturnType<typeof supabase.from>)
-      .upsert({ user_id: user.id, currency: newCurrency } as Record<string, unknown>, { onConflict: 'user_id' })
-  }, [user])
+      if (!user || USE_MOCK_DATA) return
+
+      const supabase = createClient()
+      await (supabase
+        .from('user_preferences') as ReturnType<typeof supabase.from>)
+        .upsert(
+          { user_id: user.id, currency: newCurrency } as Record<string, unknown>,
+          { onConflict: 'user_id' },
+        )
+    },
+    [user],
+  )
 
   const format = useCallback((amount: number) => formatCurrency(amount, currency), [currency])
   const compact = useCallback((amount: number) => formatCompact(amount, currency), [currency])
 
+  // Memoize the context value so consumers only re-render when the
+  // currency (or one of the derived callbacks) actually changes.
+  const value = useMemo<CurrencyContextType>(
+    () => ({ currency, setCurrency, format, compact, loading }),
+    [currency, setCurrency, format, compact, loading],
+  )
+
   return (
-    <CurrencyContext value={{ currency, setCurrency, format, compact, loading }}>
+    <CurrencyContext.Provider value={value}>
       {children}
-    </CurrencyContext>
+    </CurrencyContext.Provider>
   )
 }
 
