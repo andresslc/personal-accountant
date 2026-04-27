@@ -24,6 +24,7 @@ type CurrencyContextType = {
 }
 
 const STORAGE_KEY = 'finflow:display-currency'
+const CURRENCY_CHANGE_EVENT = 'finflow:currency-change'
 
 const isSupportedCurrency = (value: unknown): value is SupportedCurrency =>
   value === 'COP' || value === 'USD'
@@ -42,16 +43,44 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   // Hydrate from localStorage so the choice survives navigation/reload in
-  // every mode (mock + Supabase). This runs once on mount on the client.
+  // every mode (mock + Supabase). This runs on mount on the client and also
+  // listens for cross-tab + same-tab updates so consumers stay in sync if the
+  // selection is changed elsewhere (different tab, browser back/forward, or
+  // via a stale Provider instance still mounted somewhere in the tree).
   useEffect(() => {
     if (typeof window === 'undefined') return
-    try {
-      const stored = window.localStorage.getItem(STORAGE_KEY)
-      if (isSupportedCurrency(stored)) {
-        setCurrencyState(stored)
+
+    const readFromStorage = () => {
+      try {
+        const stored = window.localStorage.getItem(STORAGE_KEY)
+        if (isSupportedCurrency(stored)) {
+          setCurrencyState(stored)
+        }
+      } catch {
+        // ignore storage failures (private mode, etc.)
       }
-    } catch {
-      // ignore storage failures (private mode, etc.)
+    }
+
+    readFromStorage()
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return
+      if (isSupportedCurrency(event.newValue)) {
+        setCurrencyState(event.newValue)
+      }
+    }
+    const onCustom = (event: Event) => {
+      const detail = (event as CustomEvent<unknown>).detail
+      if (isSupportedCurrency(detail)) {
+        setCurrencyState(detail)
+      }
+    }
+
+    window.addEventListener('storage', onStorage)
+    window.addEventListener(CURRENCY_CHANGE_EVENT, onCustom)
+    return () => {
+      window.removeEventListener('storage', onStorage)
+      window.removeEventListener(CURRENCY_CHANGE_EVENT, onCustom)
     }
   }, [])
 
@@ -85,6 +114,16 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
           window.localStorage.setItem(STORAGE_KEY, newCurrency)
         } catch {
           // ignore storage failures
+        }
+        // Broadcast to any other Provider instances mounted in this tab so
+        // they pick up the new value without relying on shared React state.
+        // (The browser does not fire `storage` events in the same tab.)
+        try {
+          window.dispatchEvent(
+            new CustomEvent(CURRENCY_CHANGE_EVENT, { detail: newCurrency }),
+          )
+        } catch {
+          // ignore event dispatch failures
         }
       }
 
