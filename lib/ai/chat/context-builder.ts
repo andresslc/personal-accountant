@@ -5,10 +5,12 @@ import {
   getSummaryTotals,
 } from "@/lib/data/dashboard-data"
 import { categories } from "@/lib/mocks/categories"
+import type { SupportedCurrency } from "@/lib/utils/currency"
 import type { FinancialContext } from "./types"
 
 export async function buildFinancialContext(
-  recentSummaries: string[] = []
+  recentSummaries: string[] = [],
+  displayCurrency: SupportedCurrency = "COP"
 ): Promise<FinancialContext> {
   const [summary, transactions, budgets, debts] = await Promise.all([
     getSummaryTotals(),
@@ -50,5 +52,6 @@ export async function buildFinancialContext(
       type: c.type,
     })),
     recentSummaries,
+    displayCurrency,
   }
 }

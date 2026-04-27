@@ -16,6 +16,7 @@ import {
   type LiabilityUpdate,
 } from "@/lib/data/dashboard-data"
 import { categories } from "@/lib/mocks/categories"
+import { formatCurrency, type SupportedCurrency } from "@/lib/utils/currency"
 import type { ActionEvent } from "./types"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -301,8 +302,10 @@ export async function executeTool(
   name: string,
   args: Record<string, unknown>,
   userId: string,
-  client?: AnySupabaseClient
+  client?: AnySupabaseClient,
+  displayCurrency: SupportedCurrency = "COP"
 ): Promise<ToolResult> {
+  const fmtAmt = (n: number) => formatCurrency(n, displayCurrency)
   switch (name) {
     case "create_transaction": {
       const parsed = CreateTransactionParams.safeParse(args)
@@ -328,7 +331,7 @@ export async function executeTool(
       )
       if (!result) return { content: "Failed to create transaction. There may be a database connection issue. Please try again." }
       return {
-        content: `Transaction created successfully (ID: ${result.id}). ${params.type}: ${params.description} - $${params.amount.toLocaleString()} COP on ${params.date}.`,
+        content: `Transaction created successfully (ID: ${result.id}). ${params.type}: ${params.description} - ${fmtAmt(params.amount)} on ${params.date}.`,
         action: {
           type: "action",
           action: {
@@ -360,7 +363,7 @@ export async function executeTool(
       )
       if (!result) return { content: "Failed to create budget. There may be a database connection issue. Please try again." }
       return {
-        content: `Budget created (ID: ${result.id}). Category: ${params.category_id}, Limit: $${params.budget_limit.toLocaleString()} COP, Month: ${params.month_year}.`,
+        content: `Budget created (ID: ${result.id}). Category: ${params.category_id}, Limit: ${fmtAmt(params.budget_limit)}, Month: ${params.month_year}.`,
         action: {
           type: "action",
           action: {
@@ -395,7 +398,7 @@ export async function executeTool(
       )
       if (!result) return { content: "Failed to create debt. There may be a database connection issue. Please try again." }
       return {
-        content: `Debt added (ID: ${result.id}). ${params.name}: $${params.current_balance.toLocaleString()} COP at ${params.apr}% APR.`,
+        content: `Debt added (ID: ${result.id}). ${params.name}: ${fmtAmt(params.current_balance)} at ${params.apr}% APR.`,
         action: {
           type: "action",
           action: {
@@ -422,31 +425,31 @@ export async function executeTool(
       }
       const limited = filtered.slice(0, params.limit)
       const summary = limited
-        .map((t) => `- ${t.date}: ${t.description} (${t.category}) $${Math.abs(t.amount).toLocaleString()} COP [${t.amount > 0 ? "income" : "expense"}]`)
+        .map((t) => `- ${t.date}: ${t.description} (${t.category}) ${fmtAmt(Math.abs(t.amount))} [${t.amount > 0 ? "income" : "expense"}]`)
         .join("\n")
-      return { content: `Found ${limited.length} transactions:\n${summary}` }
+      return { content: `Found ${limited.length} transactions (amounts shown in ${displayCurrency}):\n${summary}` }
     }
 
     case "get_budgets": {
       const budgets = await getBudgets()
       const summary = budgets
-        .map((b) => `- ${b.category}: Limit $${b.limit.toLocaleString()} COP, Spent $${b.spent.toLocaleString()} COP, Remaining $${(b.limit - b.spent).toLocaleString()} COP`)
+        .map((b) => `- ${b.category}: Limit ${fmtAmt(b.limit)}, Spent ${fmtAmt(b.spent)}, Remaining ${fmtAmt(b.limit - b.spent)}`)
         .join("\n")
-      return { content: budgets.length > 0 ? `Current budgets:\n${summary}` : "No budgets set up yet." }
+      return { content: budgets.length > 0 ? `Current budgets (amounts shown in ${displayCurrency}):\n${summary}` : "No budgets set up yet." }
     }
 
     case "get_debts": {
       const debts = await getDebts()
       const summary = debts
-        .map((d) => `- ${d.name} (${d.type}): Balance $${d.currentBalance.toLocaleString()} COP, Min payment $${d.minPayment.toLocaleString()} COP, APR ${d.apr}%`)
+        .map((d) => `- ${d.name} (${d.type}): Balance ${fmtAmt(d.currentBalance)}, Min payment ${fmtAmt(d.minPayment)}, APR ${d.apr}%`)
         .join("\n")
-      return { content: debts.length > 0 ? `Current debts:\n${summary}` : "No debts tracked." }
+      return { content: debts.length > 0 ? `Current debts (amounts shown in ${displayCurrency}):\n${summary}` : "No debts tracked." }
     }
 
     case "get_financial_summary": {
       const cards = await getSummaryCards()
       const summary = cards.map((c) => `${c.title}: ${c.value}`).join("\n")
-      return { content: `Financial summary:\n${summary}` }
+      return { content: `Financial summary (raw COP values from cards — convert to ${displayCurrency} before quoting):\n${summary}` }
     }
 
     case "get_categories": {

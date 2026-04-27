@@ -6,9 +6,11 @@ import { ChatInput } from "./chat-input"
 import { ChatWelcome } from "./chat-welcome"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { useCurrency } from "@/components/currency-provider"
 import type { ChatMessage, StreamEvent, ActionEvent } from "@/lib/ai/chat/types"
 
 export function ChatView() {
+  const { currency } = useCurrency()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isLoadingHistory, setIsLoadingHistory] = useState(true)
   const [isStreaming, setIsStreaming] = useState(false)
@@ -192,10 +194,10 @@ export function ChatView() {
         { role: "user" as const, content: text },
       ]
 
-      const body = JSON.stringify({ messages: allMessages })
+      const body = JSON.stringify({ messages: allMessages, displayCurrency: currency })
       sendMessage(body, { "Content-Type": "application/json" }, userMsg)
     },
-    [messages, sendMessage]
+    [messages, sendMessage, currency]
   )
 
   const handleSendAudio = useCallback(
@@ -213,10 +215,11 @@ export function ChatView() {
         "messages",
         JSON.stringify(messages.map((m) => ({ role: m.role, content: m.content })))
       )
+      formData.append("displayCurrency", currency)
 
       sendMessage(formData, {}, userMsg)
     },
-    [messages, sendMessage]
+    [messages, sendMessage, currency]
   )
 
   const handleSendImage = useCallback(
@@ -235,10 +238,11 @@ export function ChatView() {
         "messages",
         JSON.stringify(messages.map((m) => ({ role: m.role, content: m.content })))
       )
+      formData.append("displayCurrency", currency)
 
       sendMessage(formData, {}, userMsg)
     },
-    [messages, sendMessage]
+    [messages, sendMessage, currency]
   )
 
   const handleSelectPrompt = useCallback(

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import type { SupportedCurrency } from "@/lib/utils/currency"
 
 export interface ChatMessage {
   id: string
@@ -70,6 +71,7 @@ export interface FinancialContext {
   debts: Array<{ name: string; type: string; currentBalance: number; minPayment: number; apr: number }>
   categories: Array<{ id: string; name: string; type: string }>
   recentSummaries: string[]
+  displayCurrency: SupportedCurrency
 }
 
 export interface ChatSummary {

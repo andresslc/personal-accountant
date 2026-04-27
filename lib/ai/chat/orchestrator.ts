@@ -11,6 +11,7 @@ import { runDebtAgent } from "./agents/debt-agent"
 import { runAdvisoryAgent } from "./agents/advisory-agent"
 import { runPredictionAgent } from "./agents/prediction-agent"
 import { applyOutputGuardrails } from "@/lib/ai/guardrails"
+import type { SupportedCurrency } from "@/lib/utils/currency"
 import type { StreamEvent, FinancialContext } from "./types"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,6 +22,7 @@ interface OrchestratorInput {
   userId: string
   recentSummaries?: string[]
   supabase?: AnySupabaseClient
+  displayCurrency?: SupportedCurrency
 }
 
 const MAX_TOOL_ROUNDS = 5
@@ -73,7 +75,10 @@ async function buildContextNode(
   state: OrchestratorStateType
 ): Promise<Partial<OrchestratorStateType>> {
   const input = state.userInput
-  const context = await buildFinancialContext(input.recentSummaries ?? [])
+  const context = await buildFinancialContext(
+    input.recentSummaries ?? [],
+    input.displayCurrency ?? "COP"
+  )
   const systemPrompt = buildOrchestratorPrompt(context)
 
   const seededMessages: ChatMessageInput[] = [
@@ -188,7 +193,13 @@ async function executeToolsNode(
     }
 
     try {
-      const result = await executeTool(name, args, input.userId, input.supabase)
+      const result = await executeTool(
+        name,
+        args,
+        input.userId,
+        input.supabase,
+        input.displayCurrency ?? "COP"
+      )
       if (result.action) {
         await dispatch(result.action, config)
       }

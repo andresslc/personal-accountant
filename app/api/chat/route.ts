@@ -10,6 +10,11 @@ import { DEFAULT_ARCHETYPE_ID, DEMO_ARCHETYPE_COOKIE } from "@/lib/mocks/archety
 import type { StreamEvent, ActionEvent } from "@/lib/ai/chat/types"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database } from "@/lib/supabase/types"
+import type { SupportedCurrency } from "@/lib/utils/currency"
+
+function parseDisplayCurrency(value: unknown): SupportedCurrency {
+  return value === "USD" ? "USD" : "COP"
+}
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -24,6 +29,7 @@ export async function POST(request: Request) {
     let audioFile: File | null = null
     let imageFile: File | null = null
     let textContent: string | null = null
+    let displayCurrency: SupportedCurrency = "COP"
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData()
@@ -35,11 +41,13 @@ export async function POST(request: Request) {
       audioFile = formData.get("audio") as File | null
       imageFile = formData.get("image") as File | null
       textContent = formData.get("text") as string | null
+      displayCurrency = parseDisplayCurrency(formData.get("displayCurrency"))
     } else {
       const body = await request.json()
       action = body.action ?? null
       messages = body.messages ?? []
       textContent = body.text ?? null
+      displayCurrency = parseDisplayCurrency(body.displayCurrency)
     }
 
     if (textContent) {
@@ -131,7 +139,7 @@ export async function POST(request: Request) {
         transcription: cleanTranscription,
       })
 
-      return streamOrchestrator(supabase, userId, messages, cleanTranscription)
+      return streamOrchestrator(supabase, userId, messages, displayCurrency, cleanTranscription)
     }
 
     let lastUserContent: string | null = null
@@ -170,7 +178,7 @@ export async function POST(request: Request) {
       })
     }
 
-    return streamOrchestrator(supabase, userId, messages)
+    return streamOrchestrator(supabase, userId, messages, displayCurrency)
   } catch (error) {
     console.error("Chat API error:", error)
     return new Response(
@@ -184,6 +192,7 @@ function streamOrchestrator(
   supabase: SupabaseClient<Database>,
   userId: string,
   messages: Array<{ role: "user" | "assistant"; content: string }>,
+  displayCurrency: SupportedCurrency,
   transcription?: string
 ) {
   const encoder = new TextEncoder()
@@ -205,6 +214,7 @@ function streamOrchestrator(
           messages,
           userId,
           supabase,
+          displayCurrency,
         })
 
         for await (const event of orchestratorStream) {
