@@ -59,6 +59,10 @@ export interface Subscription {
   frequency: SubscriptionFrequency
   next_due_date: string | null
   active: boolean
+  category: string | null
+  last_paid_date: string | null
+  auto_pay: boolean
+  payment_method: PaymentMethod | null
   created_at: string
   updated_at: string
 }
