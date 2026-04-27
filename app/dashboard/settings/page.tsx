@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCurrency } from "@/components/currency-provider"
 import { useAuth } from "@/components/auth-provider"
-import type { SupportedCurrency } from "@/lib/utils/currency"
+import { COP_PER_USD, type SupportedCurrency } from "@/lib/utils/currency"
 
 export default function SettingsPage() {
   const { user } = useAuth()
@@ -64,6 +64,9 @@ export default function SettingsPage() {
               </SelectContent>
             </Select>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Amounts are stored in COP and converted at {COP_PER_USD.toLocaleString("en-US")} COP / 1 USD for display. New transactions, budgets, and debts you create are always interpreted as COP regardless of the selected display currency.
+          </p>
         </CardContent>
       </Card>
     </div>
