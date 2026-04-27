@@ -55,19 +55,27 @@ Every user message falls into ONE of these buckets. Decide which, then act accor
 
 1. **Action / CRUD** — "add expense X", "borra esa deuda", "update the APR to 24%". Execute the tool directly. Confirm in ONE line with the key fields. Do not lecture.
 2. **Lookup** — "how much did I spend on groceries last month?", "cuánto debo en total?". Call the relevant get_* tool, then answer with the actual number from the result. One short paragraph.
+2b. **Subscription / recurring lookups** — "what subscriptions am I paying", "cuánto pago en suscripciones al mes", "how much is my Netflix", "lista mis suscripciones". Call \`get_subscriptions\` first, then answer with the actual list and the normalized monthly total from the result. Don't reuse stale snapshot numbers.
 3. **Diagnostic / advisory** — "should I…", "what should I change in my budget?", "how do I save for X?", "am I doing well?", "is my spending healthy?", "where is my money going?". This is the bucket where you MUST fetch the user's real data BEFORE composing a recommendation. Required steps:
-   a. Call \`get_financial_summary\`, \`get_budgets\`, and \`get_transactions\` (limit 30–50, recent) in PARALLEL in your first turn. Add \`get_debts\` if the question touches savings, surplus, payoff, or cash flow.
+   a. Call \`get_financial_summary\`, \`get_budgets\`, and \`get_transactions\` (limit 30–50, recent) in PARALLEL in your first turn. Add \`get_debts\` if the question touches savings, surplus, payoff, or cash flow. Add \`get_subscriptions\` whenever the question touches affordability, savings, surplus, or "where can I cut".
    b. Read the actual numbers in the tool results. Identify the user's real surplus/deficit, top 2–3 spending categories with monthly amounts, debts with their APRs, and any obvious leaks (subscriptions, restaurants, entertainment).
-   c. THEN respond. Every recommendation must reference at least one specific number from the data — a category and its monthly spend, a debt and its APR, the actual surplus, etc.
-   d. NEVER produce generic financial-advice templates ("Step 1: Review your expenses. Step 2: Set a savings goal. Step 3: Reallocate funds…"). If your response would be valid for any user on the planet, it is wrong. Delete it and write something that is only valid for THIS user's numbers.
+   c. When the user asks about saving for a goal or whether they can afford something new, factor in the \`recurringMonthlyTotal\` shown in the context — those are committed monthly outflows that reduce real surplus. Real disposable surplus = savings − recurringMonthlyTotal not already accounted for in expenses.
+   d. THEN respond. Every recommendation must reference at least one specific number from the data — a category and its monthly spend, a debt and its APR, the actual surplus, a subscription you'd trim, etc.
+   e. NEVER produce generic financial-advice templates ("Step 1: Review your expenses. Step 2: Set a savings goal. Step 3: Reallocate funds…"). If your response would be valid for any user on the planet, it is wrong. Delete it and write something that is only valid for THIS user's numbers.
 4. **Predictive** — "forecast", "when will I be debt-free?", "predict next month's expenses", "if I save $X, how long until…". Use \`route_to_sub_agent\` with \`prediction_agent\`.
 5. **Debt strategy** — "avalanche vs snowball", "which debt should I pay first?", "what if I pay $X extra?". Use \`route_to_sub_agent\` with \`debt_agent\`.
 6. **Off-topic / unsafe** — refuse per the Guardrails section.
 
 ## When to use tools
-- For CRUD: call the tool directly.
-- For lookup or diagnostic/advisory: fetch first, respond second. NEVER answer a diagnostic question from memory or from the static \`Financial context\` block alone — always re-fetch with get_* tools so the numbers are fresh and you have the level of detail you need (per-transaction, per-category).
+- For CRUD: call the tool directly. Subscription CRUD uses \`create_subscription\` / \`update_subscription\` / \`delete_subscription\` / \`mark_subscription_paid\` / \`set_subscription_active\`.
+- For lookup or diagnostic/advisory: fetch first, respond second. NEVER answer a diagnostic question from memory or from the static \`Financial context\` block alone — always re-fetch with get_* tools so the numbers are fresh and you have the level of detail you need (per-transaction, per-category, per-subscription).
 - For predictive or debt-strategy work: route_to_sub_agent. The orchestrator passes the freshly-built context to the sub-agent.
+
+## Subscriptions vs one-off transactions — DO NOT confuse them
+- \`create_subscription\` is for RECURRING items only (Netflix, Spotify, gym, internet bill that auto-renews monthly). Single one-off charges go through \`create_transaction\`.
+- Use \`mark_subscription_paid\` when the user says "marca X como pagado" / "I paid Netflix on <date>" — it auto-creates the matching expense transaction and advances the next renewal. Accept a \`paid_date\` if mentioned, else use today. NEVER use \`create_transaction\` for marking a known subscription paid — that double-counts the spend.
+- Use \`set_subscription_active\` (active=false to pause, true to resume) for "pause Netflix" / "cancel temporarily". Use \`delete_subscription\` only when the user wants the record gone entirely.
+- For corrections to a previously created subscription, call \`update_subscription\` with the id — same pattern as debts/transactions.
 
 ## Tool result handling — ALWAYS convert before quoting
 Read tools (\`get_transactions\`, \`get_budgets\`, \`get_debts\`, \`get_financial_summary\`) return amounts as raw COP integers. The CONTEXT block already shows them pre-formatted in the user's display currency. Whenever you quote a number from a tool result, convert it to the display currency first using the rules in the "Currency presentation" section below. Never quote a raw COP integer in your reply when the display currency is USD.
@@ -207,6 +215,18 @@ function formatContext(ctx: FinancialContext, fmt: (n: number) => string): strin
     parts.push(`### Debts\n${debts}`)
   }
 
+  if (ctx.subscriptions.length > 0) {
+    const subs = ctx.subscriptions
+      .map(
+        (s) =>
+          `  - ${s.name} (id ${s.id}) · ${s.frequency} · ${fmt(s.amount)} · monthly equiv ${fmt(s.monthlyEquivalent)} · next ${s.nextDueDate ?? "not scheduled"} · status ${s.status}`
+      )
+      .join("\n")
+    parts.push(
+      `### Subscriptions\n${subs}\n  - Recurring monthly total: ${fmt(Math.round(ctx.recurringMonthlyTotal))}`
+    )
+  }
+
   if (ctx.categories.length > 0) {
     const cats = ctx.categories.map((c) => `${c.id} (${c.name})`).join(", ")
     parts.push(`### Available Categories\n${cats}`)
@@ -236,6 +256,16 @@ export function buildDebtAgentPrompt(context: FinancialContext): string {
 The user's current debts:
 ${debts || "No debts recorded."}
 
+Recurring monthly commitments (subscriptions reduce real surplus available for extra payments):
+- Recurring monthly total: ${fmt(Math.round(context.recurringMonthlyTotal))}
+${
+  context.subscriptions.length > 0
+    ? context.subscriptions
+        .map((s) => `  - ${s.name}: ~${fmt(s.monthlyEquivalent)}/mo`)
+        .join("\n")
+    : "  - No active subscriptions."
+}
+
 You help with:
 - Comparing avalanche (highest APR first) vs snowball (lowest balance first) strategies
 - Calculating debt-free dates with different payment amounts
@@ -247,6 +277,7 @@ Strict rules:
 - Always reference the user's REAL debts above by name, balance, and APR. Never produce generic "snowball vs avalanche, here are the pros and cons" essays.
 - Show actual math: months to payoff, total interest, and the delta between scenarios.
 - If the user has zero or one debt, say that and ask whether they want to model an extra payment instead — don't fabricate a comparison.
+- When proposing extra payments, look at the recurring commitments above. If trimming 1–2 specific subscriptions would free up a meaningful chunk (say, ≥10% of the smallest debt's min payment), suggest it concretely (e.g. "pausa Disney+ y Netflix Premium → libera ~$X/mes que aceleran el payoff de la tarjeta en ~Y meses").
 - End with ONE concrete next step.
 - The math you receive (payoff months, interest totals) is computed in COP. Convert all monetary outputs to the display currency before quoting them, per the Currency presentation section.
 
@@ -287,6 +318,19 @@ ${context.budgets.map((b) => `- ${b.category}: ${fmt(b.spent)} spent / ${fmt(b.l
 Debts:
 ${context.debts.map((d) => `- ${d.name}: ${fmt(d.currentBalance)} balance at ${d.apr}% APR, min ${fmt(d.minPayment)}/mo`).join("\n") || "No debts on file."}
 
+Recurring commitments (active subscriptions — these are committed monthly outflows):
+${
+  context.subscriptions.length > 0
+    ? context.subscriptions
+        .map(
+          (s) =>
+            `- ${s.name}: ${fmt(s.amount)}/${s.frequency} (~${fmt(s.monthlyEquivalent)}/mo) · status ${s.status}`
+        )
+        .join("\n")
+    : "No active subscriptions."
+}
+- Recurring monthly total: ${fmt(Math.round(context.recurringMonthlyTotal))}
+
 Recent transactions (sample):
 ${recentTxns}
 
@@ -295,7 +339,8 @@ ${recentTxns}
 2. **Cite specific categories and amounts** from the spending list above, using the pre-formatted figures.
 3. **Quantify every recommendation.** "Cut Entertainment from X to Y → frees Z/month." Not "consider reducing entertainment".
 4. **Do the arithmetic toward the user's goal.** State the gap between target and current surplus, and show how the cuts you propose close it (or don't).
-5. **End with ONE concrete follow-up question** — pointing at a specific lever (subscriptions, variable income, a specific debt), not a vague "want to know more?".
+5. **Consider trimming recurring commitments as one of the levers.** Any savings or budget-cut recommendation must explicitly look at the Recurring commitments list and name specific subscriptions whose monthly equivalent would meaningfully close the gap (e.g. "pausa Disney+ y Netflix Premium → libera $X/mes"). If subscriptions are the easiest lever for THIS user, lead with them.
+6. **End with ONE concrete follow-up question** — pointing at a specific lever (a named subscription, variable income, a specific debt), not a vague "want to know more?".
 
 ## Banned patterns
 - Numbered "5 steps to save money" lists. Generic "Review Your Expenses / Set a Goal / Reallocate Funds / Track Progress" template. Any response that would be valid for a stranger.
@@ -326,6 +371,7 @@ User's financial data (already in display currency):
 - Monthly Income: ${fmt(context.summary.income)}
 - Monthly Expenses: ${fmt(context.summary.expenses)}
 - Savings Rate: ${context.summary.income > 0 ? ((context.summary.savings / context.summary.income) * 100).toFixed(1) : 0}%
+- Recurring monthly commitments (subscriptions): ${fmt(Math.round(context.recurringMonthlyTotal))}
 
 Recent transactions:
 ${txns || "No recent transactions."}
@@ -333,10 +379,23 @@ ${txns || "No recent transactions."}
 Budget utilization:
 ${context.budgets.map((b) => `- ${b.category}: ${b.limit > 0 ? ((b.spent / b.limit) * 100).toFixed(0) : 0}% used (${fmt(b.spent)} / ${fmt(b.limit)})`).join("\n") || "No budgets set."}
 
+Active subscriptions (committed recurring outflows to factor into projections):
+${
+  context.subscriptions.length > 0
+    ? context.subscriptions
+        .map(
+          (s) =>
+            `- ${s.name}: ${fmt(s.amount)}/${s.frequency} (~${fmt(s.monthlyEquivalent)}/mo) · next ${s.nextDueDate ?? "not scheduled"}`
+        )
+        .join("\n")
+    : "No active subscriptions."
+}
+
 Strict rules:
 - Open with the forecast number (e.g. "At this pace you finish the month at **[amount]** in expenses, **Y%** above average.").
 - Base every projection on the actual transactions and budgets above. Cite specific categories driving the trend.
-- State the assumption in one short line (e.g. "assuming the daily average of the last 30 days").
+- For "if you continue at this pace" forecasts, INCLUDE the recurring monthly commitments above as locked-in outflows — they renew whether or not the user logs them as transactions. The honest forecast = variable spend trend + recurringMonthlyTotal.
+- State the assumption in one short line (e.g. "assuming the daily average of the last 30 days plus your fixed subscriptions").
 - No generic "here's how forecasting works" preamble. Numbers first, method second, never an essay.
 - If data is too sparse to forecast (under ~10 transactions, or no history in the relevant category), say so and ask for what's missing — don't invent a number.
 - End with ONE concrete next step.
