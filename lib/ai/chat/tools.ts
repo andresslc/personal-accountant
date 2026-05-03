@@ -13,10 +13,20 @@ import {
   getBudgets,
   getDebts,
   getSummaryCards,
+  getActiveSubscriptions,
+  createSubscription,
+  updateSubscription,
+  deleteSubscription,
+  markSubscriptionPaid,
   type LiabilityUpdate,
+  type SubscriptionUpdate,
 } from "@/lib/data/dashboard-data"
 import { categories } from "@/lib/mocks/categories"
 import { formatCurrency, type SupportedCurrency } from "@/lib/utils/currency"
+import {
+  monthlyEquivalent,
+  todayISO,
+} from "@/lib/utils/subscription-status"
 import type { ActionEvent } from "./types"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -89,6 +99,50 @@ const UpdateDebtParams = z.object({
 const RouteToSubAgentParams = z.object({
   agent: z.enum(["debt_agent", "advisory_agent", "prediction_agent"]),
   task_description: z.string(),
+})
+
+const SubscriptionFrequencyEnum = z.enum(["Weekly", "Monthly", "Yearly"])
+const SubscriptionPaymentMethodEnum = z.enum([
+  "Credit Card",
+  "Bank Transfer",
+  "Cash",
+  "Debit Card",
+])
+
+const CreateSubscriptionParams = z.object({
+  name: z.string(),
+  amount: z.number().positive(),
+  frequency: SubscriptionFrequencyEnum,
+  next_due_date: z.string(),
+  category: z.string().nullable().optional().default(null),
+  auto_pay: z.boolean().optional().default(false),
+  payment_method: SubscriptionPaymentMethodEnum.nullable().optional().default(null),
+})
+
+const UpdateSubscriptionParams = z.object({
+  id: z.number(),
+  name: z.string().optional(),
+  amount: z.number().positive().optional(),
+  frequency: SubscriptionFrequencyEnum.optional(),
+  next_due_date: z.string().nullable().optional(),
+  category: z.string().nullable().optional(),
+  auto_pay: z.boolean().optional(),
+  payment_method: SubscriptionPaymentMethodEnum.nullable().optional(),
+  active: z.boolean().optional(),
+})
+
+const DeleteSubscriptionParams = z.object({
+  id: z.number(),
+})
+
+const MarkSubscriptionPaidParams = z.object({
+  id: z.number(),
+  paid_date: z.string().optional(),
+})
+
+const SetSubscriptionActiveParams = z.object({
+  id: z.number(),
+  active: z.boolean(),
 })
 
 export const toolDefinitions: ChatToolDef[] = [
@@ -266,6 +320,119 @@ export const toolDefinitions: ChatToolDef[] = [
           due_day: { type: "number", description: "Day of month payment is due (1-31)", nullable: true },
         },
         required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "create_subscription",
+      description:
+        "Create a new RECURRING subscription (Netflix, Spotify, gym, etc.) — use this for items that auto-renew on a schedule. For RECURRING items only — single one-off charges go through `create_transaction`. Amount is the per-period charge in COP.",
+      parameters: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Subscription name (e.g. 'Netflix')" },
+          amount: { type: "number", description: "Per-period amount in COP" },
+          frequency: {
+            type: "string",
+            enum: ["Weekly", "Monthly", "Yearly"],
+            description: "How often the subscription renews",
+          },
+          next_due_date: { type: "string", description: "Next renewal date in YYYY-MM-DD format" },
+          category: { type: "string", description: "Category name (e.g. 'Entertainment')", nullable: true },
+          auto_pay: { type: "boolean", description: "Whether the subscription is on auto-pay", default: false },
+          payment_method: {
+            type: "string",
+            enum: ["Credit Card", "Bank Transfer", "Cash", "Debit Card"],
+            description: "Payment method used. Omit if unknown.",
+            nullable: true,
+          },
+        },
+        required: ["name", "amount", "frequency", "next_due_date"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_subscription",
+      description:
+        "Update fields on an existing subscription. Use this when the user corrects a previously created subscription (e.g. 'no, the Netflix amount went up to 45k', 'change Spotify to yearly'). Only include fields the user wants changed.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Subscription ID to update" },
+          name: { type: "string" },
+          amount: { type: "number", description: "Per-period amount in COP" },
+          frequency: { type: "string", enum: ["Weekly", "Monthly", "Yearly"] },
+          next_due_date: { type: "string", description: "Next renewal date in YYYY-MM-DD format", nullable: true },
+          category: { type: "string", nullable: true },
+          auto_pay: { type: "boolean" },
+          payment_method: {
+            type: "string",
+            enum: ["Credit Card", "Bank Transfer", "Cash", "Debit Card"],
+            nullable: true,
+          },
+          active: { type: "boolean", description: "Active flag (use set_subscription_active for pause/resume specifically)" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "delete_subscription",
+      description: "Delete a subscription by its ID. Use this when the user says a previously created subscription was wrong, a mistake, or should be removed entirely (not just paused).",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Subscription ID to delete" },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_subscriptions",
+      description: "Get all ACTIVE subscriptions with their amounts, frequencies, next renewal dates, and statuses. Returns a normalized monthly total too.",
+      parameters: { type: "object", properties: {}, required: [] },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "mark_subscription_paid",
+      description:
+        "Mark a known subscription as paid for the current period. This automatically creates the matching expense transaction and advances the next renewal date by one period. Use when the user says 'marca X como pagado' / 'I paid X on <date>'. NEVER use `create_transaction` to record a payment for a known subscription.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Subscription ID being marked paid" },
+          paid_date: {
+            type: "string",
+            description: "Date the payment was made in YYYY-MM-DD format. Defaults to today if omitted.",
+          },
+        },
+        required: ["id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "set_subscription_active",
+      description: "Pause (active=false) or resume (active=true) a subscription without deleting it. Use when the user says 'pause Netflix' / 'cancel Spotify temporarily' / 'resume my gym membership'.",
+      parameters: {
+        type: "object",
+        properties: {
+          id: { type: "number", description: "Subscription ID" },
+          active: { type: "boolean", description: "true = resume, false = pause" },
+        },
+        required: ["id", "active"],
       },
     },
   },
@@ -533,6 +700,183 @@ export async function executeTool(
           action: {
             kind: "debt_updated",
             data: { id, ...updates },
+          },
+        },
+      }
+    }
+
+    case "create_subscription": {
+      const parsed = CreateSubscriptionParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid subscription parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const params = parsed.data
+      const result = await createSubscription(
+        {
+          name: params.name,
+          amount: params.amount,
+          frequency: params.frequency,
+          next_due_date: params.next_due_date,
+          active: true,
+          category: params.category ?? null,
+          auto_pay: params.auto_pay ?? false,
+          payment_method: params.payment_method ?? null,
+        },
+        userId,
+        client
+      )
+      if (!result) return { content: "Failed to create subscription. There may be a database connection issue. Please try again." }
+      return {
+        content: `Created subscription "${params.name}" for ${fmtAmt(params.amount)}/${params.frequency}. Next renewal: ${params.next_due_date}.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "subscription_created",
+            data: { id: result.id, ...params },
+          },
+        },
+      }
+    }
+
+    case "update_subscription": {
+      const parsed = UpdateSubscriptionParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid update_subscription parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const { id, ...rest } = parsed.data
+      const updates: SubscriptionUpdate = rest
+      const result = await updateSubscription(id, userId, updates, client)
+      if (!result) return { content: `Failed to update subscription ${id}. There may be a database connection issue or the subscription may not exist.` }
+      return {
+        content: `Subscription ${id} (${result.name}) updated successfully.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "subscription_updated",
+            data: { id, ...updates },
+          },
+        },
+      }
+    }
+
+    case "delete_subscription": {
+      const parsed = DeleteSubscriptionParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid delete_subscription parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const success = await deleteSubscription(parsed.data.id, userId, client)
+      if (!success) return { content: `Failed to delete subscription ${parsed.data.id}. There may be a database connection issue or the subscription may not exist.` }
+      return {
+        content: `Subscription ${parsed.data.id} deleted successfully.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "subscription_deleted",
+            data: { id: parsed.data.id },
+          },
+        },
+      }
+    }
+
+    case "get_subscriptions": {
+      const subs = await getActiveSubscriptions(client)
+      if (subs.length === 0) {
+        return { content: "No active subscriptions tracked." }
+      }
+      const lines = subs
+        .map((s, i) => {
+          const monthly = Math.round(monthlyEquivalent(s))
+          const due = s.next_due_date ?? "not scheduled"
+          return `${i + 1}. ${s.name} (id ${s.id}) — ${fmtAmt(s.amount)}/${s.frequency} (~${fmtAmt(monthly)}/mo) · next ${due}`
+        })
+        .join("\n")
+      const total = Math.round(
+        subs.reduce((sum, s) => sum + monthlyEquivalent(s), 0)
+      )
+      return {
+        content: `Active subscriptions (amounts shown in ${displayCurrency}):\n${lines}\n\nNormalized monthly total: ${fmtAmt(total)}`,
+      }
+    }
+
+    case "mark_subscription_paid": {
+      const parsed = MarkSubscriptionPaidParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid mark_subscription_paid parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const { id, paid_date } = parsed.data
+      const paidDate = paid_date ?? todayISO()
+      const result = await markSubscriptionPaid(id, userId, paidDate, client)
+      if (!result.ok) {
+        return { content: `Could not mark subscription ${id} as paid: ${result.error}` }
+      }
+      if (result.alreadyPaid) {
+        return {
+          content: `Already marked paid on ${paidDate}. Next renewal stays at ${result.nextDueDate}.`,
+          action: {
+            type: "action",
+            action: {
+              kind: "subscription_paid",
+              data: {
+                id,
+                paid_date: paidDate,
+                next_due_date: result.nextDueDate,
+                already_paid: true,
+              },
+            },
+          },
+        }
+      }
+      const txnNote = result.transactionId
+        ? ` Created transaction (#${result.transactionId}).`
+        : ""
+      return {
+        content: `Marked subscription ${id} as paid on ${paidDate}.${txnNote} Next renewal: ${result.nextDueDate}.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "subscription_paid",
+            data: {
+              id,
+              paid_date: paidDate,
+              next_due_date: result.nextDueDate,
+              transaction_id: result.transactionId,
+              already_paid: false,
+            },
+          },
+        },
+      }
+    }
+
+    case "set_subscription_active": {
+      const parsed = SetSubscriptionActiveParams.safeParse(args)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join("; ")
+        return { content: `Invalid set_subscription_active parameters: ${issues}. Please ask the user for the correct values and try again.` }
+      }
+      const { id, active } = parsed.data
+      const result = await updateSubscription(id, userId, { active }, client)
+      if (!result) return { content: `Failed to ${active ? "resume" : "pause"} subscription ${id}.` }
+      return {
+        content: active ? `Resumed ${result.name}.` : `Paused ${result.name}.`,
+        action: {
+          type: "action",
+          action: {
+            kind: "subscription_active_changed",
+            data: { id, active, name: result.name },
           },
         },
       }

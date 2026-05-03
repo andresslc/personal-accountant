@@ -19,6 +19,7 @@ import {
   Mic,
   MicOff,
   Plus,
+  Repeat,
   Square,
   TrendingUp,
   Upload,
@@ -32,8 +33,10 @@ type QuickAddMenuProps = {
   onAddTransaction?: () => void
   onCreateBudget?: () => void
   onAddDebt?: () => void
+  onAddSubscription?: () => void
   budgetHref?: string
   debtHref?: string
+  subscriptionHref?: string
 }
 
 async function compressImage(file: File, maxWidth = 1600, quality = 0.8): Promise<Blob> {
@@ -62,8 +65,10 @@ export function QuickAddMenu({
   onAddTransaction,
   onCreateBudget,
   onAddDebt,
+  onAddSubscription,
   budgetHref = "/dashboard/budget?create=true",
   debtHref = "/dashboard/debts?create=true",
+  subscriptionHref = "/dashboard/subscriptions?create=true",
 }: QuickAddMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [quickPrompt, setQuickPrompt] = useState("")
@@ -552,6 +557,22 @@ export function QuickAddMenu({
                 <div>
                   <p className="font-medium text-foreground">Add Debt</p>
                   <p className="text-xs text-foreground/70">Create a liability with payment and APR details.</p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleAction(onAddSubscription, subscriptionHref)}
+              className="w-full rounded-lg border border-border p-4 text-left hover:bg-muted transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-md bg-primary/10 flex items-center justify-center">
+                  <Repeat className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Add Subscription</p>
+                  <p className="text-xs text-foreground/70">Track a recurring payment and renewal date.</p>
                 </div>
               </div>
             </button>

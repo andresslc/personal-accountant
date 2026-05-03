@@ -11,6 +11,14 @@ import {
 } from "@/lib/ui/category-icons"
 import type { ClientArchetype } from "@/lib/mocks/archetypes"
 import type { PayoffTimelinePoint } from "@/lib/mocks/debts"
+import {
+  advanceFrequency,
+  getSubscriptionStatus,
+  monthlyEquivalent,
+  rewindFrequency,
+  todayISO,
+  type SubscriptionFrequency,
+} from "@/lib/utils/subscription-status"
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>
@@ -578,13 +586,18 @@ export const getSubscriptions = async (
 
   const { data, error } = await supabase
     .from("subscriptions")
-    .select("name,amount,frequency")
-    .eq("active", true)
-    .order("name", { ascending: true })
+    .select(
+      "id,name,amount,frequency,next_due_date,last_paid_date,active,category,auto_pay,payment_method,created_at,updated_at,user_id"
+    )
+    .order("next_due_date", { ascending: true, nullsFirst: false })
 
   if (error || !data) return []
-  return data
+  return data as unknown as Subscription[]
 }
+
+export const getActiveSubscriptions = async (
+  client?: AnySupabaseClient
+): Promise<Subscription[]> => (await getSubscriptions(client)).filter((s) => s.active)
 
 export const getNetWorth = async (
   client?: AnySupabaseClient
@@ -609,6 +622,36 @@ export type DashboardPageData = {
   incomeVsExpenses: MonthlyData[]
   expensesByCategory: CategoryExpense[]
   recentTransactions: Omit<MockTransaction, "icon">[]
+  upcomingSubscriptions: Subscription[]
+  recurringMonthlyCost: number
+}
+
+const computeUpcomingSubscriptionWidget = (
+  subs: Subscription[]
+): { upcomingSubscriptions: Subscription[]; recurringMonthlyCost: number } => {
+  const today = todayISO()
+  const active = subs.filter((s) => s.active)
+  const recurringMonthlyCost = active.reduce(
+    (sum, s) => sum + monthlyEquivalent(s),
+    0
+  )
+  // The dashboard widget supports a 7d/30d toggle, so we hand it all active
+  // subs whose next_due_date is within ~31 days (or already overdue). The
+  // widget itself narrows further via `getUpcomingRenewals`.
+  const todayMs = new Date(`${today}T00:00:00Z`).getTime()
+  const horizonMs = todayMs + 31 * 86_400_000
+  const upcomingSubscriptions = active
+    .filter((s) => {
+      if (!s.next_due_date) return false
+      const dueMs = new Date(`${s.next_due_date}T00:00:00Z`).getTime()
+      return dueMs <= horizonMs
+    })
+    .sort((a, b) => {
+      if (!a.next_due_date) return 1
+      if (!b.next_due_date) return -1
+      return a.next_due_date.localeCompare(b.next_due_date)
+    })
+  return { upcomingSubscriptions, recurringMonthlyCost }
 }
 
 const stripIcon = <T extends { icon?: unknown }>(item: T): Omit<T, "icon"> => {
@@ -623,6 +666,9 @@ export const getDashboardPageData = async (
   if (USE_MOCK_DATA) {
     const archetype = await getMockSource()
     if (archetype) {
+      const subWidget = computeUpcomingSubscriptionWidget(
+        archetype.subscriptions ?? subscriptions
+      )
       return {
         summaryCards: archetype.summaryCards.map((card) => ({
           title: card.title,
@@ -649,14 +695,19 @@ export const getDashboardPageData = async (
         incomeVsExpenses: archetype.monthlyFlow,
         expensesByCategory: archetype.expensesByCategory,
         recentTransactions: archetype.transactions.slice(0, 5).map(stripIcon),
+        upcomingSubscriptions: subWidget.upcomingSubscriptions,
+        recurringMonthlyCost: subWidget.recurringMonthlyCost,
       }
     }
     const totals = computeSummaryTotals(allTransactions, liabilitiesData)
+    const subWidget = computeUpcomingSubscriptionWidget(subscriptions)
     return {
       summaryCards: buildSummaryCardsFromValues(totals),
       incomeVsExpenses: incomeVsExpensesData,
       expensesByCategory: expensesByCategoryData,
       recentTransactions: recentTransactions.map(stripIcon),
+      upcomingSubscriptions: subWidget.upcomingSubscriptions,
+      recurringMonthlyCost: subWidget.recurringMonthlyCost,
     }
   }
 
@@ -672,24 +723,30 @@ export const getDashboardPageData = async (
       incomeVsExpenses: [],
       expensesByCategory: [],
       recentTransactions: [],
+      upcomingSubscriptions: [],
+      recurringMonthlyCost: 0,
     }
   }
 
-  const [transactions, debts] = await Promise.all([
+  const [transactions, debts, activeSubs] = await Promise.all([
     getTransactions(supabase),
     getDebts(supabase),
+    getActiveSubscriptions(supabase),
   ])
 
   const totals = computeSummaryTotals(transactions, debts)
   const incomeVsExpenses = await getIncomeVsExpenses(supabase)
   const expensesByCategory = await getExpensesByCategory(supabase)
   const recent = transactions.slice(0, 5).map(stripIcon)
+  const subWidget = computeUpcomingSubscriptionWidget(activeSubs)
 
   return {
     summaryCards: buildSummaryCardsFromValues(totals),
     incomeVsExpenses,
     expensesByCategory,
     recentTransactions: recent,
+    upcomingSubscriptions: subWidget.upcomingSubscriptions,
+    recurringMonthlyCost: subWidget.recurringMonthlyCost,
   }
 }
 
@@ -760,6 +817,36 @@ export const getReportsPageData = async (
     subscriptions: subs,
     netWorth,
   }
+}
+
+export type SubscriptionsPageData = {
+  subscriptions: Subscription[]
+  monthlyRecurringCost: number
+  upcomingCount: number
+  overdueCount: number
+  pausedCount: number
+}
+
+export const getSubscriptionsPageData = async (
+  client?: AnySupabaseClient
+): Promise<SubscriptionsPageData> => {
+  const subs = await getSubscriptions(client)
+  const today = todayISO()
+  const monthlyRecurringCost = subs
+    .filter((s) => s.active)
+    .reduce((sum, s) => sum + monthlyEquivalent(s), 0)
+
+  let upcomingCount = 0
+  let overdueCount = 0
+  let pausedCount = 0
+  for (const s of subs) {
+    const status = getSubscriptionStatus(s, today)
+    if (status === "upcoming") upcomingCount++
+    else if (status === "overdue") overdueCount++
+    else if (status === "paused") pausedCount++
+  }
+
+  return { subscriptions: subs, monthlyRecurringCost, upcomingCount, overdueCount, pausedCount }
 }
 
 // --- Write functions ---
@@ -971,6 +1058,272 @@ export const updateDebt = async (
     return false
   }
   return true
+}
+
+// --- Subscription write functions ---
+
+export type SubscriptionInsert = {
+  name: string
+  amount: number
+  frequency: "Weekly" | "Monthly" | "Yearly"
+  next_due_date: string | null
+  active: boolean
+  category: string | null
+  auto_pay: boolean
+  payment_method: "Credit Card" | "Bank Transfer" | "Cash" | "Debit Card" | null
+}
+
+export type SubscriptionUpdate = Partial<SubscriptionInsert> & {
+  last_paid_date?: string | null
+}
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
+const findMockSubscriptionIndex = (id: number) =>
+  subscriptions.findIndex((s) => s.id === id)
+
+const nextMockSubscriptionId = () =>
+  subscriptions.reduce((max, s) => (s.id > max ? s.id : max), 0) + 1
+
+export const createSubscription = async (
+  data: SubscriptionInsert,
+  userId: string,
+  client?: AnySupabaseClient
+): Promise<Subscription | null> => {
+  if (USE_MOCK_DATA) {
+    const id = nextMockSubscriptionId()
+    const row: Subscription = {
+      id,
+      name: data.name,
+      amount: data.amount,
+      frequency: data.frequency,
+      next_due_date: data.next_due_date,
+      last_paid_date: null,
+      active: data.active,
+      category: data.category,
+      auto_pay: data.auto_pay,
+      payment_method: data.payment_method,
+    }
+    subscriptions.push(row)
+    console.log("[mock] createSubscription:", { ...row, userId })
+    return row
+  }
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) {
+    console.error("[createSubscription] Supabase client not available")
+    return null
+  }
+
+  const { data: row, error } = await supabase
+    .from("subscriptions")
+    .insert({ ...data, user_id: userId })
+    .select(
+      "id,name,amount,frequency,next_due_date,last_paid_date,active,category,auto_pay,payment_method,created_at,updated_at,user_id"
+    )
+    .single()
+
+  if (error) {
+    console.error("[createSubscription] Supabase error:", error.message, error.details)
+    return null
+  }
+  if (!row) return null
+  return row as unknown as Subscription
+}
+
+export const updateSubscription = async (
+  id: number,
+  userId: string,
+  updates: SubscriptionUpdate,
+  client?: AnySupabaseClient
+): Promise<Subscription | null> => {
+  if (USE_MOCK_DATA) {
+    const idx = findMockSubscriptionIndex(id)
+    if (idx === -1) {
+      console.warn("[mock] updateSubscription: id not found", { id, userId })
+      return null
+    }
+    const merged: Subscription = { ...subscriptions[idx], ...updates }
+    subscriptions[idx] = merged
+    console.log("[mock] updateSubscription:", { id, userId, updates })
+    return merged
+  }
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return null
+
+  const { data: row, error } = await supabase
+    .from("subscriptions")
+    .update(updates)
+    .eq("id", id)
+    .eq("user_id", userId)
+    .select(
+      "id,name,amount,frequency,next_due_date,last_paid_date,active,category,auto_pay,payment_method,created_at,updated_at,user_id"
+    )
+    .single()
+
+  if (error) {
+    console.error("[updateSubscription] Supabase error:", error.message, error.details)
+    return null
+  }
+  if (!row) return null
+  return row as unknown as Subscription
+}
+
+export const deleteSubscription = async (
+  id: number,
+  userId: string,
+  client?: AnySupabaseClient
+): Promise<boolean> => {
+  if (USE_MOCK_DATA) {
+    const idx = findMockSubscriptionIndex(id)
+    if (idx === -1) return false
+    subscriptions.splice(idx, 1)
+    console.log("[mock] deleteSubscription:", { id, userId })
+    return true
+  }
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return false
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+
+  if (error) {
+    console.error("[deleteSubscription] Supabase error:", error.message, error.details)
+    return false
+  }
+  return true
+}
+
+export type MarkPaidResult =
+  | { ok: true; transactionId: number | null; nextDueDate: string; alreadyPaid: false }
+  | { ok: true; transactionId: null; nextDueDate: string; alreadyPaid: true }
+  | { ok: false; error: string }
+
+const resolveSubscriptionCategoryId = async (
+  categoryName: string | null,
+  client?: AnySupabaseClient
+): Promise<{ id: string; name: string }> => {
+  if (USE_MOCK_DATA) {
+    const name = categoryName ?? "Other"
+    return { id: name, name }
+  }
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return { id: "other", name: "Other" }
+
+  const map = await getCategoryMap(supabase)
+  if (categoryName) {
+    const target = categoryName.toLowerCase()
+    for (const [id, name] of Object.entries(map)) {
+      if (name.toLowerCase() === target) return { id, name }
+    }
+  }
+  for (const [id, name] of Object.entries(map)) {
+    if (name.toLowerCase() === "other") return { id, name }
+  }
+  return { id: "other", name: "Other" }
+}
+
+const findMockSubscription = (id: number): Subscription | null => {
+  const idx = findMockSubscriptionIndex(id)
+  return idx === -1 ? null : subscriptions[idx]
+}
+
+const loadSubscriptionForMarkPaid = async (
+  id: number,
+  userId: string,
+  client?: AnySupabaseClient
+): Promise<Subscription | null> => {
+  if (USE_MOCK_DATA) return findMockSubscription(id)
+  const supabase = (client ?? getSupabaseClient()) as AnySupabaseClient | null
+  if (!supabase) return null
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(
+      "id,name,amount,frequency,next_due_date,last_paid_date,active,category,auto_pay,payment_method,created_at,updated_at,user_id"
+    )
+    .eq("id", id)
+    .eq("user_id", userId)
+    .single()
+
+  if (error || !data) return null
+  return data as unknown as Subscription
+}
+
+export const markSubscriptionPaid = async (
+  id: number,
+  userId: string,
+  paidDate: string,
+  client?: AnySupabaseClient
+): Promise<MarkPaidResult> => {
+  if (!ISO_DATE_RE.test(paidDate)) {
+    return { ok: false, error: "Invalid date format. Expected YYYY-MM-DD." }
+  }
+  const today = todayISO()
+  if (paidDate > today) {
+    return { ok: false, error: "Paid date cannot be in the future." }
+  }
+
+  const sub = await loadSubscriptionForMarkPaid(id, userId, client)
+  if (!sub) return { ok: false, error: "Not found" }
+
+  const frequency = sub.frequency as SubscriptionFrequency
+
+  if (sub.next_due_date) {
+    const earliestAcceptable = rewindFrequency(sub.next_due_date, frequency)
+    if (paidDate < earliestAcceptable) {
+      return {
+        ok: false,
+        error: `Paid date is older than one ${frequency.toLowerCase()} period before the next due date.`,
+      }
+    }
+  }
+
+  if (sub.last_paid_date && sub.last_paid_date === paidDate) {
+    return {
+      ok: true,
+      transactionId: null,
+      nextDueDate: sub.next_due_date ?? advanceFrequency(paidDate, frequency),
+      alreadyPaid: true,
+    }
+  }
+
+  const newNextDueDate = advanceFrequency(paidDate, frequency)
+  const resolvedCategory = await resolveSubscriptionCategoryId(sub.category, client)
+
+  const txn = await createTransaction(
+    {
+      description: sub.name,
+      amount: sub.amount,
+      type: "expense",
+      category_id: resolvedCategory.id,
+      date: paidDate,
+      method: sub.payment_method ?? null,
+      liability_id: null,
+    },
+    userId,
+    client
+  )
+
+  const updated = await updateSubscription(
+    id,
+    userId,
+    { last_paid_date: paidDate, next_due_date: newNextDueDate },
+    client
+  )
+
+  if (!updated) {
+    return { ok: false, error: "Failed to update subscription after recording payment." }
+  }
+
+  return {
+    ok: true,
+    transactionId: txn?.id ?? null,
+    nextDueDate: newNextDueDate,
+    alreadyPaid: false,
+  }
 }
 
 // Re-export types so components never import from lib/mocks directly

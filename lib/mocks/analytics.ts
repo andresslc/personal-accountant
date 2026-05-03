@@ -18,9 +18,16 @@ export interface SpendingRank {
 }
 
 export interface Subscription {
+  id: number
   name: string
-  amount: number
+  amount: number              // stored in COP
   frequency: 'Weekly' | 'Monthly' | 'Yearly'
+  next_due_date: string | null
+  last_paid_date: string | null
+  active: boolean
+  category: string | null
+  auto_pay: boolean
+  payment_method: 'Credit Card' | 'Bank Transfer' | 'Cash' | 'Debit Card' | null
 }
 
 export interface NetWorthPoint {
@@ -80,9 +87,42 @@ export const topSpendingCategories: SpendingRank[] = [
 
 // Recurring subscriptions
 export const subscriptions: Subscription[] = [
-  { name: "Netflix", amount: 15.99, frequency: "Monthly" },
-  { name: "Spotify", amount: 10.99, frequency: "Monthly" },
-  { name: "Cloud Storage", amount: 9.99, frequency: "Monthly" },
+  {
+    id: 1,
+    name: "Netflix",
+    amount: 65000,
+    frequency: "Monthly",
+    next_due_date: "2026-05-07",
+    last_paid_date: "2026-04-07",
+    active: true,
+    category: "Streaming",
+    auto_pay: true,
+    payment_method: "Credit Card",
+  },
+  {
+    id: 2,
+    name: "Spotify",
+    amount: 21900,
+    frequency: "Monthly",
+    next_due_date: "2026-05-07",
+    last_paid_date: "2026-04-07",
+    active: true,
+    category: "Music",
+    auto_pay: true,
+    payment_method: "Credit Card",
+  },
+  {
+    id: 3,
+    name: "Cloud Storage",
+    amount: 12000,
+    frequency: "Monthly",
+    next_due_date: "2026-05-07",
+    last_paid_date: "2026-04-07",
+    active: true,
+    category: "Software",
+    auto_pay: true,
+    payment_method: "Credit Card",
+  },
 ]
 
 // Net worth over time

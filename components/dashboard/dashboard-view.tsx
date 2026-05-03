@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { SmartTransactionHub } from "@/components/dashboard/smart-transaction-hub"
 import { QuickAddMenu } from "@/components/dashboard/quick-add-menu"
 import { BudgetQuickCreateDialog } from "@/components/dashboard/budget-quick-create-dialog"
+import { UpcomingExpensesWidget } from "@/components/dashboard/upcoming-expenses-widget"
 import type { DashboardPageData } from "@/lib/data/dashboard-data"
 
 type DashboardViewProps = {
@@ -39,6 +40,10 @@ export function DashboardView({ initialData }: DashboardViewProps) {
           <IncomeVsExpensesChart initialData={initialData.incomeVsExpenses} />
         </div>
         <ExpensesByCategoryChart initialData={initialData.expensesByCategory} />
+      </div>
+
+      <div className="mt-8">
+        <UpcomingExpensesWidget initialSubscriptions={initialData.upcomingSubscriptions} />
       </div>
 
       <div className="mt-8">

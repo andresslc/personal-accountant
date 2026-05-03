@@ -36,7 +36,8 @@
       "Skill(update-config)",
       "Read(//c/Users/andres/**)",
       "Read(//c/Users/andres/.claude/**)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(xxd)"
     ]
   },
   "enabledPlugins": {

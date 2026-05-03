@@ -28,6 +28,11 @@ export interface ActionEvent {
       | "transaction_updated"
       | "debt_deleted"
       | "debt_updated"
+      | "subscription_created"
+      | "subscription_updated"
+      | "subscription_deleted"
+      | "subscription_paid"
+      | "subscription_active_changed"
     data: Record<string, unknown>
   }
 }
@@ -69,6 +74,17 @@ export interface FinancialContext {
   recentTransactions: Array<{ date: string; description: string; amount: number; category: string; type: string }>
   budgets: Array<{ category: string; limit: number; spent: number; remaining: number }>
   debts: Array<{ name: string; type: string; currentBalance: number; minPayment: number; apr: number }>
+  subscriptions: Array<{
+    id: number
+    name: string
+    amount: number
+    frequency: "Weekly" | "Monthly" | "Yearly"
+    monthlyEquivalent: number
+    nextDueDate: string | null
+    category: string | null
+    status: "paused" | "overdue" | "paid" | "upcoming" | "scheduled"
+  }>
+  recurringMonthlyTotal: number
   categories: Array<{ id: string; name: string; type: string }>
   recentSummaries: string[]
   displayCurrency: SupportedCurrency
